@@ -190,6 +190,41 @@ function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable 
         end
     end
     pop.meta["bus_binaries"] = bus_bins
+    # "binary_neighborhoods": each binary with the voltage variables of its bus(es), so that cliques
+    # containing binaries also contain the network variables they interact with
+    vidx(i) = [k for k in (findfirst(==("e[$i]"), pop.names), findfirst(==("f[$i]"), pop.names)) if k !== nothing]
+    nbhd = Vector{Vector{Int}}()
+    for (kind, id) in binaries
+        if kind == :gen
+            push!(nbhd, sort([findfirst(==("u[$id]"), pop.names); vidx(ref[:gen][id]["gen_bus"])]))
+        else
+            br = ref[:branch][id]
+            push!(nbhd, sort([findfirst(==("z[$id]"), pop.names); vidx(br["f_bus"]); vidx(br["t_bus"])]))
+        end
+    end
+    pop.meta["binary_neighborhoods"] = nbhd
+    # "pair_cliques": for each bus and each pair of binaries acting at that bus, a small moment block with
+    # both binaries, their local flow / output variables at that bus, and the bus voltage
+    idx(nm) = findfirst(==(nm), pop.names)
+    pair_cl = Vector{Vector{Int}}()
+    for i in buses
+        local_bins = Tuple{Int,Vector{Int}}[]
+        for l in sort(collect(keys(ref[:branch])))
+            l in switchable || continue
+            br = ref[:branch][l]
+            side = br["f_bus"] == i ? "fr" : br["t_bus"] == i ? "to" : nothing
+            side === nothing && continue
+            push!(local_bins, (idx("z[$l]"), [idx("p_$(side)[$l]"), idx("q_$(side)[$l]")]))
+        end
+        for g in ref[:bus_gens][i]
+            g in commitable && push!(local_bins, (idx("u[$g]"), [idx("pg[$g]"), idx("qg[$g]")]))
+        end
+        for a in eachindex(local_bins), b in a+1:length(local_bins)
+            (ba, va), (bb, vb) = local_bins[a], local_bins[b]
+            push!(pair_cl, sort([ba; bb; va; vb; vidx(i)]))
+        end
+    end
+    pop.meta["pair_cliques"] = pair_cl
     pop.meta["all_binaries"] = [sort([findfirst(==(k == :gen ? "u[$id]" : "z[$id]"), pop.names) for (k, id) in binaries])]
 
     pop.meta["name"] = name

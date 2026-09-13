@@ -19,6 +19,8 @@ This is research code for studying moment/sum-of-squares (Lasserre) relaxations 
 | `scripts/experiment1.jl` | order 1 vs order 2 × rounding schemes |
 | `scripts/analyze_experiment1.jl` | builds `results/experiment1_tables.md` from the JSON outputs |
 | `scripts/experiment1b_cliques.jl` | clique augmentation and its effect on joint binary moments / rounding |
+| `scripts/experiment2_scaling.jl` | case14/24/30 scaling: mixed-order and augmented sparse relaxations vs NLP relax-and-round (`VARIANTS=base` or `adjacent`) |
+| `scripts/analyze_experiment2.jl` | builds `results/experiment2_tables.md` |
 | `scripts/validate_formulations.jl` | checks the POP against PowerModels' AC-OPF and reports relaxation bounds |
 | `data/` | MATPOWER test cases (from the PowerModels.jl test suite) |
 | `docs/formulations.md` | mathematical formulations, as implemented |

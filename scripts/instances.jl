@@ -12,10 +12,25 @@ function uc_modify!(data; pmin_frac = 0.4, noload_frac = 0.15, c0 = nothing)
     for (k, g) in data["gen"]
         g["pmin"] = pmin_frac * g["pmax"]
         c = g["cost"]
-        c1 = length(c) >= 2 ? c[end-1] : 0.0
+        while length(c) < 2            # PowerModels may store zero-cost units with a truncated cost vector
+            pushfirst!(c, 0.0)
+        end
+        g["ncost"] = length(c)
+        c1 = c[end-1]
         c[end] = c0 === nothing ? noload_frac * c1 * g["pmax"] : c0[parse(Int, k)]
     end
     return data
+end
+
+"Branch ids whose removal alone does not disconnect the network."
+function nonbridge_branches(d)
+    out = Int[]
+    for l in ids(d, "branch")
+        dd = deepcopy(d)
+        dd["branch"][string(l)]["br_status"] = 0
+        length(PowerModels.calc_connected_components(dd)) == 1 && push!(out, l)
+    end
+    return out
 end
 
 function load_instance(name::String)
@@ -59,6 +74,27 @@ function load_instance(name::String)
         sw = [1, 2, 3, 4, 5, 6, 7, 10, 13, 16]
         return build_power_pop(d; switchable = sw, name = name),
             "case14, 10 switchable branches $(sw)"
+    elseif name == "case30_ots"
+        # PGLib IEEE 30-bus: the 15 lowest-numbered non-bridge branches are switchable
+        d = parse_case("case30")
+        sw = nonbridge_branches(d)[1:15]
+        return build_power_pop(d; switchable = sw, name = name),
+            "case30 (pglib), 15 switchable non-bridge branches $(sw)"
+    elseif name == "case24_ots"
+        d = parse_case("case24")
+        sw = nonbridge_branches(d)[1:15]
+        return build_power_pop(d; switchable = sw, name = name),
+            "case24 (pglib RTS), 15 switchable non-bridge branches $(sw)"
+    elseif name == "case24_uc"
+        # PGLib RTS-96 already has Pmin > 0 and no-load costs; all 33 units commitable (startup costs ignored)
+        d = parse_case("case24")
+        return build_power_pop(d; commitable = ids(d, "gen"), name = name),
+            "case24 (pglib RTS), all 33 units commitable, original Pmin and no-load costs"
+    elseif name == "case30_uc"
+        d = parse_case("case30")
+        uc_modify!(d; pmin_frac = 0.2, c0 = Dict(1 => 300.0, 2 => 300.0, 3 => 100.0, 4 => 100.0, 5 => 100.0, 6 => 100.0))
+        return build_power_pop(d; commitable = ids(d, "gen"), name = name),
+            "case30 (pglib), Pmin = 0.2 Pmax, no-load costs (300, 300, 100, 100, 100, 100) \$/h, all 6 units commitable"
     end
     error("unknown instance $name")
 end

@@ -50,12 +50,63 @@ monoprod(a::Vector{Int}, b::Vector{Int}, isbin) = reduce_mono(sort!(vcat(a, b)),
 _ceil_half(d) = (d + 1) ÷ 2
 
 """
+Supports (variable sets) defining the interaction graph. Linear constraints with more than
+`global_linear` variables are kept out of the graph; if no clique contains their support they are
+enforced on first moments only (L(g) >= 0, L(h) = 0).
+"""
+function interaction_supports(obj, ineqs, eqs, pmis; global_linear = typemax(Int))
+    supports = Vector{Vector{Int}}()
+    for m in keys(obj.terms)
+        isempty(m) || push!(supports, unique(m))
+    end
+    in_graph(p) = !(degree(p) <= 1 && length(support(p)) > global_linear)
+    append!(supports, filter(!isempty, support.(filter(in_graph, ineqs))))
+    append!(supports, filter(!isempty, support.(filter(in_graph, eqs))))
+    for G in pmis
+        s = sort!(unique(reduce(vcat, support.(G))))
+        isempty(s) || push!(supports, s)
+    end
+    return supports, sort!(unique(reduce(vcat, supports)))
+end
+
+function interaction_supports(pop::POP; global_linear = typemax(Int))
+    r(p) = reduce_poly(p, pop.isbin)
+    return interaction_supports(r(pop.obj), r.(pop.ineqs), r.(pop.eqs), [map(r, G) for G in pop.pmis];
+        global_linear = global_linear)
+end
+
+"""
+    capped_augmentation(pop, candidates; maxclique, global_linear) -> accepted supports
+
+Greedily add candidate supports (in the given order) as long as every clique of the chordal extension
+that contains a binary variable has at most `maxclique` variables.
+"""
+function capped_augmentation(pop::POP, candidates::Vector{Vector{Int}}; maxclique::Int = 14,
+    global_linear = typemax(Int))
+    supports, active = interaction_supports(pop; global_linear = global_linear)
+    act = Set(active)
+    maxbin(cl) = maximum((length(c) for c in cl if any(pop.isbin[v] for v in c)); init = 0)
+    accepted = Vector{Vector{Int}}()
+    for cand in candidates
+        s = filter(in(act), cand)
+        length(s) > 1 || continue
+        trial = [supports; accepted; [s]]
+        if maxbin(chordal_cliques(trial)) <= maxclique
+            push!(accepted, s)
+        end
+    end
+    return accepted
+end
+
+"""
     solve_moment_relaxation(pop; order = 1, sparse = true, form = :sos, optimizer = mosek_optimizer())
 
-`order` is either an Int or a function `clique::Vector{Int} -> Int`.
+`order` is either an Int or a function `clique::Vector{Int} -> Int` (see `binary_clique_order`).
 """
 function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliques = nothing, form::Symbol = :sos,
-    extra_supports = Vector{Vector{Int}}(), optimizer = mosek_optimizer(), silent::Bool = true)
+    extra_supports = Vector{Vector{Int}}(), extra_cliques = Vector{Vector{Int}}(), global_linear::Int = typemax(Int),
+    optimizer = mosek_optimizer(),
+    silent::Bool = true)
     t0 = time()
     isbin = pop.isbin
     obj = reduce_poly(pop.obj, isbin)
@@ -63,17 +114,7 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     eqs = [reduce_poly(h, isbin) for h in pop.eqs]
     pmis = [map(p -> reduce_poly(p, isbin), G) for G in pop.pmis]
 
-    supports = Vector{Vector{Int}}()
-    for m in keys(obj.terms)
-        isempty(m) || push!(supports, unique(m))
-    end
-    append!(supports, filter(!isempty, support.(ineqs)))
-    append!(supports, filter(!isempty, support.(eqs)))
-    for G in pmis
-        s = sort!(unique(reduce(vcat, support.(G))))
-        isempty(s) || push!(supports, s)
-    end
-    active = sort!(unique(reduce(vcat, supports)))
+    supports, active = interaction_supports(obj, ineqs, eqs, pmis; global_linear = global_linear)
     # extra supports force sets of variables into a common clique (e.g. to create joint binary moments)
     for s in extra_supports
         s = filter(in(Set(active)), s)
@@ -82,16 +123,21 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     if cliques === nothing
         cliques = sparse ? chordal_cliques(supports) : [active]
     end
+    # extra moment blocks added without re-chordalizing (valid relaxation; running intersection not required)
+    for c in extra_cliques
+        c = sort(filter(in(Set(active)), c))
+        length(c) > 1 && !any(issubset(c, k) for k in cliques) && push!(cliques, c)
+    end
     orders = order isa Integer ? fill(Int(order), length(cliques)) : [Int(order(c)) for c in cliques]
 
-    function assign(s::Vector{Int})
+    function assign(s::Vector{Int}; allow_global = false)
         best = 0
         for (k, c) in enumerate(cliques)
             if issubset(s, c) && (best == 0 || orders[k] > orders[best])
                 best = k
             end
         end
-        best == 0 && error("support $(s) not contained in any clique")
+        best == 0 && !allow_global && error("support $(s) not contained in any clique")
         return best
     end
     bases = Dict{Tuple{Int,Int},Vector{Vector{Int}}}()
@@ -108,7 +154,11 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     end
     for (g, tag) in zip(ineqs, pop.ineq_tags)
         is_constant(g) && continue
-        k = assign(support(g))
+        k = assign(support(g); allow_global = degree(g) <= 1)
+        if k == 0
+            push!(blocks, (fill(g, 1, 1), [Int[]]))
+            continue
+        end
         dd = orders[k] - _ceil_half(degree(g))
         dd < 0 ? skip!(tag) : push!(blocks, (fill(g, 1, 1), basis(k, dd)))
     end
@@ -119,7 +169,11 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     end
     for (h, tag) in zip(eqs, pop.eq_tags)
         is_constant(h) && continue
-        k = assign(support(h))
+        k = assign(support(h); allow_global = degree(h) <= 1)
+        if k == 0
+            push!(eqblocks, (h, [Int[]]))
+            continue
+        end
         dd = 2 * orders[k] - degree(h)
         dd < 0 ? skip!(tag) : push!(eqblocks, (h, basis(k, dd)))
     end
@@ -193,7 +247,9 @@ function _solve_sos_form(model, obj, blocks, eqblocks, isbin, scale)
     optimize!(model)
     st = termination_status(model)
     ok = primal_status(model) in (MOI.FEASIBLE_POINT, MOI.NEARLY_FEASIBLE_POINT)
-    bound = ok ? objective_value(model) * scale : NaN
+    # conservative bound: with inexact termination (e.g. SLOW_PROGRESS) the SOS objective can overshoot;
+    # take the smaller of the primal (SOS) and dual (moment) objective values
+    bound = ok ? min(objective_value(model), has_duals(model) ? dual_objective_value(model) : Inf) * scale : NaN
     yv = Dict{Vector{Int},Float64}()
     ps = dual_status(model)
     if has_duals(model)
@@ -247,4 +303,20 @@ end
 function moment(rel::MomentRelaxation, m::Vector{Int})
     isempty(m) && return 1.0
     return get(rel.y, sort(m), missing)
+end
+
+"Order function: `high` for cliques containing a binary variable, `low` otherwise."
+binary_clique_order(pop::POP; high = 2, low = 1) = c -> any(pop.isbin[v] for v in c) ? high : low
+
+"""
+Order function: `high` for cliques (of at most `maxsize` variables) that contain a binary or a variable
+appearing in some constraint together with a binary; `low` otherwise.
+"""
+function adjacent_clique_order(pop::POP; high = 2, low = 1, maxsize = typemax(Int))
+    S = Set(findall(pop.isbin))
+    for p in [pop.ineqs; pop.eqs]
+        sp = support(reduce_poly(p, pop.isbin))
+        any(pop.isbin[v] for v in sp) && union!(S, sp)
+    end
+    return c -> (length(c) <= maxsize && any(in(S), c)) ? high : low
 end

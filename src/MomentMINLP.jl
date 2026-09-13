@@ -13,7 +13,7 @@ import Ipopt
 import PowerModels
 
 export Poly, pvar, POP, add_var!, add_ineq!, add_eq!, add_pmi!, fix_variables, solve_nlp,
-    solve_moment_relaxation, MomentRelaxation, moment, chordal_cliques,
+    solve_moment_relaxation, MomentRelaxation, moment, chordal_cliques, binary_clique_order, adjacent_clique_order, capped_augmentation,
     build_power_pop, ConfigEvaluator, evaluate!, enumerate_configs!, best_config, config_data,
     binvars, marginals, binary_correlation, sample_threshold, sample_independent, sample_gaussian,
     sample_conditional, sample_dive, summarize_samples, mosek_optimizer, ipopt_optimizer
@@ -51,6 +51,6 @@ end
 
 mosek_optimizer() = optimizer_with_attributes(MosekTools.Optimizer, "MSK_IPAR_NUM_THREADS" => 4)
 ipopt_optimizer() = optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0, "sb" => "yes",
-    "max_iter" => 3000)
+    "max_iter" => 3000, "max_cpu_time" => 60.0)
 
 end # module

@@ -84,6 +84,11 @@ POP: $\min f(x)$ s.t. $g_i(x)\ge 0$, $h_j(x)=0$, $G_k(x)\succeq 0$, with $x_b\in
    - **Clique augmentation** (`extra_supports`): additional variable sets can be added to the interaction graph, so the chordal extension places them in a common clique.
    - `build_power_pop` provides `meta["bus_binaries"]` (binaries incident to each bus, plus the bus voltage) and `meta["all_binaries"]`.
    - This matters for rounding. Without it, AC-OTS relaxations contain *no* joint moments $y_{z_iz_j}$ (see `results/experiment1_findings.md`, F3).
+   - **Scaling options** (experiment 2):
+     - `global_linear = k`: linear constraints with more than $k$ variables are kept out of the interaction graph and, if no clique contains them, enforced only as $L_y(g)\ge 0$ / $L_y(h)=0$.
+     - `capped_augmentation`: accept augmentation supports only while binary cliques stay within a size cap.
+     - `extra_cliques`: additional moment blocks added *without* re-chordalizing. The relaxation stays valid, but the running intersection property is lost.
+     - Order policies: `binary_clique_order` (order 2 on cliques with a binary) and `adjacent_clique_order` (order 2 on size-capped cliques containing a binary or a variable that shares a constraint with one).
 3. **Moment matrices.** $M_{t_k}(y; C_k) = \big[y_{\alpha\beta}\big]_{\alpha,\beta\in \mathbb B_{t_k}(C_k)} \succeq 0$, where $\mathbb B_t(C)$ is the set of binary-reduced monomials of degree $\le t$ in the variables of $C$.
 4. **Assignment.** Each constraint is assigned to one clique that contains its support, choosing the highest order.
 5. **Localizing matrices.** $M_{t_k-\lceil \deg g/2\rceil}(g\,y;C_k)\succeq 0$. Skipped if $t_k < \lceil \deg g/2\rceil$.

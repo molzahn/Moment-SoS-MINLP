@@ -1,0 +1,207 @@
+{
+ "binaries": [
+  "gen:1",
+  "gen:2",
+  "gen:3",
+  "gen:4",
+  "gen:5"
+ ],
+ "bit_order_note": "bits[k] is the status of binaries[k]",
+ "configs": [
+  {
+   "bits": "01101",
+   "cost": 21889.537533835293,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "10101",
+   "cost": 21889.537533835293,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "00101",
+   "cost": 21891.029215120747,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "11101",
+   "cost": 21900.768876732414,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "00111",
+   "cost": 23460.0616032935,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "10111",
+   "cost": 23466.0430739843,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "01111",
+   "cost": 23466.0430739843,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "11111",
+   "cost": 23477.07987580502,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "10110",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "11001",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "11000",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "11011",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "11010",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "10001",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "10000",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "10011",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "01100",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "10010",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "01110",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "00100",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "00110",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "01001",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "01000",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "01011",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "01010",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "00001",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "00000",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "11100",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "00011",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "00010",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "11110",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "10100",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  }
+ ],
+ "description": "case5_uc with units 1 and 2 (bus 1) made identical: Pmax 105 MW, Q ±80 MVAr, c1 = 14.5 $/MWh",
+ "enumeration_seconds": 0.109550167,
+ "instance": "case5_uc_sym"
+}

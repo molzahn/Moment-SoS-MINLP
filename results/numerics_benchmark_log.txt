@@ -1,0 +1,43 @@
+
+=== case5_opf_o2
+  config               status            time  iter     raw bound     certified   SOS res   λmin(X)    relgap   λmin(M)  dropped
+  baseline             SLOW_PROGRESS      1.6    22    18269.4151    18247.0380   8.4e-05   5.8e-10   3.7e-08  -1.5e-09  Dict{String, Int64}()
+  normalize            OPTIMAL            1.2    20    18269.1048    18269.0896   1.6e-08   4.9e-12   3.4e-10  -2.7e-11  Dict{String, Int64}()
+  norm+drop            OPTIMAL            1.3    20    18269.1048    18269.0896   1.6e-08   4.9e-12   3.4e-10  -2.7e-11  Dict{String, Int64}()
+  norm+quotient        OPTIMAL            1.4    20    18269.1045    18269.0893   1.4e-08   4.5e-12   3.0e-10  -2.5e-11  Dict{String, Int64}()
+  norm+drop+quotient   OPTIMAL            1.4    20    18269.1045    18269.0893   1.4e-08   4.5e-12   3.0e-10  -2.5e-11  Dict{String, Int64}()
+
+=== case14_uc_o2
+  config               status            time  iter     raw bound     certified   SOS res   λmin(X)    relgap   λmin(M)  dropped
+  baseline             SLOW_PROGRESS     45.0    30     9042.4788     9041.1734   1.7e-06   1.0e-11   1.1e-10  -2.1e-11  Dict{String, Int64}()
+  normalize            OPTIMAL           25.7    22     9042.4790     9042.4522   2.0e-08   2.2e-11   2.2e-10  -6.5e-11  Dict{String, Int64}()
+  norm+drop            OPTIMAL           25.5    22     9042.4790     9042.4522   2.0e-08   2.2e-11   2.2e-10  -6.5e-11  Dict{String, Int64}()
+  norm+quotient        OPTIMAL           27.1    22     9042.4785     9042.4612   3.7e-07   1.2e-11   1.2e-10  -3.2e-11  Dict{String, Int64}()
+  norm+drop+quotient   OPTIMAL           26.7    22     9042.4785     9042.4612   3.7e-07   1.2e-11   1.2e-10  -3.2e-11  Dict{String, Int64}()
+
+=== case5_ots_o2
+  config               status            time  iter     raw bound     certified   SOS res   λmin(X)    relgap   λmin(M)  dropped
+  baseline             SLOW_PROGRESS     10.0    28    15071.6502    11712.7522   1.1e-03  -1.6e-05   5.2e-08  -2.5e-09  Dict{String, Int64}()
+  normalize            SLOW_PROGRESS     14.6    45    15027.2929    13400.9334   8.4e-06   1.9e-10   4.1e-08  -5.8e-10  Dict{String, Int64}()
+  norm+drop            SLOW_PROGRESS      9.8    33    15025.0658    14164.4947   5.4e-06   2.1e-10   1.0e-07  -1.7e-09  Dict("sw_flow_onoff" => 56, "sw_angle_bigM" => 14, "sw_flow_bigM" => 56)
+  norm+quotient        SLOW_PROGRESS     14.5    45    15027.2929    13400.9334   8.4e-06   1.9e-10   4.1e-08  -5.8e-10  Dict{String, Int64}()
+  norm+drop+quotient   SLOW_PROGRESS      9.6    33    15025.0658    14164.4947   5.4e-06   2.1e-10   1.0e-07  -1.7e-09  Dict("sw_flow_onoff" => 56, "sw_angle_bigM" => 14, "sw_flow_bigM" => 56)
+
+=== case30_ots_mixed
+  config               status            time  iter     raw bound     certified   SOS res   λmin(X)    relgap   λmin(M)  dropped
+  baseline             SLOW_PROGRESS      5.1    41      173.0329      172.7091   1.3e-05  -1.5e-07   1.1e-10  -4.5e-10  Dict{String, Int64}()
+  normalize            SLOW_PROGRESS      5.1    41      173.0324      173.0059   2.8e-07  -3.0e-10   4.0e-11  -8.2e-11  Dict{String, Int64}()
+  norm+drop            SLOW_PROGRESS      2.2    27      172.9852      172.9731   1.5e-07  -8.7e-11   2.9e-11  -2.2e-11  Dict("sw_flow_onoff" => 120, "sw_angle_bigM" => 30, "sw_flow_bigM" => 120)
+  norm+quotient        SLOW_PROGRESS      5.1    41      173.0324      173.0059   2.8e-07  -3.0e-10   4.0e-11  -8.2e-11  Dict{String, Int64}()
+  norm+drop+quotient   SLOW_PROGRESS      2.1    27      172.9852      172.9731   1.5e-07  -8.7e-11   2.9e-11  -2.2e-11  Dict("sw_flow_onoff" => 120, "sw_angle_bigM" => 30, "sw_flow_bigM" => 120)
+
+=== case24_ots_adj16
+  config               status            time  iter     raw bound     certified   SOS res   λmin(X)    relgap   λmin(M)  dropped
+  baseline             SLOW_PROGRESS     53.3    38    74415.5140    67660.7902   1.6e-03  -4.8e-05   2.6e-08  -2.6e-08  Dict{String, Int64}()
+  normalize            SLOW_PROGRESS     53.7    44    74402.4055    73303.3671   4.8e-06  -3.4e-09   2.8e-09  -1.6e-09  Dict{String, Int64}()
+  norm+drop            SLOW_PROGRESS     45.2    36    74016.1883    73437.5681   4.0e-06  -1.6e-08   5.2e-10  -2.6e-09  Dict("sw_flow_onoff" => 120, "sw_angle_bigM" => 30, "sw_flow_bigM" => 120)
+  norm+quotient        SLOW_PROGRESS     53.7    40    74405.8865    73740.5202   3.1e-06  -1.5e-09   2.6e-09  -1.5e-09  Dict{String, Int64}()
+  norm+drop+quotient   SLOW_PROGRESS     45.5    33    74014.7347    73361.7237   5.3e-06  -2.3e-08   2.0e-09  -4.3e-09  Dict("sw_flow_onoff" => 120, "sw_angle_bigM" => 30, "sw_flow_bigM" => 120)
+Precompiling packages...
+   4568.6 ms  ✓ MomentMINLP
+  1 dependency successfully precompiled in 5 seconds. 139 already precompiled.

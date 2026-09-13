@@ -2,6 +2,14 @@
 
 *2026-09-13. Code: `scripts/experiment2_scaling.jl` (`VARIANTS=base` or `VARIANTS=adjacent`), tables: `results/experiment2_tables.md`, raw data: `results/experiment2*_*.json`.*
 
+> **Correction (2026-09-13, `results/numerics_findings.md`).** Bounds below were raw SOS objectives. Certified bounds with the new defaults (normalize + scale_vars):
+> - case24_uc adj16_pairs **75736.79** (gap 3.63%)
+> - case30_ots adj16_pairs **174.46** (gap 10.2%)
+> - case24_ots adj16_pairs **74425.89** (gap 5.04%)
+> - order-1 and `mixed` bounds are unchanged to < 0.02%
+>
+> The 1083 s (case24_uc adj16) and 1035 s (case30_ots adj16_pairs) solves now take 55 s and 91 s, so finding S3 (erratic times) was a conditioning issue, now largely resolved.
+
 ## Setup
 
 - **Instances** (`scripts/instances.jl`; case24/case30 are the PGLib versions shipped with PowerModels):

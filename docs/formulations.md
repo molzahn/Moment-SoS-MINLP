@@ -102,6 +102,21 @@ POP: $\min f(x)$ s.t. $g_i(x)\ge 0$, $h_j(x)=0$, $G_k(x)\succeq 0$, with $x_b\in
 
 **Size check** (`scripts/validate_formulations.jl`): case5 AC-OPF has a 3.84% gap at order 1 and 0% at order 2 (7 s). case9 and case14 are tight at order 1.
 
+### 5.1 Numerics and certified bounds (defaults since 2026-09-13; see `results/numerics_findings.md`)
+
+- **`normalize = true`.** Every constraint polynomial (inequality, equality, PMI) is divided by its largest absolute coefficient. The feasible set is unchanged.
+- **`scale_vars = true`.** Substitute $x_i = s_i\hat x_i$ with $s_i=\max(|\ell_i|,|u_i|)$ from the POP variable bounds, so all variables lie in $[-1,1]$. Binaries are not scaled. Pseudo-moments are mapped back, $y_\alpha = \prod_i s_i^{\alpha_i}\,\hat y_\alpha$.
+- **Certified lower bound.** MOSEK often stops with SLOW_PROGRESS, and the SOS objective $t$ can then overshoot the true relaxation value. From the returned solution, compute
+  - coefficient residuals $r_\alpha = C_\alpha(X,\lambda,t) - f_\alpha$, and
+  - smallest Gram eigenvalues $\lambda_k$.
+
+  Then for every feasible $x$ in the variable box,
+  $$ f(x) \;\ge\; t \;-\; \sum_\alpha |r_\alpha| \max_{x\in\text{box}}|x^\alpha| \;-\; \sum_k \max(-\lambda_k,0)\,\max_{x\in\text{box}} \operatorname{tr} W_k(x),$$
+  where $W_k(x)$ is the weighted monomial matrix of block $k$. `rel.bound` is this certified value. The uncorrected value is in `rel.info["raw_bound"]`. After variable scaling, the box is $[-1,1]^n$ and the correction is typically $<10^{-4}$ relative.
+- **Options tested but not adopted:**
+  - `skip_high_order_tags`, which drops big-M constraints in order-2 cliques: it weakens the bound and is not faster.
+  - `quotient_basis`, which removes pivot monomials of degree-2 equalities from order-2 moment bases (an exact reformulation): no measurable effect.
+
 ## 6. Rounding schemes (`src/rounding.jl`)
 
 Let $\mu_i = y_{z_i}$ (marginal) and $Y_{ij} = y_{z_iz_j}$ (available if $z_i,z_j$ share a clique).

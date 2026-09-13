@@ -2,6 +2,13 @@
 
 *2026-09-13. Code: `scripts/experiment1.jl`, `scripts/experiment1b_cliques.jl`. Full tables: `results/experiment1_tables.md`. Raw data: `results/experiment1_*.json`, `results/experiment1b_cliques.json`, `results/enum_*.json`.*
 
+> **Correction (2026-09-13, `results/numerics_findings.md`).** Bounds below were raw SOS objectives from unnormalized relaxations. Certified bounds with the new defaults:
+> - case5_uc_sym order 2: **21888.35**. The value 21891.22 below exceeded the optimum and is invalid.
+> - case5_ots order 2: **15025.97**, a gap of **0.98%**, not 0.675%.
+> - Other bounds change by < 0.001%.
+>
+> Rounding statistics below still use pseudo-moments from the old formulation.
+
 ## Setup
 
 - **Instances** (definitions in `scripts/instances.jl`), all derived from PowerModels test cases:

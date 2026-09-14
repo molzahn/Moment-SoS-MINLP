@@ -2,12 +2,56 @@
 
 *2026-09-13. Code: `scripts/experiment1.jl`, `scripts/experiment1b_cliques.jl`. Full tables: `results/experiment1_tables.md`. Raw data: `results/experiment1_*.json`, `results/experiment1b_cliques.json`, `results/enum_*.json`.*
 
-> **Correction (2026-09-13, `results/numerics_findings.md`).** Bounds below were raw SOS objectives from unnormalized relaxations. Certified bounds with the new defaults:
-> - case5_uc_sym order 2: **21888.35**. The value 21891.22 below exceeded the optimum and is invalid.
-> - case5_ots order 2: **15025.97**, a gap of **0.98%**, not 0.675%.
-> - Other bounds change by < 0.001%.
->
-> Rounding statistics below still use pseudo-moments from the old formulation.
+## ⚠️ Update after the numerics fix (rerun 2026-09-13; supersedes parts of F1–F5)
+
+All experiments were rerun with `normalize = true`, `scale_vars = true` and certified bounds (`results/numerics_findings.md`), using the same seeds and sample counts.
+- Side-by-side tables: `results/rerun_comparison.md`
+- Updated full tables: `results/experiment1_tables.md`
+- The findings below the line are the **original** analysis; this section lists what changed.
+
+| instance, order 2 | certified bound (old raw) | marginals of interest | independent opt | Gaussian opt | conditional opt | dive opt |
+|---|---|---|---|---|---|---|
+| case5_uc | 21865.71 (21865.80) | integral | 100% | 100% | 100% | 100% |
+| case5_uc_sym | 21888.35 (21891.22, invalid) | u1, u2 = 0.30, 0.40; corr −0.54 (was −0.20) | 46% | 60% (50%) | **73%** (57%) | 100% |
+| case14_uc | 9042.46 | integral | 100% | 100% | 100% | 100% |
+| case5_ots | 15025.97 (15071.65), gap 0.98% | z5, z6 = **0.17, 0.14** (were 0.66, 0.67) | **66%** (10%) | 68% (8%) | **73%** (13%) | 40% (20%) |
+| case9_ots | 638.18 | integral | 100% | 100% | 100% | 100% |
+
+In parentheses: values from the original run.
+
+**What changes in the conclusions:**
+
+1. **F4 was largely a numerical artifact.**
+   - With accurate solves, the *base* order-2 relaxation of case5_ots already puts low marginals on the two phase shifters that the optimum switches off.
+   - Independent rounding finds the optimum in 66% of samples (was 10%), and threshold rounding returns it directly.
+   - The old "marginals 0.66 vs 0.08 depending on cliques" effect was mostly inaccurate moments, not optimal-face non-uniqueness. The general caveat about non-unique optimal faces remains valid, but it was not the main driver here.
+
+2. **Clique augmentation (F3) still helps, now on top of good marginals.**
+
+   | case5_ots, order 2 | independent | Gaussian | conditional |
+   |---|---|---|---|
+   | base | 66% | 64% | 70% |
+   | bus_binaries | 83% | 87% | **92%** |
+   | all_binaries | 84% | 88% | **94%** |
+
+   With augmentation, marginals drop to 0.05 and correlated schemes add 8–10 points over independent rounding.
+
+3. **The correlation effect (F5) is stronger and cleaner.**
+   - case5_uc_sym, base cliques: corr(u1,u2) = −0.54; conditional 73–74% (experiments 1 and 1b) vs independent 46%.
+   - With bus_binaries: corr(u1,u2) = **−1.00**, marginals 0.52/0.48. Gaussian and conditional rounding are optimal in **100%** of samples, vs 44% for independent rounding.
+   - The pseudo-moments encode "exactly one of the two identical units" exactly.
+
+4. **Order-1 OTS rounding is arbitrary (new negative finding).**
+   - The order-1 big-M relaxations have bound 0 (case5_ots) or 75 (case9_ots) and a huge optimal face.
+   - With the new scaling, the solver returns a different point on it: marginals ≈ 0.4–0.5 instead of 0.8–0.95.
+   - Rounding collapsed: case9_ots threshold 100% → 0%, independent 32% → 0%.
+   - Order-1 OTS marginals carry no reliable information, which reinforces F2.
+
+5. **Diving at order 2** is now optimal in 100% of samples (5 of 5) on case5_uc and case5_uc_sym, and 40% on case5_ots.
+
+---
+
+# Original analysis (before the numerics fix)
 
 ## Setup
 

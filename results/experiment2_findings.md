@@ -2,13 +2,34 @@
 
 *2026-09-13. Code: `scripts/experiment2_scaling.jl` (`VARIANTS=base` or `VARIANTS=adjacent`), tables: `results/experiment2_tables.md`, raw data: `results/experiment2*_*.json`.*
 
-> **Correction (2026-09-13, `results/numerics_findings.md`).** Bounds below were raw SOS objectives. Certified bounds with the new defaults (normalize + scale_vars):
-> - case24_uc adj16_pairs **75736.79** (gap 3.63%)
-> - case30_ots adj16_pairs **174.46** (gap 10.2%)
-> - case24_ots adj16_pairs **74425.89** (gap 5.04%)
-> - order-1 and `mixed` bounds are unchanged to < 0.02%
->
-> The 1083 s (case24_uc adj16) and 1035 s (case30_ots adj16_pairs) solves now take 55 s and 91 s, so finding S3 (erratic times) was a conditioning issue, now largely resolved.
+## ⚠️ Update after the numerics fix (rerun 2026-09-13)
+
+Rerun with `normalize = true`, `scale_vars = true` and certified bounds; same seeds. Side-by-side: `results/rerun_comparison.md`. Updated tables: `results/experiment2_tables.md`.
+
+**Certified bounds and gaps:**
+
+| instance | best certified bound | best known | certified gap |
+|---|---|---|---|
+| case14_ots | 8077.59 | 8081.42 | 0.05% |
+| case30_uc | 959.37 | 1005.74 | 4.6% |
+| case24_uc | 75736.79 | 78586.97 | 3.6% |
+| case30_ots | 174.46 | 194.37 | 10.2% |
+| case24_ots | 74425.89 | 78377.09 | 5.0% |
+
+The best-known solutions are unchanged.
+
+**Solve times:**
+- The pathological solves are gone: case24_uc `adj16` 1083 s → 85 s; case30_ots `adj16_pairs` 1035 s → 133 s.
+- Some small solves are slightly slower (e.g. case30_ots `mixed` 5 s → 12 s). This includes the scaled-model construction and certification. S3 is therefore resolved in its severe form.
+
+**Rounding:**
+- Essentially unchanged at this scale. S4 stands: correlated schemes give no consistent gain over independent rounding, and relax-and-round from the NLP relaxation is competitive.
+- Small improvements on case24_ots from order-2 cliques around binaries: `mixed` best rounded gap 0.45% → 0.19%; `mixed_aug` 1.64% → 0.91%.
+- Order-1 OTS rounding got worse (case30_ots: 38% → 0% feasible; case24_ots: 10% → 0%), consistent with the arbitrariness of order-1 OTS marginals (experiment 1 update, item 4).
+
+---
+
+# Original analysis (before the numerics fix)
 
 ## Setup
 

@@ -138,7 +138,7 @@ function run_case(name)
     res["best_bound_variant"] = isempty(bounds) ? nothing :
         first(k for (k, o) in res["relaxations"] if !get(o, "failed", false) && o["bound"] === maximum(bounds))
     res["best_bound"] = isempty(bounds) ? nothing : maximum(bounds)
-    ref = minimum(filter(!isnothing, [res["best_found"], row[5]]))
+    ref = minimum(filter(!isnothing, [res["best_found"], row[5], row[4]]))   # ours, paper AC-OTS, paper O-DC-OTS (AC cost)
     res["certified_gap_best_known"] = res["best_bound"] === nothing ? nothing : (ref - res["best_bound"]) / ref
     @printf("  SUMMARY %s: best found %.2f vs paper AC-OTS %s / O-DC-OTS %d; best bound %.2f; certified gap of best known %.2f%%; %d configs\n",
         name, res["best_found"], something(row[5], "–"), row[4], something(res["best_bound"], NaN),

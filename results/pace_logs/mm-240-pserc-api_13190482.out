@@ -1,0 +1,39 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 12:18:45
+Job ID:    13190482
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mm-240-pserc-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 240-pserc-api on atl1-1-02-005-11-2.pace.gatech.edu, cpus 8, mem 65536 MB, variants mixed,mixed_nobigM, start Mon Sep 14 12:18:45 EDT 2026
+
+=== 240-pserc-api: 240 buses, 448 branches (55 merged ties, 393 switchable), 2732 POP variables (build 7.1s); AC-OPF 4640589.22 (paper 4640589); paper O-DC-OTS 4627155, AC-OTS –
+  mixed        bound 4586789.06 (raw 4607419.91) SLOW_PROGRESS  total 374.5s (solve 334.7s)  order-2 cliques 576/1397  max PSD 54  integral marginals 10%, marginals<0.5: 19
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.0s)
+    independent  best infeasible  feas 0%  unique 100  (eval 0.7s)
+    gaussian     best infeasible  feas 0%  unique 100  (eval 0.7s)
+    conditional  best infeasible  feas 0%  unique 100  (eval 32.1s)
+    best rounded 4640589.22 (opens Any[]); after 1-flip polish 4640452.56 (opens [340, 354, 379]; 40 evals, 202.4s)
+  mixed_nobigM bound 4604032.68 (raw 4607219.97) SLOW_PROGRESS  total 196.2s (solve 171.7s)  order-2 cliques 576/1397  max PSD 54  integral marginals 15%, marginals<0.5: 16
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.0s)
+    independent  best infeasible  feas 0%  unique 100  (eval 0.7s)
+    gaussian     best infeasible  feas 0%  unique 100  (eval 0.6s)
+    conditional  best infeasible  feas 0%  unique 100  (eval 0.6s)
+    best rounded 4640589.22 (opens Any[]); after 1-flip polish 4640403.76 (opens [286, 354, 370, 378]; 40 evals, 197.3s)
+  SUMMARY 240-pserc-api: best found 4640403.17 vs paper AC-OTS – / O-DC-OTS 4627155; best bound 4604032.68; certified gap of best known 0.78%; 683 configs
+finished Mon Sep 14 12:36:59 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 12:37:01
+Job ID:        13190482
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mm-240-pserc-api
+Resources:     cpu=8,mem=64G,node=1
+Rsrc Used:     cput=02:26:08,vmem=0,walltime=00:18:16,mem=9883880K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-11-2
+---------------------------------------

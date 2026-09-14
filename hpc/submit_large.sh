@@ -11,5 +11,5 @@ submit 179-goc-api     64G  36:00:00
 submit 200-activ-api   64G  36:00:00
 submit 240-pserc-api   64G  36:00:00
 submit 300-ieee-api   128G  48:00:00
-submit 500-goc-api    192G  72:00:00
-submit 1354-pegase-api 384G 96:00:00
+submit 500-goc-api     48G  36:00:00
+submit 1354-pegase-api 128G 72:00:00

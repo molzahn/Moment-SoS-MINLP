@@ -6,6 +6,7 @@
 \usepackage{listings}
 \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in,headsep=0.1in}
 
+\usepackage{amsmath,amssymb}
 \usepackage{wasysym}
 \usepackage{xcolor}
 
@@ -57,6 +58,165 @@ We'll probably use .md files (notes.md, CLAUDE.md,) for the agents to keep track
 
 \item Is there some nice connection to Dan's education-focused side project (creating 3Blue1Brown videos)?
 
+\end{itemize}
+
+%==========================================================================================
+\section{Status as of September 14, 2026: code, experiments, and findings}
+%==========================================================================================
+
+This section summarizes the work done so far on the two threads:
+\begin{enumerate*}[label=(\roman*)]
+\item which relaxation strengthening to use, and
+\item correlated randomized rounding of the binaries using pseudo-moments.
+\end{enumerate*}
+The detailed write-ups, tables, and raw JSON results are in \texttt{results/}. The formulation note is in \texttt{docs/formulations.md}, and the literature notes are in \texttt{docs/literature\_notes.md}. The code is on the branch \texttt{experiment3-dcots}.
+
+\subsection{Code developed (Julia, MOSEK, PowerModels)}
+
+The package \texttt{MomentMINLP} (in \texttt{src/}) uses Julia~1.12 with JuMP, MosekTools (MOSEK~11), Ipopt, and PowerModels.
+\begin{itemize}
+\item \texttt{polynomials.jl}, \texttt{pop.jl}: sparse polynomials and a polynomial optimization problem (POP) type with bounds, binary flags, inequalities, equalities, and polynomial matrix inequalities. Also local NLP solves of the POP with Ipopt.
+\item \texttt{sparsity.jl}, \texttt{relaxation.jl}: sparse moment/SOS relaxations. The main features are:
+  \begin{itemize}
+  \item correlative sparsity (chordal extension, maximal cliques) with a \emph{per-clique} relaxation order;
+  \item binary reduction $z^2=z$ applied directly to the monomial basis;
+  \item localizing matrices and matrix constraints (thermal limits via Schur complements);
+  \item optional extra moment blocks and clique augmentation.
+  \end{itemize}
+  The SDP is built in SOS (dual) form and solved with MOSEK. Pseudo-moments are recovered as normalized equality duals. The returned bound is \emph{certified} (see below).
+\item \texttt{power.jl}: builds AC-OPF, AC-OTS, and single-period AC-UC as POPs in rectangular coordinates from PowerModels data. It also includes low-impedance bus merging, and it evaluates binary configurations with PowerModels' polar AC-OPF and Ipopt, after screening for connectivity and capacity.
+\item \texttt{rounding.jl}: rounding schemes for the binaries, namely threshold, independent (marginals), Gaussian copula (first and second moments), pseudo-moment conditional sampling, and diving (re-solving the relaxation after fixing each sampled binary).
+\item \texttt{scripts/}: instance definitions, enumeration of ground truth, Experiments 1--3, a numerics benchmark, and analysis/table scripts. \texttt{hpc/} holds Slurm scripts for GT PACE.
+\end{itemize}
+
+\subsection{Formulation summary}
+
+\paragraph{POP.} Voltages are $V_i = e_i + \mathrm{j} f_i$, with $f_{\text{ref}}=0$ and $e_{\text{ref}}\ge 0$. Generator outputs are explicit variables. For a switchable branch $l$ with status $z_l\in\{0,1\}$, we introduce flow variables and impose
+\begin{align*}
+p_l &= z_l\, P_l(e,f), \quad q_l = z_l\, Q_l(e,f) && \text{(exact, degree 3)},\\
+|p_l - P_l(e,f)| &\le M_l (1-z_l), \quad |p_l| \le \bar{s}_l z_l && \text{(big-M, degree 2)},\\
+p_l^2 + q_l^2 &\le \bar{s}_l^2, && \text{plus $z_l$-gated angle-difference limits.}
+\end{align*}
+Commitment uses $u_g\,\underline{p}_g \le p_g \le u_g\,\overline{p}_g$ together with a capacity cut. The degree-3 switching constraints can only be enforced in cliques of order $\ge 2$.
+
+\paragraph{Multi-order sparse hierarchy.} Cliques come from a chordal extension of the variable interaction graph. Each clique $C$ has its own order $t_C$:
+\begin{itemize}
+\item \emph{mixed}: $t_C=2$ if $C$ contains a binary, and $t_C = 1$ otherwise;
+\item \emph{adj16}: $t_C=2$ also for cliques of at most 16 variables that share a constraint with a binary, e.g., bus balance equations;
+\item \emph{pairs}: extra moment blocks for pairs of binaries at the same bus.
+\end{itemize}
+Linear constraints with more than 8 variables are imposed on first moments only.
+
+\paragraph{Numerics and certified bounds.} Every constraint is normalized by its largest coefficient, and all variables are scaled to $[-1,1]$. MOSEK often stops with \texttt{SLOW\_PROGRESS}. Given the SOS solution $(t, X_k, \lambda)$ with coefficient residuals $r_\alpha$ and Gram-matrix minimum eigenvalues $\lambda_k$, we report
+\[
+\text{bound} \;=\; t \;-\; \sum_\alpha |r_\alpha| \max_{x\in\text{box}} |x^\alpha| \;-\; \sum_k \max(-\lambda_k,0)\,\max_{x\in\text{box}} \operatorname{tr} W_k(x),
+\]
+which is a valid lower bound on the objective over all feasible $x$ in the variable box.
+
+\paragraph{Rounding.} Samples of the binaries come from the relaxation's pseudo-moments. Each sampled configuration is solved as an AC-OPF (Ipopt, local) on the original network. By Rothvo\ss' local consistency, an order-$t$ pseudo-distribution restricted to any small set of binaries is a genuine joint distribution; this justifies conditional sampling.
+
+\subsection{Experiment 1: small enumerable AC-UC/AC-OTS instances}
+
+The instances are case5\_uc, case5\_uc\_sym (two identical units), case14\_uc, case5\_ots, and case9\_ots. Ground truth comes from enumerating all configurations.
+\begin{itemize}
+\item \textbf{Order 2 is exact or nearly exact.} It is exact on case5\_uc, case14\_uc, and case9\_ots. On case5\_ots the certified bound is 15025.97 vs.\ optimum 15174.03 (gap 0.98\%).
+\item \textbf{Correlations help in symmetric/degenerate cases.} On case5\_uc\_sym with bus-level clique augmentation, $\mathrm{corr}(u_1,u_2) = -1.00$ with marginals $\approx 0.5$. Gaussian and conditional rounding are optimal in 100\% of samples, vs.\ 44\% for independent rounding.
+\item \textbf{Clique augmentation improves rounding.} On case5\_ots at order 2, conditional rounding is optimal in 70\% of samples with base cliques and 92--94\% with augmentation (independent: 66\%$\to$84\%).
+\item \textbf{Negative:} order-1 OTS relaxations (big-M) have bound $\approx 0$ and a huge optimal face. Their marginals are arbitrary, and rounding from them is unreliable.
+\end{itemize}
+
+\subsection{Numerics of order-2 relaxations}
+
+\begin{itemize}
+\item Early order-2 solves stalled erratically (56--1083\,s), and one reported ``bound'' exceeded a feasible cost.
+\item Normalization plus variable scaling cut SOS residuals by $100$--$1000\times$ and removed the pathological solve times (e.g., 1083\,s$\to$85\,s).
+\item The certified bound above is now the default. All earlier experiments were rerun with it.
+\item Removing pivot monomials of degree-2 equalities (quotient basis) and changing MOSEK's solve form had no effect.
+\item On small cases, dropping big-M constraints weakened bounds. On larger cases the opposite holds (Experiment~3).
+\end{itemize}
+
+\subsection{Experiment 2: scaling to 14--30 buses (partially switchable)}
+
+Certified gaps of the best known solutions:
+
+\begin{center}
+\begin{tabular}{l|ccccc}
+\hline
+instance & case14\_ots & case30\_uc & case24\_uc & case30\_ots & case24\_ots \\
+\hline
+certified gap & 0.05\% & 4.6\% & 3.6\% & 10.2\% & 5.0\% \\
+\hline
+\end{tabular}
+\end{center}
+
+At this scale, correlated rounding gives no consistent gain over independent rounding. A relax-and-round baseline from the continuous NLP relaxation is competitive.
+
+\subsection{Experiment 3: test cases of Taheri \& Molzahn (AC-informed DC-OTS paper)}
+
+\paragraph{Setup.} We use the same 18 PGLib v21.07 \texttt{api} cases as the paper, with \emph{all} branches switchable. Our AC-OPF costs and the paper's reported topologies reproduce the paper's numbers. The paper's AC-OTS results come from Juniper, a local solver with a 12\,h limit.
+\begin{itemize}
+\item Relaxations: \emph{mixed} for all cases (also without big-M from 73 buses on); \emph{adj16} up to 60 buses and on 89-pegase; \emph{pairs} up to 60 buses.
+\item Rounding: four schemes with $N=100$--$200$ samples each.
+\item Polish: a separately reported 1-flip local search with a budget of 40 AC-OPF solves.
+\end{itemize}
+
+\begin{center}
+\footnotesize
+\begin{tabular}{l|rrrrr}
+\hline
+case & O-DC-OTS & AC-OTS (Juniper) & best found (ours) & certified bound & certified gap \\
+\hline
+3-lmbd & 10636 & 10636 & 10635.95 & 10635.95 & 0 (optimal) \\
+5-pjm & 75190 & 75190 & 75190.29 & 73369.15 & 2.42\% \\
+14-ieee & 5999 & 5999 & 5999.36 & 5729.78 & 4.49\% \\
+24-ieee-rts & 122283 & 119743 & 119743.13 & 111523.24 & 6.86\% \\
+30-as & 2797 & 2797 & 2797.47 & 2760.26 & 1.31\% \\
+30-ieee & 17939 & 17936 & 17939.51 & 17179.82 & 4.22\% \\
+39-epri & 246850 & 246723 & \textbf{246561.20} & 245299.51 & 0.51\% \\
+57-ieee & 49290 & 49274 & \textbf{49271.85} & 49188.32 & 0.17\% \\
+60-c & 182028 & 182028 & 182027.63 & 180064.72 & 1.08\% \\
+73-ieee-rts & 413133 & 385194 & 389141.92 & 368109.94 & 4.44\% \\
+89-pegase$^\dagger$ & 100702 & 100344 & 100539.74 & 99517.69 & 0.82\%$^\dagger$ \\
+118-ieee & 195918 & 180312 & 230418.58 & 169350.89 & 6.08\% \\
+\hline
+\end{tabular}
+\end{center}
+{\footnotesize The certified gap is (best known $-$ bound)/best known, where best known $=\min$(ours, Juniper). Bold marks a solution better than Juniper's. $^\dagger$Low-impedance ties merged; the bound is for the merged model (see below).}
+
+\paragraph{Low-impedance lines (89-pegase).} 19 lines have $|z|\approx 2.2\times10^{-4}$. Their big-M constants multiply terms that must cancel, and MOSEK stalls after 3 iterations with no bound.
+\begin{itemize}
+\item A plain bus merge (as in the LCOTS project) removes these lines together with their thermal limits. Three of those limits bind, and AC-OPF drops from 130175 to 125456 ($-3.6\%$).
+\item We instead merge at the \emph{voltage} level. Buses joined by a tie share one voltage, each bus keeps its own power balance, and each tie becomes a lossless flow with its thermal limit that cannot be switched. This changes AC-OPF by $-0.34\%$.
+\item The relaxation then solves, and rounding reaches 100540 ($+0.2\%$ vs.\ Juniper; better than O-DC-OTS).
+\item Caveat: the bound is for the merged model, not a rigorous bound for the original problem. Juniper's topology opens 4 ties. With those ties closed instead, the same topology costs 100322 on the original network, slightly better than Juniper.
+\end{itemize}
+
+\subsection{Key findings to date}
+
+\paragraph{Positive.}
+\begin{enumerate}
+\item \textbf{Optimality certificates for the paper's AC-OTS solutions.} 3-lmbd is proven optimal. 57-ieee is within 0.17\%, 39-epri within 0.51\%, 60-c within 1.08\%, and 30-as within 1.31\%.
+\item \textbf{Better topologies than Juniper.} On 39-epri (opening lines $\{4,6\}$, verified independently), the topology is found by rounding alone. On 57-ieee it is found after polishing.
+\item \textbf{Best known cost matched or beaten on 8 of the 12 cases} (the exceptions are 30-ieee at $+0.02\%$, 89-pegase at $+0.2\%$, 73-ieee-rts at $+1.0\%$, and 118-ieee). On 24-ieee-rts, rounding already beats O-DC-OTS, and polishing reaches Juniper's topology.
+\item \textbf{The cheap mixed relaxation is the best value.} It takes 20--100\,s per SDP up to 118 buses, and its bound is within 0.2\% of the best bound from any variant on most cases.
+\item \textbf{Correlated rounding helps where symmetry or degeneracy is present} (Experiment 1: 100\% vs.\ 44\% optimal).
+\end{enumerate}
+
+\paragraph{Negative.}
+\begin{enumerate}
+\item \textbf{Bounds are much weaker when all branches are switchable} than with a few switchable lines: case14 has a 4.5\% gap vs.\ 0.05\%, and gaps are 4--7\% on 14/24/30-ieee/73/118.
+\item \textbf{Solver accuracy, not relaxation strength, limits the larger relaxations.} Raw SOS objectives increase from mixed to adj16 to pairs, but the correction for the inexact solve grows faster. After certification, the largest relaxation often has the \emph{lowest} bound. Big-M constraints are the main culprit on larger cases: dropping them raises the certified bound and speeds up solves $2$--$3\times$ on 73 and 118 buses.
+\item \textbf{Correlated rounding shows no systematic gain} over independent rounding on realistic OTS instances (Experiments 2--3).
+\item \textbf{Rounding fails on 118-ieee.} Only 0--1\% of samples are feasible, and the marginals give no hint of the 33 lines Juniper opens. At 30--89 buses, only 3--52\% of samples are feasible.
+\item \textbf{Memory.} The adj16 and pairs variants need 10--21\,GB at 24--89 buses, versus 3--6\,GB for mixed at 73--118 buses.
+\end{enumerate}
+
+\subsection{In progress and next steps}
+\begin{itemize}
+\item Running the larger paper cases (179, 200, 240, 300, 500, 1354 buses) with merging, mixed relaxations (with and without big-M), and a 12\,h SDP limit on GT PACE.
+\item Improving SDP accuracy: conditioning of the switching constraints, tighter big-M from bound tightening (OBBT), and facial reduction.
+\item Making rounding topology-aware: screen or repair islanding, dive on the most confident lines, or condition on already-sampled lines. Also, use a larger polish budget or 2-flip moves.
+\item Selecting relaxations adaptively (thread 1): use per-clique certification corrections and moment-matrix rank as signals for where to raise the order.
 \end{itemize}
 
 \end{document}

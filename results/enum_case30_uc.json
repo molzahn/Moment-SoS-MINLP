@@ -1,0 +1,400 @@
+{
+ "binaries": [
+  "gen:1",
+  "gen:2",
+  "gen:3",
+  "gen:4",
+  "gen:5",
+  "gen:6"
+ ],
+ "bit_order_note": "bits[k] is the status of binaries[k]",
+ "configs": [
+  {
+   "bits": "111100",
+   "cost": 1005.7418421179357,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "111101",
+   "cost": 1105.193156847151,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "111110",
+   "cost": 1105.2602539715997,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "110111",
+   "cost": 1105.725678270288,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "111011",
+   "cost": 1106.0158529914665,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "111111",
+   "cost": 1204.9683507959376,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "110000",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "011111",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "101100",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "010100",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "100111",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "101001",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "010001",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "101010",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "001101",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "010010",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "001110",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "110100",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "001011",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "000000",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "110001",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "101101",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "110010",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "010101",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "101110",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "010110",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "011000",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "101011",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "010011",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "100000",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "001111",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "000100",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "110101",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "110110",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "111000",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "000001",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "011100",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "000010",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "110011",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "101111",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "010111",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "011001",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "100100",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "011010",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "100001",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "100010",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "000101",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "000110",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "001000",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "111001",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "111010",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "011101",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "000011",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "011110",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "100101",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "011011",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "100110",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "101000",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "010000",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "001100",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "100011",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "000111",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "001001",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  },
+  {
+   "bits": "001010",
+   "cost": null,
+   "feasible": false,
+   "reason": "capacity"
+  }
+ ],
+ "description": "case30 (pglib), Pmin = 0.2 Pmax, no-load costs (300, 300, 100, 100, 100, 100) $/h, all 6 units commitable",
+ "enumeration_seconds": 1.576213084,
+ "instance": "case30_uc"
+}

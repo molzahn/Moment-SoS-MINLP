@@ -1,0 +1,3091 @@
+{
+ "binaries": [
+  "branch:1",
+  "branch:2",
+  "branch:3",
+  "branch:4",
+  "branch:5",
+  "branch:6",
+  "branch:7",
+  "branch:8",
+  "branch:9"
+ ],
+ "bit_order_note": "bits[k] is the status of binaries[k]",
+ "configs": [
+  {
+   "bits": "111111111",
+   "cost": 638.1828420286334,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "101111111",
+   "cost": 641.6767241054577,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "111110111",
+   "cost": 646.2992588028206,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "111101111",
+   "cost": 650.3245460654628,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "110111111",
+   "cost": 662.9781449630287,
+   "feasible": true,
+   "reason": ""
+  },
+  {
+   "bits": "010101111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111110000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110011001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110100100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000111101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000100011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111011111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101010011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010011010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100000111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001000100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111101001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100111011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011010001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010000101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011101010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001111000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110001000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000101100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111001110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101011100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010111001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011111111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101000010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111110100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110011101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001110011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110000011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000100111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100010001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101010111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010011110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100101010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011000000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000010010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111101101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100111111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011010101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101100001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010101000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011101110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111011000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001111100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110001100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001100010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000001011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010111101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100000000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101000110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010100011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000110001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111010011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001110111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110000111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100010101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101111010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100101110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011000100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000010110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110111011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011111000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101100101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010101100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111011100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000100000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001011011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111000010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001100110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101010000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000001111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100000100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011110011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010100111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110010001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000110101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111010111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110101010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100111000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010010010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101111110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101001001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111100001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100110011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001001010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011111100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011100010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010001011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001110000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000011001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110000000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000100100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111000110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001011111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101010100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010110001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011110111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110010101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111111010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110101110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100111100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010010110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001101001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100100010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101001101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111100101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100110111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000001000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001001110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010100000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011011011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011100110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010001111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111010000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001110100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110000100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000011101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000000011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010110101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110111000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111111110",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "101110010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111001001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100100110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001101101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100011011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110110011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011001010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001011000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000001100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011110000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010011001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010100100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011011111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101101011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111010100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001010011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000000111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100001010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110111100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011101001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000111011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110100010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100110000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101110110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111001101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100011111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101000001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110110111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010001000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011001110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001011100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001000010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011110100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010011101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100101001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010000011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101101111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000010001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001010111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000101010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101011010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100001110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111110010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011101101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110100110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110011011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100110100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000111111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001100001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011011000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101000101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010001100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000000000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001000110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111101011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101111001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100101101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011010011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010000111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000010101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001111010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110001010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000101110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100011000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101011110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010111011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110110000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111110110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110011111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111000001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001100101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100010011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011011100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101101000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011000010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001010000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000000100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110101001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010010001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101111101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011010111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101100011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010101010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000111000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111011010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001111110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110001110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100011100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001001001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010111111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100000010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110110100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011100001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000110011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111000101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100010111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010000000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101101100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011000110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001010100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111111001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110101101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010010101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100100001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011111010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101100111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010101110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110011000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000111100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111011110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000100010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101010010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001001101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100000110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011100101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110010011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000110111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111101000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100111010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011010000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010000100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101001011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111111101",
+   "cost": null,
+   "feasible": false,
+   "reason": "LOCALLY_INFEASIBLE"
+  },
+  {
+   "bits": "111100011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101110001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010111000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100100101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011111110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110011100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001110010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011001001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110000010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000100110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100010000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000011011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101010110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010110011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110010111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111101100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100111110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001101011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011010100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101100000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100001001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101001111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110100001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111100111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000001010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101110101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010111100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010100010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000110000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111010010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001110110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110000110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011001101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100010100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000011111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001000001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010110111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110111010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000101001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111001011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001101111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101011001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101100100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100001101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111110001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110100101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001011010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000001110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011110010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010011011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010100110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110010000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000110100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111010110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001000101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101001000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110111110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011101011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001111001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111100000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100110010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110001001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000101101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101011101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111001111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101000011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010001010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111110101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000011000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001011110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010110000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011110110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010011111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100101011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110010100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011000001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000010011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001101000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101001100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010101001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011101111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111011001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001111101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111100100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100110110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110001101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001100011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100000001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011011010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101000111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010001110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000011100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000000010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010110100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101111011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100101111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011000101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000010111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111001000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001101100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100011010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011111001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110110010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010101101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111011101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000100001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111000011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001100111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101010001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010011000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100000101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011011110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101101010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001010010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000000110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110101011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100111001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010010011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011101000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000111010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111001100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100011110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001001011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011111101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101000000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110110110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011100011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001110001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110000001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000100101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111000111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101010101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010011100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100101000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010000010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101101110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000010000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001010110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111111011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110101111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100111101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010010111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100100011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011101100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110011010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000111110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001100000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000001001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001001111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101000100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010100001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011100111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111010001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001110101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110000101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111101010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101111000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100101100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011010010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010000110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000010100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110111001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101110011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010111010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100100111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110011110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011001011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001011001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111000000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001100100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100010010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000001101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011110001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010100101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111010101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110101000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111101110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010010000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101111100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011010110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101100010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100001011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110111101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110100011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100110001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101110111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001001000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010111110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011100000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000110010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010001001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011001111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001011101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111000100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100010110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001000011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011110101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111111000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110101100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000101011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010010100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100100000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101011011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101100110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100001111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111110011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110100111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100110101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001001100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011011001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011100100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110010010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000110110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010001101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000000001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001000111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101001010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111111100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001111011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111100010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110001011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101110000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100011001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100100100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000101111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101011111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110110001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011001000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000011010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010110010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011011101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110010110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101101001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011000011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001010001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000000101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001101010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100001000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101001110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010101011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000111001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110100000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111011011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111100110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110001111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101110100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100011101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001111111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100000011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "110110101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011001100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000011110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001000000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010110110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "010000001",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101101101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011000111",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001010101",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "000101000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "111001010",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "001101110",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "101011000",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "100001100",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  },
+  {
+   "bits": "011111011",
+   "cost": null,
+   "feasible": false,
+   "reason": "islanded"
+  }
+ ],
+ "description": "case9, rate_a = 100 MVA on all branches, all 9 branches switchable",
+ "enumeration_seconds": 0.137215459,
+ "instance": "case9_ots"
+}

@@ -1,0 +1,62 @@
+
+=== case30_uc: case30 (pglib), Pmin = 0.2 Pmax, no-load costs (300, 300, 100, 100, 100, 100) $/h, all 6 units commitable (77 vars, 6 binaries)
+  all-on: 1204.97
+  enumerated optimum: 1005.74 at 111100 (0s)
+  NLP relaxation: LOCALLY_SOLVED obj 759.4853221211242; threshold nothing; independent best 1005.7418421179357 (feas 0.245)
+  adj16        bound 959.37 OPTIMAL total 9.6s (solve 3.5s) cliques 33 (order2 12) max 20 maxPSD 105, pair moments 1/15, integral marginals 67%
+    threshold    best 1005.74  feas 100%  unique 1  (eval 0.0s)
+    independent  best 1005.74  feas 84%  unique 4  (eval 0.0s)
+    gaussian     best 1005.74  feas 84%  unique 4  (eval 0.0s)
+    conditional  best 1005.74  feas 80%  unique 4  (eval 0.0s)
+  adj16_pairs  bound 959.37 OPTIMAL total 4.2s (solve 3.9s) cliques 33 (order2 12) max 20 maxPSD 105, pair moments 1/15, integral marginals 67%
+    threshold    best 1005.74  feas 100%  unique 1  (eval 0.0s)
+    independent  best 1005.74  feas 84%  unique 4  (eval 0.0s)
+    gaussian     best 1005.74  feas 84%  unique 4  (eval 0.0s)
+    conditional  best 1005.74  feas 80%  unique 4  (eval 0.0s)
+  best found 1005.74, best bound 959.37, certified gap 4.611%, 64 configurations evaluated
+
+=== case24_uc: case24 (pglib RTS), all 33 units commitable, original Pmin and no-load costs (146 vars, 33 binaries)
+  all-on: 79804.96
+  NLP relaxation: LOCALLY_SOLVED obj 78152.24617771381; threshold 78844.3831971096; independent best 78586.96919736825 (feas 0.2)
+  adj16        bound 75716.19 SLOW_PROGRESS total 85.0s (solve 82.4s) cliques 79 (order2 66) max 19 maxPSD 136, pair moments 0/528, integral marginals 39%
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.0s)
+    independent  best 78586.97  feas 14%  unique 92  (eval 2.9s)
+    gaussian     best 78586.97  feas 14%  unique 93  (eval 1.8s)
+    conditional  best 78586.97  feas 14%  unique 85  (eval 1.1s)
+  adj16_pairs  bound 75736.79 SLOW_PROGRESS total 99.0s (solve 96.9s) cliques 130 (order2 117) max 19 maxPSD 136, pair moments 51/528, integral marginals 39%
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.0s)
+    independent  best 78586.97  feas 14%  unique 94  (eval 0.5s)
+    gaussian     best 78586.97  feas 10%  unique 66  (eval 0.3s)
+    conditional  best 78586.97  feas 4%  unique 59  (eval 0.6s)
+  best found 78586.97, best bound 75736.79, certified gap 3.627%, 299 configurations evaluated
+
+=== case30_ots: case30 (pglib), 15 switchable non-bridge branches [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 17] (146 vars, 15 binaries)
+  all-on: 204.97
+  NLP relaxation: LOCALLY_SOLVED obj 176.08481823046566; threshold nothing; independent best 194.3844033331547 (feas 0.055)
+  adj16        bound 173.80 SLOW_PROGRESS total 121.8s (solve 119.9s) cliques 72 (order2 61) max 22 maxPSD 153, pair moments 0/105, integral marginals 7%
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.1s)
+    independent  best 194.37  feas 45%  unique 36  (eval 1.3s)
+    gaussian     best 194.37  feas 53%  unique 43  (eval 3.9s)
+    conditional  best 194.37  feas 50%  unique 36  (eval 0.4s)
+  adj16_pairs  bound 174.46 SLOW_PROGRESS total 132.6s (solve 130.0s) cliques 106 (order2 95) max 22 maxPSD 153, pair moments 34/105, integral marginals 0%
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.0s)
+    independent  best 194.37  feas 32%  unique 34  (eval 0.3s)
+    gaussian     best 194.38  feas 42%  unique 32  (eval 0.1s)
+    conditional  best 194.37  feas 39%  unique 29  (eval 0.3s)
+  best found 194.37, best bound 174.46, certified gap 10.241%, 83 configurations evaluated
+
+=== case24_ots: case24 (pglib RTS), 15 switchable non-bridge branches [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16] (188 vars, 15 binaries)
+  all-on: 79804.96
+  NLP relaxation: LOCALLY_SOLVED obj 77942.83682377586; threshold nothing; independent best 78522.88821138679 (feas 0.355)
+  adj16        bound 74374.89 SLOW_PROGRESS total 74.6s (solve 72.0s) cliques 79 (order2 61) max 27 maxPSD 136, pair moments 0/105, integral marginals 0%
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.2s)
+    independent  best 78401.42  feas 22%  unique 95  (eval 9.0s)
+    gaussian     best 78377.09  feas 28%  unique 101  (eval 4.3s)
+    conditional  best 78377.09  feas 24%  unique 86  (eval 1.5s)
+  adj16_pairs  bound 74425.89 SLOW_PROGRESS total 77.5s (solve 75.2s) cliques 109 (order2 91) max 27 maxPSD 136, pair moments 30/105, integral marginals 0%
+    threshold    best 79090.97  feas 100%  unique 1  (eval 0.0s)
+    independent  best 78377.09  feas 20%  unique 97  (eval 1.1s)
+    gaussian     best 78377.09  feas 34%  unique 82  (eval 2.5s)
+    conditional  best 78377.09  feas 42%  unique 68  (eval 0.6s)
+  best found 78377.09, best bound 74425.89, certified gap 5.041%, 236 configurations evaluated
+wrote /Users/dmolzahn6/Documents/Dan's Files/Moment-SoS-MINLP/scripts/../results/experiment2_tables.md

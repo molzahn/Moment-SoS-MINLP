@@ -1,0 +1,39 @@
+
+=== 89-pegase-api: 89 buses, 210 branches (19 merged ties, 191 switchable), 1156 POP variables (build 2.2s); AC-OPF 130174.85 (paper 130175); paper O-DC-OTS 100702, AC-OTS 100344
+  mixed        bound 99517.69 (raw 99918.79) SLOW_PROGRESS  total 69.9s (solve 60.8s)  order-2 cliques 340/588  max PSD 54  integral marginals 5%, marginals<0.5: 39
+    threshold    best 124989.05  feas 100%  unique 1  (eval 0.2s)
+    independent  best 100721.54  feas 44%  unique 100  (eval 102.3s)
+    gaussian     best 101121.97  feas 38%  unique 100  (eval 115.3s)
+    conditional  best 101781.97  feas 52%  unique 100  (eval 97.8s)
+    best rounded 100721.54 (opens [9, 11, 21, 26, 28, 31, 33, 37, 43, 53, 88, 103, 104, 109, 112, 114, 116, 118, 119, 120, 123, 132, 134, 139, 142, 147, 151, 158, 170, 182, 186, 191, 199, 200]); after 1-flip polish 100719.67 (opens [9, 11, 21, 26, 28, 31, 33, 39, 43, 53, 77, 88, 103, 104, 112, 114, 116, 118, 119, 120, 132, 134, 139, 142, 147, 151, 158, 170, 182, 186, 190, 191, 199, 200]; 40 evals, 5.7s)
+  mixed_nobigM bound 99293.18 (raw 99915.00) SLOW_PROGRESS  total 34.7s (solve 32.4s)  order-2 cliques 340/588  max PSD 54  integral marginals 5%, marginals<0.5: 36
+    threshold    best 125569.10  feas 100%  unique 1  (eval 0.2s)
+    independent  best 100721.49  feas 38%  unique 100  (eval 118.9s)
+    gaussian     best 100545.72  feas 36%  unique 100  (eval 95.6s)
+    conditional  best 101809.28  feas 49%  unique 100  (eval 90.5s)
+    best rounded 100545.72 (opens [19, 21, 27, 31, 33, 38, 43, 44, 53, 67, 70, 77, 88, 103, 104, 105, 107, 111, 114, 116, 119, 120, 122, 123, 125, 128, 134, 144, 150, 184, 196, 199, 200]); after 1-flip polish 100539.77 (opens [19, 21, 27, 38, 39, 43, 44, 53, 67, 70, 77, 88, 103, 104, 105, 107, 109, 111, 116, 119, 120, 122, 123, 125, 128, 134, 144, 150, 184, 196, 199, 200]; 40 evals, 5.8s)
+  adj16        bound 97009.47 (raw 100001.48) SLOW_PROGRESS  total 473.2s (solve 464.1s)  order-2 cliques 528/588  max PSD 153  integral marginals 6%, marginals<0.5: 45
+    threshold    best 118755.16  feas 100%  unique 1  (eval 0.3s)
+    independent  best 100706.63  feas 38%  unique 100  (eval 89.7s)
+    gaussian     best 100566.66  feas 34%  unique 100  (eval 110.5s)
+    conditional  best 100687.59  feas 42%  unique 100  (eval 100.6s)
+    best rounded 100566.66 (opens [12, 19, 21, 23, 27, 31, 33, 42, 44, 53, 70, 77, 79, 88, 90, 93, 100, 103, 104, 105, 107, 111, 114, 116, 119, 120, 122, 123, 125, 128, 134, 141, 144, 150, 184, 196, 199, 200]); after 1-flip polish 100551.64 (opens [12, 19, 21, 23, 31, 33, 39, 44, 53, 70, 77, 79, 88, 90, 92, 93, 100, 103, 104, 105, 107, 109, 114, 116, 119, 120, 122, 123, 125, 128, 134, 141, 144, 150, 184, 187, 196, 200]; 40 evals, 5.4s)
+  SUMMARY 89-pegase-api: best found 100539.74 vs paper AC-OTS 100344 / O-DC-OTS 100702; best bound 99517.69; certified gap of best known 0.82%; 1024 configs
+     1536.32 real      2469.34 user       143.43 sys
+         21001830400  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+             4242755  page reclaims
+                   0  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   7  messages sent
+                   7  messages received
+                   0  signals received
+                   4  voluntary context switches
+            13410839  involuntary context switches
+      24312621793892  instructions retired
+       7679406991970  cycles elapsed
+         27230294632  peak memory footprint

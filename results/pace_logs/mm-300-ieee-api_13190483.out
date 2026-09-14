@@ -1,0 +1,39 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 12:18:45
+Job ID:    13190483
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mm-300-ieee-api
+Partition: cpu-medium
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 300-ieee-api on atl1-1-01-003-8-1.pace.gatech.edu, cpus 8, mem 131072 MB, variants mixed,mixed_nobigM, start Mon Sep 14 12:18:46 EDT 2026
+
+=== 300-ieee-api: 300 buses, 411 branches (2 merged ties, 409 switchable), 2782 POP variables (build 7.3s); AC-OPF 684985.49 (paper 684985); paper O-DC-OTS 684985, AC-OTS 683968
+  mixed        bound NaN (raw NaN) SLOW_PROGRESS  total 375.5s (solve 336.0s)  order-2 cliques 620/1482  max PSD 54  integral marginals 16%, marginals<0.5: 13
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.0s)
+    independent  best infeasible  feas 0%  unique 100  (eval 0.8s)
+    gaussian     best infeasible  feas 0%  unique 100  (eval 0.6s)
+    conditional  best infeasible  feas 0%  unique 100  (eval 0.6s)
+    best rounded 684985.49 (opens Any[]); after 1-flip polish 684554.10 (opens [163, 178, 272]; 40 evals, 23.7s)
+  mixed_nobigM bound 677043.71 (raw 678369.85) SLOW_PROGRESS  total 185.8s (solve 165.3s)  order-2 cliques 620/1482  max PSD 54  integral marginals 20%, marginals<0.5: 11
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.0s)
+    independent  best infeasible  feas 0%  unique 100  (eval 0.7s)
+    gaussian     best infeasible  feas 0%  unique 100  (eval 0.6s)
+    conditional  best infeasible  feas 0%  unique 100  (eval 0.6s)
+    best rounded 684985.49 (opens Any[]); after 1-flip polish 684401.57 (opens [110, 178, 272, 341]; 40 evals, 23.1s)
+  SUMMARY 300-ieee-api: best found 684401.43 vs paper AC-OTS 683968 / O-DC-OTS 684985; best bound 677043.71; certified gap of best known 1.01%; 683 configs
+finished Mon Sep 14 12:29:56 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 12:29:56
+Job ID:        13190483
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mm-300-ieee-api
+Resources:     cpu=8,mem=128G,node=1
+Rsrc Used:     cput=01:29:28,vmem=0,walltime=00:11:11,mem=11324228K,energy_used=0
+Partition:     cpu-medium
+QOS:           inferno
+Nodes:         atl1-1-01-003-8-1
+---------------------------------------

@@ -1,0 +1,67 @@
+
+case5_ots: case5, all 7 branches switchable
+  7 binaries, 128 configs, 43 feasible, 8.4s
+  binaries: branch:1 branch:2 branch:3 branch:4 branch:5 branch:6 branch:7
+  all-on cost: 18269.10
+  1111001  15174.03  (+0.000%)
+  1110011  16587.95  (+9.318%)
+  1110101  16598.52  (+9.388%)
+  1110111  16642.37  (+9.677%)
+  1111011  17981.94  (+18.505%)
+  1111101  18134.47  (+19.510%)
+  1111111  18269.10  (+20.397%)
+  1110010  18481.21  (+21.795%)
+  configs within 1% of best: 1
+
+case9_ots: case9, rate_a = 100 MVA on all branches, all 9 branches switchable
+  9 binaries, 512 configs, 5 feasible, 0.1s
+  binaries: branch:1 branch:2 branch:3 branch:4 branch:5 branch:6 branch:7 branch:8 branch:9
+  all-on cost: 638.18
+  111111111  638.18  (+0.000%)
+  101111111  641.68  (+0.547%)
+  111110111  646.30  (+1.272%)
+  111101111  650.32  (+1.903%)
+  110111111  662.98  (+3.885%)
+  configs within 1% of best: 2
+
+case5_uc: case5, Pmin = 0.4 Pmax, no-load cost = 0.15 c1 Pmax, all 5 units commitable
+  5 binaries, 32 configs, 8 feasible, 0.1s
+  binaries: gen:1 gen:2 gen:3 gen:4 gen:5
+  all-on cost: 23552.91
+  10101  21865.76  (+0.000%)
+  00101  21891.03  (+0.116%)
+  11101  21976.50  (+0.506%)
+  01101  21994.44  (+0.588%)
+  10111  23438.08  (+7.191%)
+  00111  23460.06  (+7.291%)
+  11111  23552.91  (+7.716%)
+  01111  23571.13  (+7.799%)
+  configs within 1% of best: 4
+
+case5_uc_sym: case5_uc with units 1 and 2 (bus 1) made identical: Pmax 105 MW, Q ±80 MVAr, c1 = 14.5 $/MWh
+  5 binaries, 32 configs, 8 feasible, 0.1s
+  binaries: gen:1 gen:2 gen:3 gen:4 gen:5
+  all-on cost: 23477.08
+  01101  21889.54  (+0.000%)
+  10101  21889.54  (+0.000%)
+  00101  21891.03  (+0.007%)
+  11101  21900.77  (+0.051%)
+  00111  23460.06  (+7.175%)
+  10111  23466.04  (+7.202%)
+  01111  23466.04  (+7.202%)
+  11111  23477.08  (+7.253%)
+  configs within 1% of best: 4
+
+case14_uc: case14, Pmin = 0.2 Pmax, no-load costs (500, 300, 150, 150, 150) $/h, all 5 units commitable
+  5 binaries, 32 configs, 15 feasible, 0.9s
+  binaries: gen:1 gen:2 gen:3 gen:4 gen:5
+  all-on cost: 9372.34
+  11100  9042.48  (+0.000%)
+  11001  9075.12  (+0.361%)
+  11010  9095.64  (+0.588%)
+  11101  9187.99  (+1.609%)
+  11110  9200.00  (+1.742%)
+  11011  9224.38  (+2.012%)
+  10101  9249.77  (+2.292%)
+  10110  9252.80  (+2.326%)
+  configs within 1% of best: 3

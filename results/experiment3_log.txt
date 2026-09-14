@@ -1,0 +1,192 @@
+### 5-pjm-api Sun Sep 13 22:25:51 EDT 2026
+
+=== 5-pjm-api: 5 buses, 6 branches, 49 POP variables (build 2.8s); AC-OPF 76377.41 (paper 76377); paper O-DC-OTS 75190, AC-OTS 75190
+  mixed        bound 73256.69 (raw 73256.73) OPTIMAL  total 9.6s (solve 2.1s)  order-2 cliques 12/28  max PSD 54  integral marginals 50%, marginals<0.5: 0
+    threshold    best 76377.41  feas 100%  unique 1  (eval 0.0s)
+    independent  best 75190.29  feas 86%  unique 5  (eval 0.1s)
+    gaussian     best 75190.29  feas 90%  unique 5  (eval 0.0s)
+    conditional  best 75190.29  feas 89%  unique 5  (eval 0.0s)
+    best rounded 75190.29 (opens [3]); after 1-flip polish 75190.29 (opens [3]; 4 evals, 0.0s)
+  adj16        bound 73363.45 (raw 73373.09) SLOW_PROGRESS  total 11.4s (solve 10.6s)  order-2 cliques 28/28  max PSD 105  integral marginals 33%, marginals<0.5: 0
+    threshold    best 76377.41  feas 100%  unique 1  (eval 0.0s)
+    independent  best 75190.29  feas 91%  unique 7  (eval 0.0s)
+    gaussian     best 75190.29  feas 92%  unique 7  (eval 0.0s)
+    conditional  best 75190.29  feas 93%  unique 7  (eval 0.0s)
+    best rounded 75190.29 (opens [3]); after 1-flip polish 75190.29 (opens [3]; 0 evals, 0.0s)
+  adj16_pairs  bound 73369.15 (raw 73376.18) SLOW_PROGRESS  total 13.6s (solve 12.9s)  order-2 cliques 37/37  max PSD 105  integral marginals 33%, marginals<0.5: 0
+    threshold    best 76377.41  feas 100%  unique 1  (eval 0.0s)
+    independent  best 75190.29  feas 91%  unique 7  (eval 0.0s)
+    gaussian     best 75190.29  feas 93%  unique 8  (eval 0.0s)
+    conditional  best 76377.41  feas 92%  unique 6  (eval 0.0s)
+    best rounded 75190.29 (opens [3]); after 1-flip polish 75190.29 (opens [3]; 0 evals, 0.0s)
+  SUMMARY 5-pjm-api: best found 75190.29 vs paper AC-OTS 75190 / O-DC-OTS 75190; best bound 73369.15; certified gap of best known 2.42%; 14 configs
+       59.09 real        83.48 user         7.35 sys
+          2079801344  maximum resident set size
+### 14-ieee-api Sun Sep 13 22:26:50 EDT 2026
+
+=== 14-ieee-api: 14 buses, 20 branches, 137 POP variables (build 2.8s); AC-OPF 5999.36 (paper 5999); paper O-DC-OTS 5999, AC-OTS 5999
+  mixed        bound 5687.41 (raw 5687.56) SLOW_PROGRESS  total 18.9s (solve 10.8s)  order-2 cliques 33/75  max PSD 54  integral marginals 5%, marginals<0.5: 0
+    threshold    best 5999.36  feas 100%  unique 1  (eval 0.0s)
+    independent  best 5999.36  feas 42%  unique 39  (eval 1.3s)
+    gaussian     best 5999.36  feas 47%  unique 33  (eval 0.6s)
+    conditional  best 5999.36  feas 46%  unique 33  (eval 0.3s)
+    best rounded 5999.36 (opens Any[]); after 1-flip polish 5999.36 (opens Any[]; 4 evals, 0.4s)
+  adj16        bound 5720.05 (raw 5723.27) SLOW_PROGRESS  total 144.8s (solve 142.1s)  order-2 cliques 71/75  max PSD 153  integral marginals 10%, marginals<0.5: 0
+    threshold    best 5999.36  feas 100%  unique 1  (eval 0.0s)
+    independent  best 5999.36  feas 59%  unique 40  (eval 0.5s)
+    gaussian     best 5999.36  feas 64%  unique 35  (eval 0.1s)
+    conditional  best 5999.36  feas 66%  unique 34  (eval 0.2s)
+    best rounded 5999.36 (opens Any[]); after 1-flip polish 5999.36 (opens Any[]; 0 evals, 0.0s)
+  adj16_pairs  bound 5729.78 (raw 5735.33) SLOW_PROGRESS  total 131.8s (solve 129.1s)  order-2 cliques 117/121  max PSD 153  integral marginals 5%, marginals<0.5: 0
+    threshold    best 5999.36  feas 100%  unique 1  (eval 0.0s)
+    independent  best 5999.36  feas 56%  unique 38  (eval 0.1s)
+    gaussian     best 5999.36  feas 63%  unique 37  (eval 0.6s)
+    conditional  best 5999.36  feas 68%  unique 35  (eval 0.1s)
+    best rounded 5999.36 (opens Any[]); after 1-flip polish 5999.36 (opens Any[]; 0 evals, 0.0s)
+  SUMMARY 14-ieee-api: best found 5999.36 vs paper AC-OTS 5999 / O-DC-OTS 5999; best bound 5729.78; certified gap of best known 4.49%; 120 configs
+      324.50 real       676.92 user        65.83 sys
+          7705444352  maximum resident set size
+### 24-ieee-rts-api Sun Sep 13 22:32:15 EDT 2026
+
+=== 24-ieee-rts-api: 24 buses, 38 branches, 303 POP variables (build 2.9s); AC-OPF 134943.63 (paper 134944); paper O-DC-OTS 122283, AC-OTS 119743
+  mixed        bound 110814.59 (raw 110827.29) SLOW_PROGRESS  total 29.3s (solve 20.6s)  order-2 cliques 53/154  max PSD 54  integral marginals 18%, marginals<0.5: 1
+    threshold    best 132798.48  feas 100%  unique 1  (eval 0.0s)
+    independent  best 123040.14  feas 49%  unique 152  (eval 22.2s)
+    gaussian     best 122282.67  feas 55%  unique 149  (eval 16.7s)
+    conditional  best 123270.41  feas 46%  unique 156  (eval 15.9s)
+    best rounded 122282.67 (opens [9, 30, 34, 35]); after 1-flip polish 119743.13 (opens [8, 9, 24, 30, 34, 35]; 40 evals, 4.9s)
+  adj16        bound 111523.24 (raw 111721.20) SLOW_PROGRESS  total 142.4s (solve 137.9s)  order-2 cliques 130/154  max PSD 153  integral marginals 16%, marginals<0.5: 4
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.1s)
+    independent  best 122282.67  feas 34%  unique 175  (eval 14.0s)
+    gaussian     best 123687.08  feas 40%  unique 167  (eval 11.3s)
+    conditional  best 122320.14  feas 32%  unique 167  (eval 10.1s)
+    best rounded 122282.67 (opens [9, 30, 34, 35]); after 1-flip polish 119743.13 (opens [8, 9, 24, 30, 34, 35]; 9 evals, 0.4s)
+  adj16_pairs  bound 111220.25 (raw 111811.54) SLOW_PROGRESS  total 154.4s (solve 149.6s)  order-2 cliques 226/250  max PSD 153  integral marginals 13%, marginals<0.5: 1
+    threshold    best 134023.31  feas 100%  unique 1  (eval 0.0s)
+    independent  best 122282.67  feas 44%  unique 184  (eval 6.7s)
+    gaussian     best 120165.71  feas 56%  unique 162  (eval 10.2s)
+    conditional  best 120117.99  feas 55%  unique 161  (eval 6.6s)
+    best rounded 120117.99 (opens [9, 24, 30, 34, 35]); after 1-flip polish 119743.13 (opens [8, 9, 24, 30, 34, 35]; 0 evals, 0.0s)
+  SUMMARY 24-ieee-rts-api: best found 119743.13 vs paper AC-OTS 119743 / O-DC-OTS 122283; best bound 111523.24; certified gap of best known 6.86%; 955 configs
+      471.49 real       910.11 user        72.10 sys
+         10277289984  maximum resident set size
+### 30-as-api Sun Sep 13 22:40:06 EDT 2026
+
+=== 30-as-api: 30 buses, 41 branches, 276 POP variables (build 2.8s); AC-OPF 4996.20 (paper 4996); paper O-DC-OTS 2797, AC-OTS 2797
+  mixed        bound 2760.26 (raw 2763.76) SLOW_PROGRESS  total 43.1s (solve 34.4s)  order-2 cliques 74/149  max PSD 54  integral marginals 24%, marginals<0.5: 0
+    threshold    best 4996.20  feas 100%  unique 1  (eval 0.0s)
+    independent  best 3434.00  feas 32%  unique 63  (eval 8.0s)
+    gaussian     best 3065.78  feas 39%  unique 63  (eval 4.2s)
+    conditional  best 3385.09  feas 32%  unique 59  (eval 3.7s)
+    best rounded 3065.78 (opens [1, 22]); after 1-flip polish 2797.47 (opens [11, 22]; 40 evals, 2.8s)
+  adj16        bound 2755.47 (raw 2767.47) SLOW_PROGRESS  total 128.1s (solve 123.5s)  order-2 cliques 139/149  max PSD 153  integral marginals 32%, marginals<0.5: 0
+    threshold    best 4996.20  feas 100%  unique 1  (eval 0.0s)
+    independent  best 2797.47  feas 34%  unique 62  (eval 2.1s)
+    gaussian     best 3065.78  feas 37%  unique 69  (eval 1.9s)
+    conditional  best 2804.32  feas 37%  unique 66  (eval 2.2s)
+    best rounded 2797.47 (opens [11, 22]); after 1-flip polish 2797.47 (opens [11, 22]; 1 evals, 0.0s)
+  adj16_pairs  bound 2743.35 (raw 2767.66) SLOW_PROGRESS  total 179.3s (solve 174.6s)  order-2 cliques 239/249  max PSD 153  integral marginals 32%, marginals<0.5: 0
+    threshold    best 4996.20  feas 100%  unique 1  (eval 0.0s)
+    independent  best 3385.09  feas 36%  unique 60  (eval 0.2s)
+    gaussian     best 3092.58  feas 35%  unique 66  (eval 3.1s)
+    conditional  best 3385.09  feas 44%  unique 58  (eval 0.9s)
+    best rounded 3092.58 (opens [22]); after 1-flip polish 2797.47 (opens [11, 22]; 0 evals, 0.0s)
+  SUMMARY 30-as-api: best found 2797.47 vs paper AC-OTS 2797 / O-DC-OTS 2797; best bound 2760.26; certified gap of best known 1.31%; 256 configs
+      404.55 real       853.28 user        71.49 sys
+         10022273024  maximum resident set size
+### 30-ieee-api Sun Sep 13 22:46:51 EDT 2026
+
+=== 30-ieee-api: 30 buses, 41 branches, 276 POP variables (build 2.1s); AC-OPF 18043.92 (paper 18044); paper O-DC-OTS 17939, AC-OTS 17936
+  mixed        bound 17146.67 (raw 17156.27) SLOW_PROGRESS  total 28.9s (solve 21.4s)  order-2 cliques 74/149  max PSD 54  integral marginals 17%, marginals<0.5: 0
+    threshold    best 18043.92  feas 100%  unique 1  (eval 0.0s)
+    independent  best 17956.13  feas 9%  unique 130  (eval 11.0s)
+    gaussian     best 17939.52  feas 12%  unique 142  (eval 7.4s)
+    conditional  best 17956.13  feas 14%  unique 129  (eval 6.0s)
+    best rounded 17939.52 (opens [26]); after 1-flip polish 17939.52 (opens [26]; 38 evals, 2.8s)
+  adj16        bound 17179.82 (raw 17252.70) SLOW_PROGRESS  total 131.7s (solve 127.5s)  order-2 cliques 139/149  max PSD 153  integral marginals 17%, marginals<0.5: 0
+    threshold    best 18043.92  feas 100%  unique 1  (eval 0.0s)
+    independent  best 17939.52  feas 15%  unique 97  (eval 5.5s)
+    gaussian     best 17939.52  feas 16%  unique 110  (eval 4.4s)
+    conditional  best 17956.13  feas 19%  unique 99  (eval 3.6s)
+    best rounded 17939.52 (opens [26]); after 1-flip polish 17939.52 (opens [26]; 0 evals, 0.0s)
+  adj16_pairs  bound 17101.85 (raw 17289.50) SLOW_PROGRESS  total 175.7s (solve 172.1s)  order-2 cliques 239/249  max PSD 153  integral marginals 20%, marginals<0.5: 0
+    threshold    best 18043.92  feas 100%  unique 1  (eval 0.0s)
+    independent  best 17939.52  feas 11%  unique 107  (eval 1.1s)
+    gaussian     best 17939.52  feas 22%  unique 101  (eval 4.4s)
+    conditional  best 17956.13  feas 22%  unique 98  (eval 2.4s)
+    best rounded 17939.52 (opens [26]); after 1-flip polish 17939.52 (opens [26]; 0 evals, 0.0s)
+  SUMMARY 30-ieee-api: best found 17939.51 vs paper AC-OTS 17936 / O-DC-OTS 17939; best bound 17179.82; certified gap of best known 4.22%; 582 configs
+      408.29 real       884.73 user        72.23 sys
+         10122248192  maximum resident set size
+### 39-epri-api Sun Sep 13 22:53:39 EDT 2026
+
+=== 39-epri-api: 39 buses, 46 branches, 327 POP variables (build 2.5s); AC-OPF 249672.32 (paper 249672); paper O-DC-OTS 246850, AC-OTS 246723
+  mixed        bound 245131.80 (raw 245204.42) SLOW_PROGRESS  total 27.1s (solve 19.5s)  order-2 cliques 80/178  max PSD 54  integral marginals 24%, marginals<0.5: 0
+    threshold    best 249672.32  feas 100%  unique 1  (eval 0.0s)
+    independent  best 246561.20  feas 14%  unique 132  (eval 8.9s)
+    gaussian     best 246767.13  feas 15%  unique 123  (eval 5.6s)
+    conditional  best 246561.20  feas 16%  unique 134  (eval 4.6s)
+    best rounded 246561.20 (opens [4, 6]); after 1-flip polish 246561.20 (opens [4, 6]; 40 evals, 2.1s)
+  adj16        bound 245299.51 (raw 245351.49) SLOW_PROGRESS  total 100.1s (solve 95.7s)  order-2 cliques 173/178  max PSD 136  integral marginals 33%, marginals<0.5: 0
+    threshold    best 249672.32  feas 100%  unique 1  (eval 0.0s)
+    independent  best 247046.57  feas 16%  unique 93  (eval 2.1s)
+    gaussian     best 246561.20  feas 23%  unique 79  (eval 2.5s)
+    conditional  best 247246.10  feas 20%  unique 86  (eval 1.5s)
+    best rounded 246561.20 (opens [4, 6]); after 1-flip polish 246561.20 (opens [4, 6]; 2 evals, 0.1s)
+  adj16_pairs  bound 244874.05 (raw 245368.74) SLOW_PROGRESS  total 145.4s (solve 141.4s)  order-2 cliques 255/260  max PSD 136  integral marginals 35%, marginals<0.5: 0
+    threshold    best 249672.32  feas 100%  unique 1  (eval 0.0s)
+    independent  best 247046.57  feas 14%  unique 96  (eval 0.3s)
+    gaussian     best 247046.57  feas 28%  unique 81  (eval 2.0s)
+    conditional  best 246561.20  feas 26%  unique 83  (eval 0.9s)
+    best rounded 246561.20 (opens [4, 6]); after 1-flip polish 246561.20 (opens [4, 6]; 0 evals, 0.0s)
+  SUMMARY 39-epri-api: best found 246561.20 vs paper AC-OTS 246723 / O-DC-OTS 246850; best bound 245299.51; certified gap of best known 0.51%; 488 configs
+      324.64 real       668.87 user        54.41 sys
+          8688812032  maximum resident set size
+### 57-ieee-api Sun Sep 13 22:59:04 EDT 2026
+
+=== 57-ieee-api: 57 buses, 80 branches, 527 POP variables (build 2.7s); AC-OPF 49290.36 (paper 49290); paper O-DC-OTS 49290, AC-OTS 49274
+  mixed        bound 49188.32 (raw 49215.54) SLOW_PROGRESS  total 47.7s (solve 38.7s)  order-2 cliques 141/285  max PSD 54  integral marginals 19%, marginals<0.5: 2
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.0s)
+    independent  best 49282.10  feas 10%  unique 188  (eval 35.1s)
+    gaussian     best 49283.54  feas 6%  unique 189  (eval 34.4s)
+    conditional  best 49282.74  feas 5%  unique 186  (eval 35.7s)
+    best rounded 49282.10 (opens [13, 34, 54, 75, 77]); after 1-flip polish 49273.66 (opens [13, 34, 73, 77]; 40 evals, 6.1s)
+  adj16        bound 49169.13 (raw 49227.28) SLOW_PROGRESS  total 329.7s (solve 321.9s)  order-2 cliques 256/285  max PSD 153  integral marginals 10%, marginals<0.5: 3
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.0s)
+    independent  best 49280.32  feas 17%  unique 181  (eval 23.9s)
+    gaussian     best 49283.54  feas 12%  unique 179  (eval 29.1s)
+    conditional  best 49282.44  feas 16%  unique 180  (eval 18.8s)
+    best rounded 49280.32 (opens [13, 19, 34, 75, 77]); after 1-flip polish 49271.94 (opens [13, 21, 34, 62, 73, 77]; 40 evals, 4.7s)
+  adj16_pairs  bound 49130.73 (raw 49229.28) SLOW_PROGRESS  total 363.3s (solve 353.7s)  order-2 cliques 437/466  max PSD 153  integral marginals 10%, marginals<0.5: 3
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.0s)
+    independent  best 49280.32  feas 15%  unique 174  (eval 13.4s)
+    gaussian     best 49277.51  feas 17%  unique 169  (eval 16.0s)
+    conditional  best 49285.07  feas 10%  unique 151  (eval 14.7s)
+    best rounded 49277.51 (opens [13, 34]); after 1-flip polish 49271.85 (opens [13, 34, 62, 73, 77]; 40 evals, 5.4s)
+  SUMMARY 57-ieee-api: best found 49271.85 vs paper AC-OTS 49274 / O-DC-OTS 49290; best bound 49188.32; certified gap of best known 0.17%; 1364 configs
+     1000.96 real      2039.66 user       143.90 sys
+         13476954112  maximum resident set size
+### 60-c-api Sun Sep 13 23:15:45 EDT 2026
+
+=== 60-c-api: 60 buses, 88 branches, 605 POP variables (build 2.6s); AC-OPF 185239.00 (paper 185239); paper O-DC-OTS 182028, AC-OTS 182028
+  mixed        bound 180064.72 (raw 180334.40) SLOW_PROGRESS  total 48.8s (solve 40.1s)  order-2 cliques 126/315  max PSD 54  integral marginals 18%, marginals<0.5: 0
+    threshold    best 185239.00  feas 100%  unique 1  (eval 0.0s)
+    independent  best 185299.63  feas 3%  unique 198  (eval 8.8s)
+    gaussian     best 185239.00  feas 4%  unique 196  (eval 5.3s)
+    conditional  best 185239.00  feas 4%  unique 197  (eval 6.5s)
+    best rounded 185239.00 (opens Any[]); after 1-flip polish 182599.25 (opens [86]; 40 evals, 5.2s)
+  adj16        bound 179535.74 (raw 180864.66) SLOW_PROGRESS  total 311.2s (solve 303.8s)  order-2 cliques 295/315  max PSD 153  integral marginals 24%, marginals<0.5: 0
+    threshold    best 185239.00  feas 100%  unique 1  (eval 0.0s)
+    independent  best 182027.63  feas 19%  unique 186  (eval 22.5s)
+    gaussian     best 182037.70  feas 26%  unique 191  (eval 21.1s)
+    conditional  best 182251.76  feas 23%  unique 196  (eval 36.7s)
+    best rounded 182027.63 (opens [16]); after 1-flip polish 182027.63 (opens [16]; 40 evals, 6.8s)
+  adj16_pairs  bound 180023.10 (raw 180899.31) SLOW_PROGRESS  total 418.8s (solve 409.3s)  order-2 cliques 577/597  max PSD 153  integral marginals 24%, marginals<0.5: 0
+    threshold    best 185239.00  feas 100%  unique 1  (eval 0.0s)
+    independent  best 182027.63  feas 23%  unique 179  (eval 19.9s)
+    gaussian     best 182123.57  feas 26%  unique 167  (eval 7.1s)
+    conditional  best 182599.25  feas 24%  unique 175  (eval 7.6s)
+    best rounded 182027.63 (opens [16]); after 1-flip polish 182027.63 (opens [16]; 40 evals, 8.1s)
+  SUMMARY 60-c-api: best found 182027.63 vs paper AC-OTS 182028 / O-DC-OTS 182028; best bound 180064.72; certified gap of best known 1.08%; 1561 configs
+      956.93 real      2062.51 user       157.52 sys
+         15510208512  maximum resident set size

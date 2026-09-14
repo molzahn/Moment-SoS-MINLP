@@ -1,0 +1,62 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{comment}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{listings}
+\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in,headsep=0.1in}
+
+\usepackage{wasysym}
+\usepackage{xcolor}
+
+\definecolor{niceblue}{rgb}{0, 0.5, 1.0}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=niceblue,
+    filecolor=magenta,      
+    urlcolor=niceblue,
+    citecolor=niceblue,
+    }
+
+\usepackage{graphicx}
+\usepackage[inline]{enumitem}   
+
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\begin{document}
+
+\pagestyle{plain}
+
+\begin{center}
+\large{\bf Moment-SoS-MINLP Notes}
+\end{center}
+
+This document collects ideas around using moment/sum-of-squares hierarchy relaxations and subsequent liftings to tighten global optimization problems. This document will live in a sub directory under the Moment-SoS-MINLP github. 
+
+\vspace{8pt}
+
+We'll probably use .md files (notes.md, CLAUDE.md,) for the agents to keep track of their experiments. We can also add notes there. However, to see the actual mathematical formulations, we will probably want to use latex files. We can add math here; we can also ask the agents to add their math here.
+
+\subsection*{Initial Ideas}
+
+\begin{itemize}
+
+\item \textbf{State-of-the-art benchmarks:} we want Claude to quickly implement many state-of-the-art benchmarks, so we can find the bottlenecks/barriers for existing approaches.
+
+\item Lazy checking of localizing matrices: there are huge number of potential localizing matrices; rather then enforcing all of them, which is intractable, we can (i) solve a lifted SDP, (ii) construct localizing matrices and check their eigenvalues, and (iii) parsimoniously add localizing matrix constraints as needed. We can also add targeted, violated RSOC/determinant cuts to the formulation, rather than the full SDP matrix constraints.
+
+\item Harsha Nagarajan has a recent paper where he learned heuristics for choosing which bounds to tighten, given computational constraints.
+
+\item Tightening the binary MINLP vs continuous NLP problems will likely have different successful heuristics.
+
+\item Conjecture: if we want to sample binaries, how can we use voltage information to derive gradients for the sampler? Is this possible?
+
+\item The moment-matrix/sampling based approaches might have other uses in stochastic settings (e.g., chance-constrained or stochastic optimization).
+
+\item Speculation: the UC problem will probably have better relaxations than the OTS porblem. 
+
+\item Is there some nice connection to Dan's education-focused side project (creating 3Blue1Brown videos)?
+
+\end{itemize}
+
+\end{document}

@@ -74,6 +74,66 @@ The certified gap is (best known − best bound) / best known. For 30-ieee the b
    - Peak memory reaches 13.5 GB at 57 buses and 15.5 GB at 60 buses, dominated by the `adj16`/`adj16_pairs` SDPs.
    - The 73–118 bus cases should run `mixed` only, or reduce clique size.
 
+## Update: 73-ieee-rts, 89-pegase, 118-ieee
+
+*Logs: `results/experiment3_log_large.txt` (73 and 118; 89 before merging), `results/experiment3_log_89merged.txt`.*
+
+These runs use only the cheap relaxations. The adj16 relaxation was also run on 89-pegase, where it needed 21 GB of memory.
+- **`mixed`:** as above.
+- **`mixed_nobigM`:** the same order policy on the POP without the degree-2 big-M switching constraints (same variables).
+
+| case | paper O-DC-OTS | paper AC-OTS (Juniper time) | best found (ours) | vs paper AC-OTS | best bound (variant) | certified gap |
+|---|---|---|---|---|---|---|
+| 73-ieee-rts | 413133 | 385194 (611 s) | 389141.92 | +1.02% | 368109.94 (mixed_nobigM) | 4.44% |
+| 89-pegase (merged ties) | 100702 | 100344 (1867 s) | 100539.74 | +0.20% | 99517.69 (mixed) | 0.82%† |
+| 118-ieee | 195918 | 180312 (3098 s) | 230418.58 | +27.8% | 169350.89 (mixed_nobigM) | 6.08% |
+
+† Bound of the merged model; see the caveat below.
+
+### 89-pegase: big-M failure and low-impedance merging
+
+- **Without merging, `mixed` fails.**
+  - MOSEK stalls after 3 iterations (PFEAS ≈ 2.3e3), reports `SLOW_PROGRESS` with no feasible SOS point, and gives no bound (NaN).
+  - Its "marginals" are noise: all 210 are below 0.5, and every sample is disconnected.
+  - Turning off variable scaling or constraint normalization does not help. Order 1 solves (bound 9138, useless).
+  - Dropping big-M solves (bound 99445.94).
+- **Cause:** 19 non-transformer branches with |z| ≈ 2.2e-4, i.e. admittances up to 4.5e3, next to thermal limits as small as 0.04 p.u. The big-M constants M = |y|·Vmax² then multiply terms that must cancel.
+- **Plain merge (`merge_low_impedance`):** collapse the buses as in the LCOTS project (`LCOPF.jl`, `merge_zero_impedance`, |z| < 1e-3).
+  - This **drops the ties' thermal limits, and three of them bind**: ties 73, 96, 160 at 3.58/3.58, 3.28/3.32, 5.45/5.66 p.u.
+  - AC-OPF on the merged data is 125456 vs 130175 on the original (−3.6%). Removing only the tie limits on the original network gives 126100.
+- **Voltage-level merge (`build_power_pop(...; merge_zmax = 1e-3)`, used here):**
+  - Buses joined by a tie share one voltage (E, F); every bus keeps its own power balance.
+  - Each tie is a lossless flow (p, q) with its thermal limit and is not switchable. This is the zero-impedance limit, as for PowerModels switches.
+  - The POP shrinks from 1251 to 1156 variables and 210 to 191 binaries. With all lines closed, its NLP gives 129734.63 vs 130174.85 on the original (−0.34%).
+  - Configurations are still evaluated with PowerModels on the original network, with the ties closed.
+  - Merging changes nothing else up to 118 buses. Larger paper cases with ties: 179-goc (2), 240-pserc (55), 300-ieee (2 non-transformer), 1354-pegase (184).
+- **Effect of merging on 89-pegase:**
+  - `mixed` now solves (bound 99517.69, 70 s).
+  - 34–52% of rounded samples are feasible (0% before).
+  - Rounding finds 100545.72 (Gaussian from `mixed_nobigM`), polished to 100539.74. That is +0.20% vs Juniper and beats the paper's O-DC-OTS (100702).
+- **Caveat on the 0.82% gap.** The bound is for the merged model: ties are zero-impedance and cannot be switched, so it is not a rigorous bound for the original AC-OTS.
+  - The paper's Juniper topology opens 4 ties (99, 129, 138, 155); the 56 opened lines were parsed from Table I and reproduce 100343.59.
+  - With those ties closed instead, the same topology costs **100321.78** on the original network, slightly better than the paper. On the merged model it costs 100312.69.
+  - So keeping ties closed loses nothing here, but that is evidence, not proof.
+
+### Big-M on the larger cases
+
+Dropping the big-M constraints gives **higher certified bounds and 2–3× faster solves** on 73-ieee-rts (368110 vs 367152; 19 s vs 53 s) and 118-ieee (169351 vs 168242; 42 s vs 87 s).
+- The raw objectives are nearly identical (73: 368244 vs 368346; 118: 169536 vs 169580).
+- The difference is the inexact-solve correction: 73: 134 vs 1193; 118: 185 vs 1338. Big-M hurts conditioning more than it tightens the relaxation.
+- On merged 89-pegase the order reverses (99518 with big-M vs 99293 without).
+- This qualifies the earlier numerics finding that dropping big-M weakens bounds, which came from the small instances.
+
+### Rounding at 73–118 buses
+
+- **73-ieee-rts:** best rounded +3.7% (Gaussian); 1-flip polish reaches +1.02%. The polish hit its 40-evaluation budget while still improving. The paper's solution opens 17 lines; ours opens 10.
+- **118-ieee: rounding fails.**
+  - Only 2–4 marginals are below 0.5, and 0–1% of the 100 samples per scheme are feasible (almost all disconnect the network or fail in Ipopt).
+  - The best configuration (+27.8%) comes from 1-flip polish starting at the all-closed topology.
+  - The paper's solution opens 33 lines; the relaxation marginals give no sign of that.
+- **89-pegase (merged):** Gaussian/adj16 rounding does best (+0.20–0.22%), with independent at +0.36–0.38%. As in the small cases, correlated rounding has no systematic edge.
+- **Memory:** 3.3–5.8 GB for `mixed` at 73–118 buses; 21 GB peak on 89-pegase with `adj16`, whose certified bound is also the weakest (97009, correction 2992).
+
 ## Next steps
 
 - Run 73-ieee-rts, 89-pegase and 118-ieee, where Juniper took 10–52 min and O-DC-OTS is notably worse than AC-OTS (73: 413133 vs 385194). These are the cases where certificates and alternative solutions are most informative.

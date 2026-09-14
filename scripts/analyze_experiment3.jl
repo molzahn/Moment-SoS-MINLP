@@ -6,7 +6,7 @@ const RES = joinpath(@__DIR__, "..", "results")
 const CASES = ["3-lmbd-api", "5-pjm-api", "14-ieee-api", "24-ieee-rts-api", "30-as-api", "30-ieee-api", "39-epri-api",
     "57-ieee-api", "60-c-api", "73-ieee-rts-api", "89-pegase-api", "118-ieee-api", "179-goc-api", "200-activ-api",
     "240-pserc-api", "300-ieee-api", "500-goc-api", "1354-pegase-api"]
-const VARIANTS = ["mixed", "adj16", "adj16_pairs"]
+const VARIANTS = ["mixed", "mixed_nobigM", "adj16", "adj16_pairs"]
 const SCHEMES = ["threshold", "independent", "gaussian", "conditional"]
 
 f2(x) = x === nothing ? "–" : @sprintf("%.2f", x)

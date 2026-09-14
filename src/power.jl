@@ -12,28 +12,41 @@
   (enforced only in cliques of order >= 2).
 * `bigM_switching`: add degree-2 on/off big-M constraints (usable at order 1).
 * `capacity_cut`: valid inequality Σ_g u_g pmax_g >= Σ pd (only if losses are nonnegative).
+* `merge_zmax`: buses joined by non-transformer branches ("ties") with |r + jx| < `merge_zmax` share one
+  voltage (see `low_impedance_groups`). Each tie becomes a lossless flow (p, q) with its thermal limit and
+  is never switchable; every bus keeps its own power balance. This is the zero-impedance limit of the tie
+  (as for PowerModels switches) and removes admittances of order 1e3–1e4 that break the SDP numerics.
+  Unlike `merge_low_impedance` on the data, tie thermal limits are kept (they bind on 89-pegase).
 """
 function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable = Int[],
-    exact_switching::Bool = true, bigM_switching::Bool = true, capacity_cut::Bool = true, name::String = "")
+    exact_switching::Bool = true, bigM_switching::Bool = true, capacity_cut::Bool = true, name::String = "",
+    merge_zmax::Float64 = 0.0)
     ref = PowerModels.build_ref(data)[:it][:pm][:nw][0]
     pop = POP()
     binaries = Tuple{Symbol,Int}[]
     buses = sort(collect(keys(ref[:bus])))
     refbus = first(sort(collect(keys(ref[:ref_buses]))))
+    groups, ties = low_impedance_groups(data; zmax = merge_zmax)
+    rep(i) = get(groups, i, i)
+    switchable = setdiff(switchable, ties)
 
     E = Dict{Int,Poly}()
     F = Dict{Int,Poly}()
     for i in buses
-        vmax = ref[:bus][i]["vmax"]
+        rep(i) == i || continue
+        mem = [j for j in buses if rep(j) == i]
+        vmax = minimum(ref[:bus][j]["vmax"] for j in mem)
+        vmin = maximum(ref[:bus][j]["vmin"] for j in mem)
         E[i] = pvar(add_var!(pop, "e[$i]"; lb = i == refbus ? 0.0 : -vmax, ub = vmax, start = 1.0))
         F[i] = i == refbus ? Poly() : pvar(add_var!(pop, "f[$i]"; lb = -vmax, ub = vmax, start = 0.0))
+        Vi = E[i] * E[i] + F[i] * F[i]
+        add_ineq!(pop, Vi - vmin^2, "vmin[$i]")
+        add_ineq!(pop, max(vmax, vmin)^2 - Vi, "vmax[$i]")
+    end
+    for i in buses
+        E[i], F[i] = E[rep(i)], F[rep(i)]
     end
     Vsq(i) = E[i] * E[i] + F[i] * F[i]
-    for i in buses
-        b = ref[:bus][i]
-        add_ineq!(pop, Vsq(i) - b["vmin"]^2, "vmin[$i]")
-        add_ineq!(pop, b["vmax"]^2 - Vsq(i), "vmax[$i]")
-    end
     add_ineq!(pop, E[refbus], "eref[$refbus]")
 
     # generators
@@ -70,9 +83,21 @@ function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable 
     # branches
     Pout = Dict(i => Poly() for i in buses)
     Qout = Dict(i => Poly() for i in buses)
+    cap = sum((max(abs(g["pmax"]), abs(g["qmax"]), abs(g["qmin"])) for g in values(ref[:gen])); init = 0.0) +
+          sum((abs(ld["pd"]) + abs(ld["qd"]) for ld in values(ref[:load])); init = 0.0)
     for l in sort(collect(keys(ref[:branch])))
         br = ref[:branch][l]
         f, t = br["f_bus"], br["t_bus"]
+        if l in ties                                  # zero-impedance tie: lossless flow variable
+            rate = get(br, "rate_a", Inf)
+            bnd = isfinite(rate) ? min(rate, cap) : cap
+            pt = pvar(add_var!(pop, "p_tie[$l]"; lb = -bnd, ub = bnd))
+            qt = pvar(add_var!(pop, "q_tie[$l]"; lb = -bnd, ub = bnd))
+            Pout[f] += pt + br["g_fr"] * Vsq(f); Qout[f] += qt - br["b_fr"] * Vsq(f)
+            Pout[t] += br["g_to"] * Vsq(t) - pt; Qout[t] += -br["b_to"] * Vsq(t) - qt
+            isfinite(rate) && add_ineq!(pop, rate^2 - pt * pt - qt * qt, "tie_thermal[$l]")
+            continue
+        end
         gs, bs = PowerModels.calc_branch_y(br)
         tr, ti = PowerModels.calc_branch_t(br)
         y = complex(gs, bs)
@@ -185,14 +210,14 @@ function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable 
             g in commitable && push!(vs, findfirst(==("u[$g]"), pop.names))
         end
         if length(vs) > 1
-            append!(vs, [k for k in (findfirst(==("e[$i]"), pop.names), findfirst(==("f[$i]"), pop.names)) if k !== nothing])
+            append!(vs, [k for k in (findfirst(==("e[$(rep(i))]"), pop.names), findfirst(==("f[$(rep(i))]"), pop.names)) if k !== nothing])
             push!(bus_bins, sort(vs))
         end
     end
     pop.meta["bus_binaries"] = bus_bins
     # "binary_neighborhoods": each binary with the voltage variables of its bus(es), so that cliques
     # containing binaries also contain the network variables they interact with
-    vidx(i) = [k for k in (findfirst(==("e[$i]"), pop.names), findfirst(==("f[$i]"), pop.names)) if k !== nothing]
+    vidx(i) = [k for k in (findfirst(==("e[$(rep(i))]"), pop.names), findfirst(==("f[$(rep(i))]"), pop.names)) if k !== nothing]
     nbhd = Vector{Vector{Int}}()
     for (kind, id) in binaries
         if kind == :gen
@@ -232,7 +257,115 @@ function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable 
     pop.meta["binaries"] = binaries
     pop.meta["binary_vars"] = [findfirst(==(k == :gen ? "u[$id]" : "z[$id]"), pop.names) for (k, id) in binaries]
     pop.meta["refbus"] = refbus
+    pop.meta["merged_ties"] = ties
+    pop.meta["bus_groups"] = groups
     return pop
+end
+
+# ---------------------------------------------------------------------------------------------
+# Network preprocessing
+
+"""
+    low_impedance_groups(data; zmax) -> (groups = Dict(bus id => representative bus id), ties = branch ids)
+
+Ties: in-service, non-transformer branches (tap = 1, shift = 0) with |r + jx| < `zmax`. Buses connected by
+ties form a group; its representative is the reference bus if the group has one, else the smallest id.
+"""
+function low_impedance_groups(data::Dict{String,Any}; zmax::Float64)
+    istie(b) = get(b, "br_status", 1) != 0 && abs(complex(b["br_r"], b["br_x"])) < zmax && b["tap"] == 1 && b["shift"] == 0
+    ties = sort([b["index"] for b in values(data["branch"]) if istie(b)])
+    groups = Dict(b["index"] => b["index"] for b in values(data["bus"]))
+    isempty(ties) && return (groups, ties)
+    parent = copy(groups)
+    findr(x) = (while parent[x] != x; parent[x] = parent[parent[x]]; x = parent[x]; end; x)
+    for l in ties
+        br = data["branch"][string(l)]
+        ra, rb = findr(br["f_bus"]), findr(br["t_bus"])
+        ra != rb && (parent[max(ra, rb)] = min(ra, rb))
+    end
+    members = Dict{Int,Vector{Int}}()
+    for i in keys(parent)
+        push!(get!(members, findr(i), Int[]), i)
+    end
+    for (_, mem) in members
+        refs = [i for i in mem if data["bus"][string(i)]["bus_type"] == 3]
+        r = isempty(refs) ? minimum(mem) : first(refs)
+        for i in mem
+            groups[i] = r
+        end
+    end
+    return (groups, ties)
+end
+
+"""
+    merge_low_impedance(data; zmax = 1e-3) -> (data = merged, groups = Dict(bus id => representative id),
+                                                ties = merged branch ids, dropped = all removed branch ids)
+
+Collapse buses joined by in-service branches with |r + jx| < `zmax` (p.u.) into one bus, as in the
+LCOTS project (`merge_zero_impedance` in parameter_optimized_LCOTS/LCOPF.jl). Such branches have
+admittances of order 1e3–1e4 (89-pegase: 19 branches with |z| ≈ 2.2e-4), which wreck the conditioning
+of the moment/SOS relaxations (MOSEK stalls within a few iterations).
+
+* Transformers (tap ≠ 1 or shift ≠ 0) are never merged, since their endpoints do not share a voltage.
+* Representative bus: the reference bus if the group has one, else the smallest id. Bus type is the most
+  specific in the group (ref > PV > PQ); the voltage boxes are intersected.
+* Loads, generators, shunts and storage are moved to the representative. The merged ties are removed,
+  together with any other branch that becomes a self-loop; the charging of removed branches is kept as a
+  bus shunt.
+* Surviving branches, generators and loads keep their original ids, so switching decisions still refer
+  to the original network.
+
+This is a modelling approximation (merged buses share one voltage, and removed branches can no longer be
+switched), so a bound from the merged model is not a rigorous bound for the original network. It also drops
+the thermal limits of the ties, which bind on 89-pegase (AC-OPF 125456 merged vs 130175 original); prefer
+`build_power_pop(...; merge_zmax)`, which merges voltages but keeps tie flows and limits.
+"""
+function merge_low_impedance(data::Dict{String,Any}; zmax::Float64 = 1e-3)
+    d = deepcopy(data)
+    isactive(b) = get(b, "br_status", 1) != 0
+    groups, ties = low_impedance_groups(d; zmax = zmax)
+    isempty(ties) && return (data = d, groups = groups, ties = ties, dropped = Int[])
+    members = Dict{Int,Vector{Int}}()
+    for (i, r) in groups
+        push!(get!(members, r, Int[]), i)
+    end
+    for (rep, mem) in members
+        length(mem) == 1 && continue
+        rb = d["bus"][string(rep)]
+        types = [d["bus"][string(i)]["bus_type"] for i in mem]
+        rb["bus_type"] = 3 in types ? 3 : (2 in types ? 2 : minimum(types))
+        rb["vmin"] = maximum(d["bus"][string(i)]["vmin"] for i in mem)
+        rb["vmax"] = max(rb["vmin"], minimum(d["bus"][string(i)]["vmax"] for i in mem))
+        for i in mem
+            i == rep || delete!(d["bus"], string(i))
+        end
+    end
+    for (comp, key) in (("gen", "gen_bus"), ("load", "load_bus"), ("shunt", "shunt_bus"), ("storage", "storage_bus"))
+        for c in values(get(d, comp, Dict{String,Any}()))
+            c[key] = groups[c[key]]
+        end
+    end
+    for c in values(get(d, "dcline", Dict{String,Any}()))
+        c["f_bus"], c["t_bus"] = groups[c["f_bus"]], groups[c["t_bus"]]
+    end
+    dropped = Int[]
+    nshunt = maximum(parse.(Int, collect(keys(d["shunt"]))); init = 0)
+    for (k, br) in collect(d["branch"])
+        f, t = groups[br["f_bus"]], groups[br["t_bus"]]
+        br["f_bus"], br["t_bus"] = f, t
+        f == t || continue
+        push!(dropped, br["index"])
+        delete!(d["branch"], k)
+        isactive(br) || continue
+        gs = br["g_fr"] / br["tap"]^2 + br["g_to"]
+        bs = br["b_fr"] / br["tap"]^2 + br["b_to"]
+        if gs != 0 || bs != 0
+            nshunt += 1
+            d["shunt"][string(nshunt)] = Dict{String,Any}("index" => nshunt, "shunt_bus" => f, "gs" => gs, "bs" => bs,
+                "status" => 1, "source_id" => Any["merged_branch", br["index"]])
+        end
+    end
+    return (data = d, groups = groups, ties = ties, dropped = sort(dropped))
 end
 
 # ---------------------------------------------------------------------------------------------

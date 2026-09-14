@@ -14,6 +14,13 @@ using Random, Printf, JSON, Statistics
 const SEED = 20260913
 const MAX_SDP_TIME = parse(Float64, get(ENV, "MAX_SDP_TIME", "3600"))
 const POLISH_EVALS = parse(Int, get(ENV, "POLISH_EVALS", "40"))
+# VARIANTS (comma-separated labels) restricts the relaxation variants, e.g. VARIANTS=mixed
+
+"Replace non-finite floats (e.g. a NaN bound from a failed SDP) by `nothing` so the results are valid JSON."
+jsonsafe(x::AbstractFloat) = isfinite(x) ? x : nothing
+jsonsafe(x::AbstractDict) = Dict(k => jsonsafe(v) for (k, v) in x)
+jsonsafe(x::AbstractVector) = map(jsonsafe, x)
+jsonsafe(x) = x
 
 function polish(ev, start::BitVector, μ::Vector{Float64}, budget::Int)
     best, bestc = copy(start), evaluate!(ev, start).cost
@@ -47,22 +54,35 @@ function run_case(name)
     base = evaluate!(ev, trues(length(bv)))
     res = Dict{String,Any}("case" => name, "buses" => nbus, "branches" => nbr, "n_vars" => length(pop.names),
         "paper_acopf" => row[3], "paper_odcots" => row[4], "paper_acots" => row[5], "paper_acots_time" => row[6],
-        "acopf" => base.cost, "pop_build_time" => t_build, "relaxations" => Dict{String,Any}())
-    @printf("\n=== %s: %d buses, %d branches, %d POP variables (build %.1fs); AC-OPF %.2f (paper %d); paper O-DC-OTS %s, AC-OTS %s\n",
-        name, nbus, nbr, length(pop.names), t_build, base.cost, row[3], row[4], something(row[5], "–"))
+        "acopf" => base.cost, "pop_build_time" => t_build, "relaxations" => Dict{String,Any}(),
+        "merge_zmax" => MERGE_ZMAX, "merged_ties" => pop.meta["merged_ties"], "n_binaries" => length(bv))
+    @printf("\n=== %s: %d buses, %d branches (%d merged ties, %d switchable), %d POP variables (build %.1fs); AC-OPF %.2f (paper %d); paper O-DC-OTS %s, AC-OTS %s\n",
+        name, nbus, nbr, length(pop.meta["merged_ties"]), length(bv), length(pop.names), t_build, base.cost, row[3], row[4], something(row[5], "–"))
     flush(stdout)
 
     params = Dict{String,Any}("MSK_DPAR_OPTIMIZER_MAX_TIME" => MAX_SDP_TIME)
     variants = Any[("mixed", (order = binary_clique_order(pop), global_linear = 8, solver_params = params))]
+    # same POP without the degree-2 big-M switching constraints (same variables, so marginals line up);
+    # used where big-M makes the SDP numerically fail (89-pegase)
+    push!(variants, ("mixed_nobigM", (order = binary_clique_order(pop), global_linear = 8, solver_params = params)))
     if nbus <= 118
         ord = adjacent_clique_order(pop; maxsize = 16)
         push!(variants, ("adj16", (order = ord, global_linear = 8, solver_params = params)))
         nbus <= 60 && push!(variants, ("adj16_pairs", (order = ord, global_linear = 8, solver_params = params,
             extra_cliques = pop.meta["pair_cliques"])))
     end
+    keep = split(get(ENV, "VARIANTS", "mixed,adj16,adj16_pairs"), ",")   # mixed_nobigM only on request
+    filter!(v -> v[1] in keep, variants)
+    pop_nobigM = nothing
     for (lbl, kw) in variants
         t = @elapsed rel = try
-            solve_moment_relaxation(pop; kw...)
+            if lbl == "mixed_nobigM"
+                pop_nobigM = first(load_dcots_instance(name; bigM_switching = false))
+                @assert pop_nobigM.names == pop.names
+                solve_moment_relaxation(pop_nobigM; kw...)
+            else
+                solve_moment_relaxation(pop; kw...)
+            end
         catch err
             @printf("  %-12s FAILED: %s\n", lbl, sprint(showerror, err)[1:min(200, end)])
             nothing
@@ -108,13 +128,15 @@ function run_case(name)
         flush(stdout)
         res["relaxations"][lbl] = o
         open(joinpath(@__DIR__, "..", "results", "experiment3_$(name).json"), "w") do io
-            JSON.print(io, res, 1)
+            JSON.print(io, jsonsafe(res), 1)
         end
     end
     feas = [r.cost for r in values(ev.cache) if r.feasible]
     res["best_found"] = minimum(feas)
     res["n_configs_evaluated"] = length(ev.cache)
     bounds = [o["bound"] for o in values(res["relaxations"]) if !get(o, "failed", false) && isfinite(o["bound"])]
+    res["best_bound_variant"] = isempty(bounds) ? nothing :
+        first(k for (k, o) in res["relaxations"] if !get(o, "failed", false) && o["bound"] === maximum(bounds))
     res["best_bound"] = isempty(bounds) ? nothing : maximum(bounds)
     ref = minimum(filter(!isnothing, [res["best_found"], row[5]]))
     res["certified_gap_best_known"] = res["best_bound"] === nothing ? nothing : (ref - res["best_bound"]) / ref
@@ -122,7 +144,7 @@ function run_case(name)
         name, res["best_found"], something(row[5], "–"), row[4], something(res["best_bound"], NaN),
         100something(res["certified_gap_best_known"], NaN), length(ev.cache))
     open(joinpath(@__DIR__, "..", "results", "experiment3_$(name).json"), "w") do io
-        JSON.print(io, res, 1)
+        JSON.print(io, jsonsafe(res), 1)
     end
 end
 

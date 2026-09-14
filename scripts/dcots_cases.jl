@@ -33,9 +33,17 @@ const DCOTS_PAPER = [
 paper_row(name) = DCOTS_PAPER[findfirst(r -> r[1] == name, DCOTS_PAPER)]
 parse_api(stem) = PowerModels.parse_file(joinpath(API_DIR, "pglib_opf_$(stem)__api.m"))
 
-"AC-OTS POP with every branch switchable (as in the paper)."
-function load_dcots_instance(name)
+"Buses joined by non-transformer branches with |z| below this (p.u.) share a voltage (env MERGE_ZMAX; 0 = off)."
+const MERGE_ZMAX = parse(Float64, get(ENV, "MERGE_ZMAX", "1e-3"))
+
+"""
+AC-OTS POP with every branch switchable (as in the paper), except low-impedance ties (|z| < `merge_zmax`),
+whose end buses share a voltage and which stay closed (see `build_power_pop`). Up to 118 buses this only
+affects 89-pegase (19 ties). Configurations are still evaluated on the original network (`pop.meta["data"]`).
+"""
+function load_dcots_instance(name; merge_zmax = MERGE_ZMAX, kwargs...)
     row = paper_row(name)
     d = parse_api(row[2])
-    return build_power_pop(d; switchable = sort(parse.(Int, collect(keys(d["branch"])))), name = name), d
+    return build_power_pop(d; switchable = sort(parse.(Int, collect(keys(d["branch"])))), name = name,
+        merge_zmax = merge_zmax, kwargs...), d
 end

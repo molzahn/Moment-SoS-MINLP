@@ -50,7 +50,9 @@ function __init__()
     PowerModels.silence()
 end
 
-mosek_optimizer() = optimizer_with_attributes(MosekTools.Optimizer, "MSK_IPAR_NUM_THREADS" => 4)
+"MOSEK optimizer; thread count from env `MOSEK_THREADS` (default 4)."
+mosek_optimizer() = optimizer_with_attributes(MosekTools.Optimizer,
+    "MSK_IPAR_NUM_THREADS" => parse(Int, get(ENV, "MOSEK_THREADS", "4")))
 ipopt_optimizer() = optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0, "sb" => "yes",
     "max_iter" => 3000, "max_cpu_time" => 60.0)
 

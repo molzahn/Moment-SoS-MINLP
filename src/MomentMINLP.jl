@@ -10,6 +10,7 @@ import MathOptInterface as MOI
 import Mosek
 import MosekTools
 import Ipopt
+import HSL_jll
 import PowerModels
 
 export Poly, pvar, POP, add_var!, add_ineq!, add_eq!, add_pmi!, fix_variables, solve_nlp,
@@ -48,13 +49,40 @@ end
 
 function __init__()
     _find_mosek_license()
+    _setup_hsl()
     PowerModels.silence()
+end
+
+"Linear solver used by `ipopt_optimizer` (set in `__init__`; \"mumps\" if HSL is unavailable)."
+const IPOPT_LINEAR_SOLVER = Ref("mumps")
+
+"""
+Use an HSL linear solver in Ipopt when the licensed HSL_jll is installed (its `override` directory
+holds libhsl): `ma97` by default, or the solver named in env `IPOPT_LINEAR_SOLVER` (ma27, ma57, ma77,
+ma86, ma97, or mumps). The public registry HSL_jll has no libhsl, in which case Ipopt keeps MUMPS.
+"""
+function _setup_hsl()
+    want = lowercase(get(ENV, "IPOPT_LINEAR_SOLVER", "ma97"))
+    if want == "mumps"
+        IPOPT_LINEAR_SOLVER[] = "mumps"
+    elseif HSL_jll.is_available() && isfile(HSL_jll.libhsl_path)
+        IPOPT_LINEAR_SOLVER[] = want
+    else
+        IPOPT_LINEAR_SOLVER[] = "mumps"
+        @warn "HSL library not available (licensed HSL_jll not installed); Ipopt will use MUMPS"
+    end
 end
 
 "MOSEK optimizer; thread count from env `MOSEK_THREADS` (default 4)."
 mosek_optimizer() = optimizer_with_attributes(MosekTools.Optimizer,
     "MSK_IPAR_NUM_THREADS" => parse(Int, get(ENV, "MOSEK_THREADS", "4")))
-ipopt_optimizer() = optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0, "sb" => "yes",
-    "max_iter" => 3000, "max_cpu_time" => 60.0)
+"Ipopt for AC-OPF evaluations and local NLP solves; HSL `IPOPT_LINEAR_SOLVER[]` (default ma97) when available."
+function ipopt_optimizer(; print_level::Int = 0)
+    attrs = Any["print_level" => print_level, "sb" => "yes", "max_iter" => 3000, "max_cpu_time" => 60.0]
+    if IPOPT_LINEAR_SOLVER[] != "mumps"
+        push!(attrs, "linear_solver" => IPOPT_LINEAR_SOLVER[], "hsllib" => HSL_jll.libhsl_path)
+    end
+    return optimizer_with_attributes(Ipopt.Optimizer, attrs...)
+end
 
 end # module

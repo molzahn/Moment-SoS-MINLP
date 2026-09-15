@@ -17,10 +17,19 @@
   is never switchable; every bus keeps its own power balance. This is the zero-impedance limit of the tie
   (as for PowerModels switches) and removes admittances of order 1e3–1e4 that break the SDP numerics.
   Unlike `merge_low_impedance` on the data, tie thermal limits are kept (they bind on 89-pegase).
+* `fix_radial`: keep closed (not switchable) every switchable bridge whose removal leaves an island that
+  provably cannot balance active power (`radial_fixings`).
+* `conn_cuts`: add cuts Σ_{l∈δ(S)} z_l >= 1 for bus sets |S| <= `conn_cuts` that cannot balance power on
+  their own (`connectivity_cuts`; 0 = none). Cuts with at most `cut_graph_max` lines are tagged
+  "conn_cut" (they may enter the sparsity graph), wider ones "conn_cut_wide". Putting cuts into the graph
+  merges cliques badly (118-ieee: max PSD block 54 -> 1029 at 4 lines), so the default is 0 and
+  `pop.meta["conn_cut_cliques"]` lists, per cut, its binary variables: pass the small ones as
+  `extra_cliques` (order-2 blocks on just those binaries) and the tags in `out_of_graph_tags`.
+Both are valid for every configuration that passes `island_screen`, so bounds stay valid.
 """
 function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable = Int[],
     exact_switching::Bool = true, bigM_switching::Bool = true, capacity_cut::Bool = true, name::String = "",
-    merge_zmax::Float64 = 0.0)
+    merge_zmax::Float64 = 0.0, fix_radial::Bool = false, conn_cuts::Int = 0, cut_graph_max::Int = 0)
     ref = PowerModels.build_ref(data)[:it][:pm][:nw][0]
     pop = POP()
     binaries = Tuple{Symbol,Int}[]
@@ -29,6 +38,8 @@ function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable 
     groups, ties = low_impedance_groups(data; zmax = merge_zmax)
     rep(i) = get(groups, i, i)
     switchable = setdiff(switchable, ties)
+    radial = fix_radial ? radial_fixings(data, switchable) : Int[]
+    switchable = setdiff(switchable, radial)
 
     E = Dict{Int,Poly}()
     F = Dict{Int,Poly}()
@@ -258,6 +269,21 @@ function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable 
     pop.meta["binary_vars"] = [findfirst(==(k == :gen ? "u[$id]" : "z[$id]"), pop.names) for (k, id) in binaries]
     pop.meta["refbus"] = refbus
     pop.meta["merged_ties"] = ties
+    pop.meta["radial_fixed"] = radial
+    ncuts = 0
+    cut_cliques = Vector{Vector{Int}}()
+    if conn_cuts > 0
+        zidx = Dict(id => findfirst(==("z[$id]"), pop.names) for (k, id) in binaries if k == :branch)
+        for cut in connectivity_cuts(data, switchable; maxset = conn_cuts)
+            all(l -> haskey(zidx, l), cut) || continue
+            g = sum(pvar(zidx[l]) for l in cut) - 1.0
+            add_ineq!(pop, g, length(cut) <= cut_graph_max ? "conn_cut[$(ncuts + 1)]" : "conn_cut_wide[$(ncuts + 1)]")
+            push!(cut_cliques, sort([zidx[l] for l in cut]))
+            ncuts += 1
+        end
+    end
+    pop.meta["n_conn_cuts"] = ncuts
+    pop.meta["conn_cut_cliques"] = cut_cliques
     pop.meta["bus_groups"] = groups
     return pop
 end
@@ -383,10 +409,21 @@ function config_data(data::Dict{String,Any}, binaries, bits::AbstractVector{Bool
     return d
 end
 
-"Cheap necessary conditions: network connected, enough active capacity."
-function screen_config(d::Dict{String,Any})
-    comps = PowerModels.calc_connected_components(d)
-    length(comps) == 1 || return (false, "islanded")
+"""
+Cheap necessary conditions for a configuration.
+
+* `islands = :allow` (default): islands are allowed, as in PowerModels' AC-OTS model; an island is rejected
+  only if it provably cannot balance active power (`island_screen`).
+* `islands = :connected`: the network must be connected (the rule used in experiments 1-3).
+"""
+function screen_config(d::Dict{String,Any}; islands::Symbol = :allow)
+    if islands == :connected
+        comps = PowerModels.calc_connected_components(d)
+        length(comps) == 1 || return (false, "islanded")
+    else
+        ok, why, _ = island_screen(d)
+        ok || return (false, why)
+    end
     pmax = sum((g["pmax"] for g in values(d["gen"]) if g["gen_status"] != 0); init = 0.0)
     pd = sum((l["pd"] for l in values(d["load"]) if l["status"] != 0); init = 0.0)
     pmax >= pd || return (false, "capacity")
@@ -396,7 +433,7 @@ end
 struct ConfigResult
     feasible::Bool
     cost::Float64
-    reason::String      # "", "islanded", "capacity", or the Ipopt termination status
+    reason::String      # "", "islanded", "island_deficit", "capacity", or the Ipopt termination status
     time::Float64
 end
 
@@ -405,16 +442,18 @@ mutable struct ConfigEvaluator
     binaries::Vector{Tuple{Symbol,Int}}
     cache::Dict{BitVector,ConfigResult}
     optimizer
+    islands::Symbol      # :allow or :connected, see `screen_config`
 end
-ConfigEvaluator(pop::POP; optimizer = ipopt_optimizer()) =
-    ConfigEvaluator(pop.meta["data"], pop.meta["binaries"], Dict{BitVector,ConfigResult}(), optimizer)
+ConfigEvaluator(data, binaries, cache, optimizer) = ConfigEvaluator(data, binaries, cache, optimizer, :allow)
+ConfigEvaluator(pop::POP; optimizer = ipopt_optimizer(), islands::Symbol = :allow) =
+    ConfigEvaluator(pop.meta["data"], pop.meta["binaries"], Dict{BitVector,ConfigResult}(), optimizer, islands)
 
 function evaluate!(ev::ConfigEvaluator, bits::AbstractVector{Bool})
     key = BitVector(bits)
     haskey(ev.cache, key) && return ev.cache[key]
     t0 = time()
     d = config_data(ev.data, ev.binaries, key)
-    ok, why = screen_config(d)
+    ok, why = screen_config(d; islands = ev.islands)
     r = if !ok
         ConfigResult(false, Inf, why, time() - t0)
     else

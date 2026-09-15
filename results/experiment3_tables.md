@@ -22,6 +22,8 @@
 | 200-activ-api | 35701.47 | 35701 | 35701 | 35700.74 | -0.00% | 35594.66 | 0.30% | 667 |
 | 240-pserc-api | 4640589.22 | 4627155 | – | 4640403.17 | +0.29% | 4604032.68 | 0.50% | 683 |
 | 300-ieee-api | 684985.49 | 684985 | 683968 | 684401.43 | +0.06% | 677043.71 | 1.01% | 683 |
+| 500-goc-api | 692407.34 | 692271 | – | 691083.11 | -0.17% | – | – | 683 |
+| 1354-pegase-api | 1498271.03 | 1496750 | – | 1498116.94 | +0.09% | – | – | 683 |
 
 ## Relaxations
 
@@ -69,6 +71,10 @@
 | 240-pserc-api | mixed_nobigM | SLOW_PROGRESS | 4604032.68 | 4607219.97 | 3187.29 | 196.2 | 576/1397 | 54 | 15% | 16 |
 | 300-ieee-api | mixed | SLOW_PROGRESS | none (no feasible SOS point) | – | – | 375.5 | 620/1482 | 54 | 16% | 13 |
 | 300-ieee-api | mixed_nobigM | SLOW_PROGRESS | 677043.71 | 678369.85 | 1326.14 | 185.8 | 620/1482 | 54 | 20% | 11 |
+| 500-goc-api | mixed | SLOW_PROGRESS | none (no feasible SOS point) | – | – | 849.6 | 1250/2563 | 72 | 18% | 40 |
+| 500-goc-api | mixed_nobigM | SLOW_PROGRESS | none (no feasible SOS point) | – | – | 468.4 | 1250/2563 | 72 | 21% | 39 |
+| 1354-pegase-api | mixed | SLOW_PROGRESS | none (no feasible SOS point) | – | – | 1643.8 | 3210/6667 | 75 | 6% | 235 |
+| 1354-pegase-api | mixed_nobigM | SLOW_PROGRESS | none (no feasible SOS point) | – | – | 892.0 | 3202/6670 | 75 | 5% | 761 |
 
 ## Rounding (best cost per scheme, gap vs paper AC-OTS; feasible fraction in parentheses)
 
@@ -116,3 +122,7 @@
 | 240-pserc-api | mixed_nobigM | – (0%) | – (0%) | – (0%) | – (0%) | +0.29% | +0.29% (40) |
 | 300-ieee-api | mixed | – (0%) | – (0%) | – (0%) | – (0%) | +0.15% | +0.09% (40) |
 | 300-ieee-api | mixed_nobigM | – (0%) | – (0%) | – (0%) | – (0%) | +0.15% | +0.06% (40) |
+| 500-goc-api | mixed | – (0%) | – (0%) | – (0%) | – (0%) | +0.02% | -0.17% (40) |
+| 500-goc-api | mixed_nobigM | – (0%) | – (0%) | – (0%) | – (0%) | +0.02% | -0.17% (40) |
+| 1354-pegase-api | mixed | – (0%) | – (0%) | – (0%) | – (0%) | +0.10% | +0.09% (40) |
+| 1354-pegase-api | mixed_nobigM | – (0%) | – (0%) | – (0%) | – (0%) | +0.10% | +0.09% (40) |

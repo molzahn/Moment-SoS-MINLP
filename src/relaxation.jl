@@ -108,7 +108,7 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     extra_supports = Vector{Vector{Int}}(), extra_cliques = Vector{Vector{Int}}(), global_linear::Int = typemax(Int),
     optimizer = mosek_optimizer(), silent::Bool = true, normalize::Bool = true,
     skip_high_order_tags = String[], solver_params = Dict{String,Any}(), diagnostics::Bool = true,
-    quotient_basis::Bool = false, scale_vars::Bool = true)
+    quotient_basis::Bool = false, scale_vars::Bool = true, out_of_graph_tags = String[])
     t0 = time()
     if scale_vars
         # substitute x_i = s_i x̂_i with s_i = max(|lb_i|, |ub_i|) so that every variable lies in [-1, 1];
@@ -126,7 +126,8 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
         r = solve_moment_relaxation(q; order = order, sparse = sparse, cliques = cliques, form = form,
             extra_supports = extra_supports, extra_cliques = extra_cliques, global_linear = global_linear,
             optimizer = optimizer, silent = silent, normalize = normalize, skip_high_order_tags = skip_high_order_tags,
-            solver_params = solver_params, diagnostics = diagnostics, quotient_basis = quotient_basis, scale_vars = false)
+            solver_params = solver_params, diagnostics = diagnostics, quotient_basis = quotient_basis, scale_vars = false,
+            out_of_graph_tags = out_of_graph_tags)
         y = Dict(m => v * prod((svec[i] for i in m); init = 1.0) for (m, v) in r.y)
         r.info["scale_vars"] = true
         return MomentRelaxation(r.status, r.primal_status, r.bound, r.primal_objective, r.build_time, r.solve_time,
@@ -146,7 +147,10 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     tagkey(tag) = first(split(tag, '['))
     drop_high(tag, k) = k > 0 && orders[k] >= 2 && tagkey(tag) in skip_high_order_tags
 
-    supports, active = interaction_supports(obj, ineqs, eqs, pmis; global_linear = global_linear)
+    # linear constraints whose tag is in `out_of_graph_tags` do not shape the cliques; they are still localized
+    # in a clique that happens to contain them, otherwise enforced on first moments
+    graph_ineqs = [g for (g, tag) in zip(ineqs, pop.ineq_tags) if !(degree(g) <= 1 && tagkey(tag) in out_of_graph_tags)]
+    supports, active = interaction_supports(obj, graph_ineqs, eqs, pmis; global_linear = global_linear)
     # extra supports force sets of variables into a common clique (e.g. to create joint binary moments)
     for s in extra_supports
         s = filter(in(Set(active)), s)

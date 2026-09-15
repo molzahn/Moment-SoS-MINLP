@@ -66,15 +66,29 @@ function _joint(rel, ones_vars::Vector{Int}, zero_vars::Vector{Int}, extra::Vect
     return s
 end
 
-function sample_conditional(rel, bvars, N; rng = Random.default_rng(), kmax = 2 * maximum(rel.orders) - 1)
+"""
+    sample_conditional(rel, bvars, N; rng, kmax, guard = nothing, order = :random, stats = nothing)
+        -> (samples, negative mass per draw)
+
+Sequential sampling from pseudo-moments. With an `IslandGuard`, a line is only opened if that cannot
+create an island that provably cannot balance active power (undecided lines count as closed);
+otherwise it is kept closed and later draws condition on that. `order = :open_first` visits binaries in
+increasing marginal (most likely to be opened first); `:random` uses a random order per sample.
+If `stats` is a Dict, "forced_closed" accumulates the number of lines kept closed by the guard.
+"""
+function sample_conditional(rel, bvars, N; rng = Random.default_rng(), kmax = 2 * maximum(rel.orders) - 1,
+    guard = nothing, order::Symbol = :random, stats = nothing)
     n = length(bvars)
     μ, _, R = binary_correlation(rel, bvars)
     samples = BitVector[]
     neg_mass = 0.0
+    nforced = 0
     for _ in 1:N
         z = falses(n)
+        closed = trues(n)
         assigned = Int[]
-        for j in randperm(rng, n)
+        perm = order == :open_first ? sortperm(μ .+ 1e-9 .* rand(rng, n)) : randperm(rng, n)
+        for j in perm
             cand = sort(assigned; by = i -> -abs(R[i, j]))
             B = Int[]
             for i in cand
@@ -94,11 +108,31 @@ function sample_conditional(rel, bvars, N; rng = Random.default_rng(), kmax = 2 
                 p = p1 + p0 > 1e-9 ? p1 / (p1 + p0) : μ[j]
             end
             z[j] = rand(rng) < p
+            if !z[j] && guard !== nothing
+                if can_open(guard, closed, j)
+                    closed[j] = false
+                else
+                    z[j] = true
+                    nforced += 1
+                end
+            end
             push!(assigned, j)
         end
         push!(samples, z)
     end
+    stats === nothing || (stats["forced_closed"] = get(stats, "forced_closed", 0) + nforced)
     return samples, neg_mass / max(N * n, 1)
+end
+
+"""
+    repair_samples(guard, samples, μ) -> (repaired samples, lines closed per sample)
+
+Apply `repair_islands!` to copies of the samples.
+"""
+function repair_samples(guard, samples::Vector{BitVector}, μ)
+    out = [copy(s) for s in samples]
+    nclosed = [repair_islands!(guard, s, μ) for s in out]
+    return out, nclosed
 end
 
 _rel_ok(r) = r.primal_status in (MOI.FEASIBLE_POINT, MOI.NEARLY_FEASIBLE_POINT) &&

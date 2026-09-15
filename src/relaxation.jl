@@ -108,7 +108,8 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     extra_supports = Vector{Vector{Int}}(), extra_cliques = Vector{Vector{Int}}(), global_linear::Int = typemax(Int),
     optimizer = mosek_optimizer(), silent::Bool = true, normalize::Bool = true,
     skip_high_order_tags = String[], solver_params = Dict{String,Any}(), diagnostics::Bool = true,
-    quotient_basis::Bool = false, scale_vars::Bool = true, out_of_graph_tags = String[])
+    quotient_basis::Bool = false, scale_vars::Bool = true, out_of_graph_tags = String[], scalar_tags = String[],
+    certify::Symbol = :implicit, bundle_params = Dict{Symbol,Any}())
     t0 = time()
     if scale_vars
         # substitute x_i = s_i x̂_i with s_i = max(|lb_i|, |ub_i|) so that every variable lies in [-1, 1];
@@ -127,7 +128,7 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
             extra_supports = extra_supports, extra_cliques = extra_cliques, global_linear = global_linear,
             optimizer = optimizer, silent = silent, normalize = normalize, skip_high_order_tags = skip_high_order_tags,
             solver_params = solver_params, diagnostics = diagnostics, quotient_basis = quotient_basis, scale_vars = false,
-            out_of_graph_tags = out_of_graph_tags)
+            out_of_graph_tags = out_of_graph_tags, scalar_tags = scalar_tags, certify = certify, bundle_params = bundle_params)
         y = Dict(m => v * prod((svec[i] for i in m); init = 1.0) for (m, v) in r.y)
         r.info["scale_vars"] = true
         return MomentRelaxation(r.status, r.primal_status, r.bound, r.primal_objective, r.build_time, r.solve_time,
@@ -221,6 +222,8 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
             continue
         end
         dd = orders[k] - _ceil_half(degree(g))
+        # inequalities tagged in `scalar_tags` are enforced as L(g) >= 0 only (no localizing matrix), as at order 1
+        tagkey(tag) in scalar_tags && (dd = min(dd, 0))
         dd < 0 ? skip!(tag) : push!(blocks, (fill(g, 1, 1), basis(k, dd)))
     end
     for (G, tag) in zip(pmis, pop.pmi_tags)
@@ -257,7 +260,8 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     end
     if form == :sos
         maxabs = [max(abs(pop.lb[i]), abs(pop.ub[i])) for i in eachindex(pop.lb)]
-        yv, bound, pobj, st, ps, nmom, cert = _solve_sos_form(model, obj, blocks, eqblocks, isbin, scale, maxabs)
+        yv, bound, pobj, st, ps, nmom, cert = _solve_sos_form(model, obj, blocks, eqblocks, isbin, scale, maxabs;
+            certify = certify, bundle_params = bundle_params, groups = square_groups(ineqs))
     elseif form == :moment
         yv, bound, pobj, st, ps, nmom = _solve_moment_form(model, obj, blocks, eqblocks, isbin, scale)
         cert = Dict{String,Any}()
@@ -295,7 +299,8 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
         skipped, nmom, psd_sizes, ratios, info)
 end
 
-function _solve_sos_form(model, obj, blocks, eqblocks, isbin, scale, maxabs)
+function _solve_sos_form(model, obj, blocks, eqblocks, isbin, scale, maxabs; certify::Symbol = :implicit,
+    bundle_params = Dict{Symbol,Any}(), groups = Tuple{Vector{Int},Float64}[])
     coef = Dict{Vector{Int},AffExpr}()
     addc!(m, c, v) = add_to_expression!(get!(() -> AffExpr(0.0), coef, m), c, v)
     Xs = Any[]
@@ -365,7 +370,39 @@ function _solve_sos_form(model, obj, blocks, eqblocks, isbin, scale, maxabs)
         end
         bound = (tval - rsum - esum) * scale
         cert = Dict{String,Any}("raw_bound" => tval * scale, "sos_residual_max" => rmax,
-            "residual_correction" => rsum * scale, "psd_correction" => esum * scale, "gram_min_eig" => emin)
+            "residual_correction" => rsum * scale, "psd_correction" => esum * scale, "gram_min_eig" => emin,
+            "certified_box" => bound)
+    end
+    # Certificates valid for any point (so also when MOSEK returns no feasible point), see src/certify.jl:
+    # :implicit = best of box / implicit / per-block hybrid at MOSEK's point; :optimize additionally maximizes
+    # the certificate (bundle_params[:method] = :smooth (default, L-BFGS on a smoothed surrogate) or :bundle).
+    if certify in (:implicit, :optimize, :bundle) && has_values(model)
+        tc = time()
+        sc = SOSCertificate(model, coef, obj, monos, blocks, Xs, t, isbin, scale, maxabs; groups = groups)
+        θ0 = value.(all_variables(model))
+        haskey(cert, "raw_bound") || (cert["raw_bound"] = θ0[sc.tcol] * scale)
+        cert["certified_box_tight_rho"] = first(certified_value(sc, θ0; mode = :box, gradient = false))
+        cert["certified_implicit"] = first(certified_value(sc, θ0; gradient = false))
+        cert["certified_hybrid"] = first(certified_value(sc, θ0; mode = :hybrid, gradient = false))
+        cert["n_unrepresented_monomials"] = count(==(0), sc.repcol)
+        cert["n_square_groups"] = length(groups)
+        for k in ("certified_box_tight_rho", "certified_implicit", "certified_hybrid")
+            isfinite(cert[k]) && (!isfinite(bound) || cert[k] > bound) && (bound = cert[k])
+        end
+        cert["implicit_time"] = time() - tc
+        bp = Dict{Symbol,Any}(bundle_params)
+        get(bp, :keep, false) && (cert["_certificate"] = (sc, θ0))
+        delete!(bp, :keep)
+        method = pop!(bp, :method, certify == :bundle ? :bundle : :smooth)
+        if certify in (:optimize, :bundle)
+            tb = time()
+            Fb, _, hist = method == :bundle ? bundle_certify(sc, θ0; bp...) : smooth_certify(sc, θ0; bp...)
+            cert["certified_optimized"] = Fb
+            cert["optimize_method"] = string(method)
+            cert["optimize_evals"] = length(hist)
+            cert["optimize_time"] = time() - tb
+            isfinite(Fb) && Fb > bound && (bound = Fb)
+        end
     end
     yv = Dict{Vector{Int},Float64}()
     ps = dual_status(model)

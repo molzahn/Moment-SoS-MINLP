@@ -1,0 +1,45 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 20:27:01
+Job ID:    13206359
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mm4-118-ieee-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 118-ieee-api on atl1-1-02-005-19-1.pace.gatech.edu, cpus 8, mem 32768 MB, relaxations base,conn, start Mon Sep 14 20:27:02 EDT 2026
+
+=== 118-ieee-api: 186 binaries; AC-OPF 242236.79; paper O-DC-OTS 195918, AC-OTS 180312
+  base  bound 169277.05 (raw 169535.35) SLOW_PROGRESS  123.2s  binaries 186 (radial fixed 0, cuts 0)  max PSD 54  E[#opened] 10.1
+    independent            best infeasible   feas   0%  connected   7%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (82s)  Dict("LOCALLY_INFEASIBLE" => 78, "island_deficit" => 22)
+    independent+repair     best infeasible   feas   0%  connected   9%  ≤1% of best known   0%  unique 100  fixes/sample 0.2  (24s)  Dict("LOCALLY_INFEASIBLE" => 100)
+    gaussian               best infeasible   feas   0%  connected   9%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (94s)  Dict("LOCALLY_INFEASIBLE" => 74, "island_deficit" => 26)
+    gaussian+repair        best infeasible   feas   0%  connected  13%  ≤1% of best known   0%  unique 100  fixes/sample 0.3  (26s)  Dict("LOCALLY_INFEASIBLE" => 100)
+    conditional            best 229567.03    feas   1%  connected  11%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (76s)  Dict("LOCALLY_INFEASIBLE" => 72, "island_deficit" => 27)
+    conditional+repair     best 229567.03    feas   1%  connected  12%  ≤1% of best known   0%  unique 100  fixes/sample 0.3  (30s)  Dict("LOCALLY_INFEASIBLE" => 99)
+    conditional_guarded    best infeasible   feas   0%  connected  16%  ≤1% of best known   0%  unique 100  fixes/sample 0.4  (155s)  Dict("LOCALLY_INFEASIBLE" => 99, "ITERATION_LIMIT" => 1)
+    best rounded 229567.03 (8 lines opened); after 1-flip polish 222375.53 (40 evals, 31s)
+  conn  bound 169129.86 (raw 169532.07) SLOW_PROGRESS  94.9s  binaries 182 (radial fixed 4, cuts 186)  max PSD 54  E[#opened] 10.4
+    independent            best infeasible   feas   0%  connected  15%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (96s)  Dict("LOCALLY_INFEASIBLE" => 93, "island_deficit" => 7)
+    independent+repair     best infeasible   feas   0%  connected  15%  ≤1% of best known   0%  unique 100  fixes/sample 0.1  (5s)  Dict("LOCALLY_INFEASIBLE" => 100)
+    gaussian               best infeasible   feas   0%  connected  17%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (98s)  Dict("LOCALLY_INFEASIBLE" => 93, "island_deficit" => 7)
+    gaussian+repair        best infeasible   feas   0%  connected  19%  ≤1% of best known   0%  unique 100  fixes/sample 0.1  (6s)  Dict("LOCALLY_INFEASIBLE" => 100)
+    conditional            best infeasible   feas   0%  connected  12%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (94s)  Dict("LOCALLY_INFEASIBLE" => 90, "island_deficit" => 10)
+    conditional+repair     best infeasible   feas   0%  connected  13%  ≤1% of best known   0%  unique 100  fixes/sample 0.1  (12s)  Dict("LOCALLY_INFEASIBLE" => 100)
+    conditional_guarded    best infeasible   feas   0%  connected  12%  ≤1% of best known   0%  unique 100  fixes/sample 0.1  (104s)  Dict("LOCALLY_INFEASIBLE" => 100)
+    best rounded 242236.79 (0 lines opened); after 1-flip polish 237207.77 (40 evals, 33s)
+  SUMMARY 118-ieee-api: best found 222375.53 (paper AC-OTS 180312, O-DC-OTS 195918); best bound 169277.04634963337; gap 6.12%; 980 configs
+finished Mon Sep 14 20:49:31 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 20:49:31
+Job ID:        13206359
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mm4-118-ieee-api
+Resources:     cpu=8,mem=32G,node=1
+Rsrc Used:     cput=03:00:00,vmem=0,walltime=00:22:30,mem=5526788K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-19-1
+---------------------------------------

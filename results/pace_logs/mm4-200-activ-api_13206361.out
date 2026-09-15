@@ -1,0 +1,45 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 20:27:01
+Job ID:    13206361
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mm4-200-activ-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 200-activ-api on atl1-1-02-005-23-2.pace.gatech.edu, cpus 8, mem 32768 MB, relaxations base,conn, start Mon Sep 14 20:27:01 EDT 2026
+
+=== 200-activ-api: 245 binaries; AC-OPF 35701.47; paper O-DC-OTS 35701, AC-OTS 35701
+  base  bound 35594.66 (raw 35677.99) SLOW_PROGRESS  143.8s  binaries 245 (radial fixed 0, cuts 0)  max PSD 56  E[#opened] 19.2
+    independent            best 35703.14     feas   4%  connected   0%  ≤1% of best known   4%  unique 100  fixes/sample 0.0  (105s)  Dict("LOCALLY_INFEASIBLE" => 78, "island_deficit" => 18)
+    independent+repair     best 35703.14     feas   4%  connected   0%  ≤1% of best known   4%  unique 100  fixes/sample 0.2  (13s)  Dict("LOCALLY_INFEASIBLE" => 96)
+    gaussian               best 35706.95     feas   2%  connected   0%  ≤1% of best known   2%  unique 100  fixes/sample 0.0  (61s)  Dict("LOCALLY_INFEASIBLE" => 83, "island_deficit" => 15)
+    gaussian+repair        best 35706.95     feas   3%  connected   0%  ≤1% of best known   3%  unique 100  fixes/sample 0.1  (10s)  Dict("LOCALLY_INFEASIBLE" => 97)
+    conditional            best 35702.04     feas   2%  connected   0%  ≤1% of best known   2%  unique 100  fixes/sample 0.0  (59s)  Dict("LOCALLY_INFEASIBLE" => 81, "island_deficit" => 17)
+    conditional+repair     best 35702.04     feas   3%  connected   0%  ≤1% of best known   3%  unique 100  fixes/sample 0.2  (11s)  Dict("LOCALLY_INFEASIBLE" => 97)
+    conditional_guarded    best 35701.06     feas   2%  connected   0%  ≤1% of best known   2%  unique 100  fixes/sample 0.1  (78s)  Dict("LOCALLY_INFEASIBLE" => 97, "OTHER_ERROR" => 1)
+    best rounded 35701.06 (14 lines opened); after 1-flip polish 35700.98 (40 evals, 83s)
+  conn  bound 35549.51 (raw 35678.13) SLOW_PROGRESS  107.8s  binaries 222 (radial fixed 23, cuts 217)  max PSD 56  E[#opened] 21.0
+    independent            best 35702.84     feas   1%  connected   0%  ≤1% of best known   1%  unique 100  fixes/sample 0.0  (52s)  Dict("LOCALLY_INFEASIBLE" => 72, "island_deficit" => 27)
+    independent+repair     best 35702.84     feas   1%  connected   0%  ≤1% of best known   1%  unique 100  fixes/sample 0.3  (19s)  Dict("LOCALLY_INFEASIBLE" => 99)
+    gaussian               best 35703.48     feas   1%  connected   0%  ≤1% of best known   1%  unique 100  fixes/sample 0.0  (58s)  Dict("LOCALLY_INFEASIBLE" => 78, "island_deficit" => 21)
+    gaussian+repair        best 35703.48     feas   1%  connected   0%  ≤1% of best known   1%  unique 100  fixes/sample 0.2  (14s)  Dict("LOCALLY_INFEASIBLE" => 99)
+    conditional            best 35713.22     feas   2%  connected   0%  ≤1% of best known   2%  unique 100  fixes/sample 0.0  (63s)  Dict("LOCALLY_INFEASIBLE" => 90, "island_deficit" => 8)
+    conditional+repair     best 35713.22     feas   2%  connected   0%  ≤1% of best known   2%  unique 100  fixes/sample 0.1  (6s)  Dict("LOCALLY_INFEASIBLE" => 98)
+    conditional_guarded    best 35702.75     feas   3%  connected   0%  ≤1% of best known   2%  unique 100  fixes/sample 0.1  (71s)  Dict("LOCALLY_INFEASIBLE" => 97)
+    best rounded 35701.47 (0 lines opened); after 1-flip polish 35700.74 (40 evals, 23s)
+  SUMMARY 200-activ-api: best found 35700.74 (paper AC-OTS 35701, O-DC-OTS 35701); best bound 35594.66407601042; gap 0.30%; 987 configs
+finished Mon Sep 14 20:45:23 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 20:45:23
+Job ID:        13206361
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mm4-200-activ-api
+Resources:     cpu=8,mem=32G,node=1
+Rsrc Used:     cput=02:26:56,vmem=0,walltime=00:18:22,mem=7168068K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-23-2
+---------------------------------------

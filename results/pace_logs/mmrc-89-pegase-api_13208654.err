@@ -1,0 +1,23 @@
+	Command being timed: "/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia --project=. scripts/recertify.jl 89-pegase-api"
+	User time (seconds): 3255.06
+	System time (seconds): 45.95
+	Percent of CPU this job got: 196%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 27:56.05
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 27815544
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 203542
+	Minor (reclaiming a frame) page faults: 2932683
+	Voluntary context switches: 554446
+	Involuntary context switches: 55564
+	Swaps: 0
+	File system inputs: 8157456
+	File system outputs: 80
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

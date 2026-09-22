@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source hpc/pace_env.sh
-declare -A MEM=( [73-ieee-rts-api]=32G [89-pegase-api]=48G [118-ieee-api]=32G [179-goc-api]=32G [200-activ-api]=32G
+declare -A MEM=( [57-ieee-api]=48G [73-ieee-rts-api]=32G [89-pegase-api]=48G [118-ieee-api]=32G [179-goc-api]=32G [200-activ-api]=32G
                  [240-pserc-api]=48G [300-ieee-api]=64G [500-goc-api]=96G [1354-pegase-api]=160G )
 declare -A TIM=( [240-pserc-api]=24:00:00 [300-ieee-api]=24:00:00 [500-goc-api]=36:00:00 [1354-pegase-api]=72:00:00 )
 CASES=("$@")

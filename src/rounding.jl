@@ -55,6 +55,51 @@ function sample_gaussian(rel, bvars, N; rng = Random.default_rng())
     return [BitVector((L * randn(rng, length(μ))) .< thr) for _ in 1:N]
 end
 
+"""
+    sample_cardinality(μ, N; rng, kmax = nothing, guard = nothing) -> samples
+    sample_cardinality(rel, bvars, N; kwargs...)
+
+Open a *bounded* number of lines per sample, chosen without replacement with probability proportional to
+the opening marginal 1 - y_i (Gumbel top-k, i.e. Plackett–Luce sampling without replacement).
+
+Independent and Gaussian rounding decide each line on its own, so the number of lines opened at once
+concentrates around Σ(1 - y_i). On the large stressed "api" cases that is far more simultaneous openings
+than any feasible configuration has, which is why their AC-feasible sample rate collapses to 0-2% above
+118 buses while 89-pegase still reaches 38-55%. Capping the count keeps the relaxation's opinion about
+*which* lines to open while refusing to open all of them at once. `kmax` defaults to the relaxation's own
+expectation, round(Σ(1 - y_i)).
+
+With an `IslandGuard`, a line is only opened when that cannot create an island which provably cannot
+balance active power; a refused line is simply skipped, so the sample still reaches `kmax` openings where
+it can.
+"""
+function sample_cardinality(μ::AbstractVector{<:Real}, N::Int; rng = Random.default_rng(),
+    kmax::Union{Nothing,Int} = nothing, guard = nothing)
+    n = length(μ)
+    w = clamp.(1 .- μ, 0.0, 1.0)                       # propensity to open
+    K = min(n, kmax === nothing ? max(1, round(Int, sum(w))) : kmax)
+    logw = [x <= 0 ? -Inf : log(x) for x in w]
+    samples = BitVector[]
+    for _ in 1:N
+        keys = logw .- log.(-log.(rand(rng, n)))       # Gumbel top-k = weighted sampling w/o replacement
+        bits = trues(n)
+        opened = 0
+        for i in sortperm(keys; rev = true)
+            opened >= K && break
+            isfinite(keys[i]) || continue
+            if guard === nothing || can_open(guard, bits, i)
+                bits[i] = false
+                opened += 1
+            end
+        end
+        push!(samples, bits)
+    end
+    return samples
+end
+
+sample_cardinality(rel::MomentRelaxation, bvars::Vector{Int}, N::Int; kwargs...) =
+    sample_cardinality(marginals(rel, bvars), N; kwargs...)
+
 "Σ_{T ⊆ zeros} (-1)^|T| y(ones ∪ T ∪ extra): pseudo-probability that z_ones = 1, z_zeros = 0 (and z_extra = 1)."
 function _joint(rel, ones_vars::Vector{Int}, zero_vars::Vector{Int}, extra::Vector{Int})
     s = 0.0

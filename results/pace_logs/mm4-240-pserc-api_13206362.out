@@ -1,0 +1,45 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 20:27:01
+Job ID:    13206362
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mm4-240-pserc-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 240-pserc-api on atl1-1-02-005-25-2.pace.gatech.edu, cpus 8, mem 32768 MB, relaxations base,conn, start Mon Sep 14 20:27:01 EDT 2026
+
+=== 240-pserc-api: 393 binaries; AC-OPF 4640589.22; paper O-DC-OTS 4627155, AC-OTS –
+  base  bound 4604032.68 (raw 4607219.97) SLOW_PROGRESS  171.1s  binaries 393 (radial fixed 0, cuts 0)  max PSD 54  E[#opened] 33.0
+    independent            best 4636334.51   feas  27%  connected   0%  ≤1% of best known  19%  unique 100  fixes/sample 0.0  (2250s)  Dict("LOCALLY_INFEASIBLE" => 45, "ITERATION_LIMIT" => 3, "OTHER_ERROR" => 2, "island_deficit" => 1, "TIME_LIMIT" => 22)
+    independent+repair     best 4636334.51   feas  27%  connected   0%  ≤1% of best known  19%  unique 100  fixes/sample 0.0  (16s)  Dict("LOCALLY_INFEASIBLE" => 46, "ITERATION_LIMIT" => 3, "OTHER_ERROR" => 2, "TIME_LIMIT" => 22)
+    gaussian               best 4643709.64   feas  24%  connected   0%  ≤1% of best known  19%  unique 100  fixes/sample 0.0  (2118s)  Dict("LOCALLY_INFEASIBLE" => 49, "ITERATION_LIMIT" => 6, "OTHER_ERROR" => 2, "island_deficit" => 2, "TIME_LIMIT" => 17)
+    gaussian+repair        best 4643709.64   feas  24%  connected   0%  ≤1% of best known  19%  unique 100  fixes/sample 0.0  (20s)  Dict("LOCALLY_INFEASIBLE" => 51, "ITERATION_LIMIT" => 6, "OTHER_ERROR" => 2, "TIME_LIMIT" => 17)
+    conditional            best 4641697.20   feas  31%  connected   0%  ≤1% of best known  20%  unique 100  fixes/sample 0.0  (2047s)  Dict("LOCALLY_INFEASIBLE" => 46, "ITERATION_LIMIT" => 3, "OTHER_ERROR" => 1, "island_deficit" => 1, "TIME_LIMIT" => 18)
+    conditional+repair     best 4641697.20   feas  32%  connected   0%  ≤1% of best known  20%  unique 100  fixes/sample 0.0  (4s)  Dict("LOCALLY_INFEASIBLE" => 46, "ITERATION_LIMIT" => 3, "OTHER_ERROR" => 1, "TIME_LIMIT" => 18)
+    conditional_guarded    best 4640466.87   feas  37%  connected   0%  ≤1% of best known  24%  unique 100  fixes/sample 0.0  (1903s)  Dict("LOCALLY_INFEASIBLE" => 44, "ITERATION_LIMIT" => 3, "OTHER_ERROR" => 1, "TIME_LIMIT" => 15)
+    best rounded 4636334.51 (32 lines opened); after 1-flip polish 4635816.25 (40 evals, 146s)
+  conn  bound 4602357.61 (raw 4607223.70) SLOW_PROGRESS  160.5s  binaries 392 (radial fixed 1, cuts 199)  max PSD 54  E[#opened] 36.4
+    independent            best 4641765.08   feas  24%  connected   2%  ≤1% of best known  17%  unique 100  fixes/sample 0.0  (2395s)  Dict("LOCALLY_INFEASIBLE" => 46, "ITERATION_LIMIT" => 4, "island_deficit" => 5, "TIME_LIMIT" => 21)
+    independent+repair     best 4641765.08   feas  25%  connected   2%  ≤1% of best known  18%  unique 100  fixes/sample 0.1  (156s)  Dict("LOCALLY_INFEASIBLE" => 48, "ITERATION_LIMIT" => 6, "TIME_LIMIT" => 21)
+    gaussian               best 4639273.27   feas  33%  connected   0%  ≤1% of best known  23%  unique 100  fixes/sample 0.0  (1877s)  Dict("LOCALLY_INFEASIBLE" => 39, "ITERATION_LIMIT" => 6, "OTHER_ERROR" => 3, "island_deficit" => 7, "TIME_LIMIT" => 12)
+    gaussian+repair        best 4639273.27   feas  35%  connected   0%  ≤1% of best known  25%  unique 100  fixes/sample 0.1  (194s)  Dict("LOCALLY_INFEASIBLE" => 41, "ITERATION_LIMIT" => 8, "OTHER_ERROR" => 3, "TIME_LIMIT" => 13)
+    conditional            best 4641228.44   feas  27%  connected   0%  ≤1% of best known  15%  unique 100  fixes/sample 0.0  (2001s)  Dict("LOCALLY_INFEASIBLE" => 46, "ITERATION_LIMIT" => 1, "OTHER_ERROR" => 2, "island_deficit" => 6, "TIME_LIMIT" => 18)
+    conditional+repair     best 4637511.18   feas  30%  connected   0%  ≤1% of best known  17%  unique 100  fixes/sample 0.1  (90s)  Dict("LOCALLY_INFEASIBLE" => 48, "ITERATION_LIMIT" => 1, "OTHER_ERROR" => 2, "TIME_LIMIT" => 19)
+    conditional_guarded    best 4638057.00   feas  32%  connected   0%  ≤1% of best known  26%  unique 100  fixes/sample 0.1  (2161s)  Dict("LOCALLY_INFEASIBLE" => 44, "ITERATION_LIMIT" => 3, "OTHER_ERROR" => 1, "TIME_LIMIT" => 20)
+    best rounded 4637511.18 (31 lines opened); after 1-flip polish 4637444.97 (40 evals, 145s)
+  SUMMARY 240-pserc-api: best found 4635816.25 (paper AC-OTS –, O-DC-OTS 4627155); best bound 4.604032677023454e6; gap 0.50%; 903 configs
+finished Tue Sep 15 01:28:32 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-15-2026 01:28:32
+Job ID:        13206362
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mm4-240-pserc-api
+Resources:     cpu=8,mem=32G,node=1
+Rsrc Used:     cput=1-16:12:08,vmem=0,walltime=05:01:31,mem=9201736K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-25-2
+---------------------------------------

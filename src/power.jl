@@ -17,6 +17,11 @@
   is never switchable; every bus keeps its own power balance. This is the zero-impedance limit of the tie
   (as for PowerModels switches) and removes admittances of order 1e3–1e4 that break the SDP numerics.
   Unlike `merge_low_impedance` on the data, tie thermal limits are kept (they bind on 89-pegase).
+* `merge_safe` (default `true`): keep out of the merge any tie that would make the merged model infeasible
+  or shift its AC-OPF value by more than `merge_tol` (see `safe_merge_exclusions`). Without this,
+  1354-pegase merges into an infeasible model and its relaxation returns a "bound" above the true optimum.
+  `merge_exclude` names further ties to leave unmerged. The ties actually dropped from the merge are
+  recorded in `pop.meta["merge_excluded"]`.
 * `fix_radial`: keep closed (not switchable) every switchable bridge whose removal leaves an island that
   provably cannot balance active power (`radial_fixings`).
 * `conn_cuts`: add cuts Σ_{l∈δ(S)} z_l >= 1 for bus sets |S| <= `conn_cuts` that cannot balance power on
@@ -29,13 +34,18 @@ Both are valid for every configuration that passes `island_screen`, so bounds st
 """
 function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable = Int[],
     exact_switching::Bool = true, bigM_switching::Bool = true, capacity_cut::Bool = true, name::String = "",
-    merge_zmax::Float64 = 0.0, fix_radial::Bool = false, conn_cuts::Int = 0, cut_graph_max::Int = 0)
+    merge_zmax::Float64 = 0.0, merge_safe::Bool = true, merge_tol::Float64 = 0.01, merge_exclude = Int[],
+    fix_radial::Bool = false, conn_cuts::Int = 0, cut_graph_max::Int = 0)
     ref = PowerModels.build_ref(data)[:it][:pm][:nw][0]
     pop = POP()
     binaries = Tuple{Symbol,Int}[]
     buses = sort(collect(keys(ref[:bus])))
     refbus = first(sort(collect(keys(ref[:ref_buses]))))
-    groups, ties = low_impedance_groups(data; zmax = merge_zmax)
+    excluded = sort(collect(merge_exclude))
+    if merge_zmax > 0 && merge_safe
+        excluded = sort(union(excluded, cached_merge_exclusions(data; zmax = merge_zmax, tol = merge_tol, name = name)))
+    end
+    groups, ties = low_impedance_groups(data; zmax = merge_zmax, exclude = excluded)
     rep(i) = get(groups, i, i)
     switchable = setdiff(switchable, ties)
     radial = fix_radial ? radial_fixings(data, switchable) : Int[]
@@ -269,6 +279,7 @@ function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable 
     pop.meta["binary_vars"] = [findfirst(==(k == :gen ? "u[$id]" : "z[$id]"), pop.names) for (k, id) in binaries]
     pop.meta["refbus"] = refbus
     pop.meta["merged_ties"] = ties
+    pop.meta["merge_excluded"] = excluded
     pop.meta["radial_fixed"] = radial
     ncuts = 0
     cut_cliques = Vector{Vector{Int}}()
@@ -292,13 +303,17 @@ end
 # Network preprocessing
 
 """
-    low_impedance_groups(data; zmax) -> (groups = Dict(bus id => representative bus id), ties = branch ids)
+    low_impedance_groups(data; zmax, exclude = Int[]) -> (groups = Dict(bus id => representative bus id),
+                                                          ties = branch ids)
 
-Ties: in-service, non-transformer branches (tap = 1, shift = 0) with |r + jx| < `zmax`. Buses connected by
-ties form a group; its representative is the reference bus if the group has one, else the smallest id.
+Ties: in-service, non-transformer branches (tap = 1, shift = 0) with |r + jx| < `zmax`, except the branch
+ids in `exclude`, which stay ordinary (switchable, loss-carrying) branches. Buses connected by ties form a
+group; its representative is the reference bus if the group has one, else the smallest id.
 """
-function low_impedance_groups(data::Dict{String,Any}; zmax::Float64)
-    istie(b) = get(b, "br_status", 1) != 0 && abs(complex(b["br_r"], b["br_x"])) < zmax && b["tap"] == 1 && b["shift"] == 0
+function low_impedance_groups(data::Dict{String,Any}; zmax::Float64, exclude = Int[])
+    skip = Set(exclude)
+    istie(b) = get(b, "br_status", 1) != 0 && abs(complex(b["br_r"], b["br_x"])) < zmax && b["tap"] == 1 &&
+               b["shift"] == 0 && !(b["index"] in skip)
     ties = sort([b["index"] for b in values(data["branch"]) if istie(b)])
     groups = Dict(b["index"] => b["index"] for b in values(data["bus"]))
     isempty(ties) && return (groups, ties)
@@ -321,6 +336,77 @@ function low_impedance_groups(data::Dict{String,Any}; zmax::Float64)
         end
     end
     return (groups, ties)
+end
+
+"""
+    safe_merge_exclusions(data; zmax, tol = 0.01, maxiter = 25, name = "", verbose = false)
+        -> (exclude = branch ids, ok, reference, merged, iters)
+
+Branch ids that must be kept *out* of the low-impedance merge for the merged model to remain a faithful
+model of `data`.
+
+Merging a tie forces its end buses to share a voltage and remodels its flow as lossless. That is harmless
+when the tie has slack, but a tie sitting exactly *at* its thermal limit has none. On 1354-pegase (184
+merged ties) the all-closed merged model is infeasible while the unmerged one solves to the paper's AC-OPF
+cost, and scaling only the merged-tie ratings by 1.10 restores feasibility. A relaxation built on such a
+model relaxes the wrong problem, and its "bound" can exceed the true optimum: 1354-pegase reported
+2.58e6–3.77e6 against a known feasible 1.498e6.
+
+Rather than guessing a smaller `zmax`, the rule validates itself: compare the all-closed AC-OPF of the
+merged model with the unmerged one, and while it is infeasible or off by more than `tol` (relative), drop
+the most heavily loaded merged tie (|S| / rate_a at the unmerged solution) from the merge and retry. It
+terminates in the worst case with nothing merged. `ok = false` means no validated merge was found within
+`maxiter`; the caller should treat bounds from the resulting model as unverified.
+"""
+function safe_merge_exclusions(data::Dict{String,Any}; zmax::Float64, tol::Float64 = 0.01,
+    maxiter::Int = 25, name::String = "", verbose::Bool = false)
+    exclude = Int[]
+    zmax > 0 || return (exclude = exclude, ok = true, reference = NaN, merged = NaN, iters = 0)
+    _, ties0 = low_impedance_groups(data; zmax = zmax)
+    isempty(ties0) && return (exclude = exclude, ok = true, reference = NaN, merged = NaN, iters = 0)
+
+    sol = PowerModels.solve_ac_opf(data, ipopt_optimizer())
+    reference = get(sol, "objective", NaN)
+    if !(string(sol["termination_status"]) in ("LOCALLY_SOLVED", "OPTIMAL")) || !isfinite(reference)
+        @warn "safe_merge_exclusions: unmerged AC-OPF did not solve; merge left unvalidated" name
+        return (exclude = exclude, ok = false, reference = reference, merged = NaN, iters = 0)
+    end
+    loading = Dict{Int,Float64}()                    # |S| / rate_a at the unmerged solution
+    for l in ties0
+        rate = get(data["branch"][string(l)], "rate_a", 0.0)
+        s = get(sol["solution"]["branch"], string(l), nothing)
+        loading[l] = (s === nothing || !(rate > 0)) ? 0.0 : hypot(s["pf"], s["qf"]) / rate
+    end
+
+    merged = NaN
+    for it in 1:maxiter
+        _, ties = low_impedance_groups(data; zmax = zmax, exclude = exclude)
+        isempty(ties) && return (exclude = exclude, ok = true, reference = reference, merged = reference, iters = it)
+        pop = build_power_pop(data; name = name, merge_zmax = zmax, merge_exclude = exclude, merge_safe = false)
+        r = solve_nlp(pop)
+        merged = r.objective
+        if r.feasible && isfinite(merged) && abs(merged - reference) <= tol * max(abs(reference), 1.0)
+            return (exclude = exclude, ok = true, reference = reference, merged = merged, iters = it)
+        end
+        worst = argmax(l -> get(loading, l, 0.0), ties)
+        push!(exclude, worst)
+        verbose && @info "safe_merge_exclusions: un-merging tie $worst" loading = get(loading, worst, 0.0) status = string(r.status)
+    end
+    @warn "safe_merge_exclusions: no validated merge after $maxiter un-merges" name nexcluded = length(exclude)
+    return (exclude = sort(exclude), ok = false, reference = reference, merged = merged, iters = maxiter)
+end
+
+"Cache for `safe_merge_exclusions`, which costs one AC-OPF per un-merge and is hit once per POP build."
+const MERGE_EXCLUSION_CACHE = Dict{Any,Vector{Int}}()
+
+function cached_merge_exclusions(data::Dict{String,Any}; zmax::Float64, tol::Float64, name::String = "")
+    key = (zmax, tol, length(data["bus"]), length(data["branch"]),
+        hash(sort([(b["index"], Float64(get(b, "rate_a", 0.0)), Float64(b["br_r"]), Float64(b["br_x"]),
+            Int(get(b, "br_status", 1))) for b in values(data["branch"])])),
+        hash(sort([(l["index"], Float64(l["pd"]), Float64(l["qd"])) for l in values(get(data, "load", Dict{String,Any}()))])))
+    get!(MERGE_EXCLUSION_CACHE, key) do
+        safe_merge_exclusions(data; zmax = zmax, tol = tol, name = name).exclude
+    end
 end
 
 """

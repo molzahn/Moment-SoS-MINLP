@@ -143,9 +143,17 @@ function run_case(name)
     feas = [r.cost for r in values(ev.cache) if r.feasible]
     res["best_found"] = minimum(feas)
     res["n_configs_evaluated"] = length(ev.cache)
-    bounds = [o["bound"] for o in values(res["relaxations"]) if isfinite(o["bound"])]
-    res["best_bound"] = isempty(bounds) ? nothing : maximum(bounds)
     bk = min(res["best_found"], best_known)
+    res["best_known"] = bk
+    # A lower bound above a known feasible cost is impossible: flag it and keep it out of the summary.
+    for o in values(res["relaxations"])
+        o["bound_valid"] = check_bound(get(o, "bound", nothing), bk)
+    end
+    invalid = sort([k for (k, o) in res["relaxations"] if isfinite(o["bound"]) && !o["bound_valid"]])
+    res["invalid_bound_variants"] = invalid
+    isempty(invalid) || @warn "INVALID BOUND(S): lower bound exceeds a known feasible cost. Do not report." case = name variants = invalid best_known = bk
+    bounds = [o["bound"] for o in values(res["relaxations"]) if isfinite(o["bound"]) && o["bound_valid"]]
+    res["best_bound"] = isempty(bounds) ? nothing : maximum(bounds)
     res["certified_gap_best_known"] = isempty(bounds) ? nothing : (bk - maximum(bounds)) / bk
     @printf("  SUMMARY %s: best found %.2f (paper AC-OTS %s, O-DC-OTS %d); best bound %s; gap %s; %d configs\n", name,
         res["best_found"], something(row[5], "–"), row[4], something(res["best_bound"], "–"),

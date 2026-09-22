@@ -1,0 +1,45 @@
+{
+ "case": "73-ieee-rts-api",
+ "paper_acots": 385194,
+ "paper_odcots": 413133,
+ "variants": {
+  "exp3/mixed": {
+   "bound": 368338.1225273555,
+   "box": 368210.96405764716,
+   "box_tight_rho": 368210.9640576516,
+   "hybrid": 368309.9003767539,
+   "implicit": 368309.2865352497,
+   "optimize_evals": 121,
+   "optimize_time": 59.99938106536865,
+   "optimized": 368338.1225273555,
+   "primal_status": "FEASIBLE_POINT",
+   "raw": 368345.10367870424,
+   "saved_bound": 367152.4003657348,
+   "saved_raw": 368345.7082548859,
+   "solve_time": 147.19485746975988,
+   "square_groups": 312,
+   "status": "SLOW_PROGRESS",
+   "time": 261.10047724,
+   "unrepresented_monomials": 0
+  },
+  "exp3/mixed_nobigM": {
+   "bound": 368243.66627173225,
+   "box": 368213.37715855293,
+   "box_tight_rho": 368213.37715855316,
+   "hybrid": 368237.37130055006,
+   "implicit": 368237.2716087923,
+   "optimize_evals": 121,
+   "optimize_time": 38.05156111717224,
+   "optimized": 368243.66627173225,
+   "primal_status": "FEASIBLE_POINT",
+   "raw": 368244.23600804777,
+   "saved_bound": 368109.93712407275,
+   "saved_raw": 368244.38376549096,
+   "solve_time": 38.13203022163361,
+   "square_groups": 312,
+   "status": "SLOW_PROGRESS",
+   "time": 80.338286022,
+   "unrepresented_monomials": 0
+  }
+ }
+}

@@ -3,7 +3,7 @@
 # Data: PGLib-OPF v21.07 "api" cases (data/pglib_api/, copied from the authors' OTS project data).
 # All branches are switchable. Costs in $/h; AC-OTS = PowerModels AC-OTS solved with Juniper (local).
 
-using MomentMINLP, PowerModels
+using MomentMINLP, PowerModels, JSON
 
 const API_DIR = joinpath(@__DIR__, "..", "data", "pglib_api")
 
@@ -31,6 +31,38 @@ const DCOTS_PAPER = [
 ]
 
 paper_row(name) = DCOTS_PAPER[findfirst(r -> r[1] == name, DCOTS_PAPER)]
+
+"""
+    best_known_cost(name) -> Float64
+
+Lowest AC-feasible cost known for `name`: the paper's AC-OPF (all lines closed, feasible by construction),
+its O-DC-OTS and AC-OTS values, and any `best_found` recorded by experiments 3 and 4.
+
+A certified lower bound must never exceed this. When one does, the relaxation is not a relaxation of this
+problem — 1354-pegase reported 2.58e6-3.77e6 against a known feasible 1.498e6 because low-impedance merging
+had made its model infeasible (see `safe_merge_exclusions` and results/merging_findings.md).
+"""
+function best_known_cost(name)
+    row = paper_row(name)
+    vals = Float64[Float64(v) for v in (row[3], row[4], row[5]) if v !== nothing]
+    for f in ("experiment3_$(name).json", "experiment4_$(name).json")
+        p = joinpath(@__DIR__, "..", "results", f)
+        isfile(p) || continue
+        v = get(JSON.parsefile(p), "best_found", nothing)
+        (v isa Real && isfinite(v)) && push!(vals, Float64(v))
+    end
+    return minimum(vals)
+end
+
+"""
+    check_bound(value, best_known; tol = 1e-6) -> Bool
+
+`false` when `value` is a lower bound that exceeds a known feasible cost, which is impossible. Callers warn
+and record the flag rather than throwing: these bounds cost hours of PACE time, so the run should finish and
+save, and the tabulation step is where an invalid row is refused.
+"""
+check_bound(value, best_known; tol::Float64 = 1e-6) =
+    !(value isa Real) || !isfinite(value) || value <= best_known + tol * max(abs(best_known), 1.0)
 parse_api(stem) = PowerModels.parse_file(joinpath(API_DIR, "pglib_opf_$(stem)__api.m"))
 
 "Buses joined by non-transformer branches with |z| below this (p.u.) share a voltage (env MERGE_ZMAX; 0 = off)."

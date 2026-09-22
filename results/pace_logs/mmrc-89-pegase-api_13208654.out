@@ -1,0 +1,29 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 22:53:00
+Job ID:    13208654
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mmrc-89-pegase-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 89-pegase-api on atl1-1-02-005-18-2.pace.gatech.edu, cpus 8, mem 49152 MB, certificate optimization time 1800 s, start Mon Sep 14 22:53:00 EDT 2026
+89-pegase-api    exp3/mixed         SLOW_PROGRESS  raw 99918.36 (saved 99918.79) | box 99515.62 | box ρ* 99515.62 | implicit 99776.26 | hybrid 99779.77 | optimized 99883.65 | saved certified 99517.69 | 275s (opt 108s)
+89-pegase-api    exp3/mixed_nobigM  SLOW_PROGRESS  raw 99914.69 (saved 99915.00) | box 99486.15 | box ρ* 99486.15 | implicit 99775.56 | hybrid 99778.14 | optimized 99890.19 | saved certified 99293.18 | 121s (opt 64s)
+89-pegase-api    exp3/adj16         SLOW_PROGRESS  raw 99993.57 (saved 100001.48) | box 96945.01 | box ρ* 96945.01 | implicit 98730.54 | hybrid 98767.65 | optimized 99755.04 | saved certified 97009.47 | 857s (opt 213s)
+89-pegase-api    exp4/base          SLOW_PROGRESS  raw 99914.69 (saved 99914.69) | box 99486.15 | box ρ* 99486.15 | implicit 99775.56 | hybrid 99778.14 | optimized 99890.19 | saved certified 99486.15 | 148s (opt 64s)
+89-pegase-api    exp4/conn          SLOW_PROGRESS  raw 99915.90 (saved 99915.90) | box 99626.63 | box ρ* 99626.63 | implicit 99830.71 | hybrid 99832.67 | optimized 99889.84 | saved certified 99626.63 | 148s (opt 65s)
+finished Mon Sep 14 23:20:56 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 23:20:56
+Job ID:        13208654
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mmrc-89-pegase-api
+Resources:     cpu=8,mem=48G,node=1
+Rsrc Used:     cput=03:43:28,vmem=0,walltime=00:27:56,mem=28064432K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-18-2
+---------------------------------------

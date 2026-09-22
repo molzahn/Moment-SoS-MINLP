@@ -1,0 +1,45 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 20:27:01
+Job ID:    13206364
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mm4-500-goc-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 500-goc-api on atl1-1-02-006-2-1.pace.gatech.edu, cpus 8, mem 65536 MB, relaxations base,conn, start Mon Sep 14 20:27:01 EDT 2026
+
+=== 500-goc-api: 728 binaries; AC-OPF 692407.34; paper O-DC-OTS 692271, AC-OTS –
+  base  bound NaN (raw NaN) SLOW_PROGRESS  482.9s  binaries 728 (radial fixed 0, cuts 0)  max PSD 72  E[#opened] 50.5
+    independent            best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (2314s)  Dict("LOCALLY_INFEASIBLE" => 74, "OTHER_ERROR" => 2, "island_deficit" => 5, "TIME_LIMIT" => 19)
+    independent+repair     best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.1  (183s)  Dict("LOCALLY_INFEASIBLE" => 77, "OTHER_ERROR" => 2, "TIME_LIMIT" => 21)
+    gaussian               best 686477.14    feas   1%  connected   0%  ≤1% of best known   1%  unique 100  fixes/sample 0.0  (2583s)  Dict("LOCALLY_INFEASIBLE" => 64, "OTHER_ERROR" => 5, "island_deficit" => 7, "TIME_LIMIT" => 23)
+    gaussian+repair        best 686477.14    feas   1%  connected   0%  ≤1% of best known   1%  unique 100  fixes/sample 0.1  (91s)  Dict("LOCALLY_INFEASIBLE" => 71, "OTHER_ERROR" => 5, "TIME_LIMIT" => 23)
+    conditional            best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (2565s)  Dict("LOCALLY_INFEASIBLE" => 74, "OTHER_ERROR" => 1, "island_deficit" => 3, "TIME_LIMIT" => 22)
+    conditional+repair     best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (126s)  Dict("LOCALLY_INFEASIBLE" => 75, "OTHER_ERROR" => 1, "TIME_LIMIT" => 24)
+    conditional_guarded    best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.1  (2823s)  Dict("LOCALLY_INFEASIBLE" => 71, "OTHER_ERROR" => 6, "TIME_LIMIT" => 23)
+    best rounded 686477.14 (44 lines opened); after 1-flip polish 685131.34 (40 evals, 112s)
+  conn  bound NaN (raw NaN) SLOW_PROGRESS  448.5s  binaries 708 (radial fixed 20, cuts 598)  max PSD 72  E[#opened] 50.8
+    independent            best 699940.35    feas   1%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (2383s)  Dict("LOCALLY_INFEASIBLE" => 75, "OTHER_ERROR" => 10, "island_deficit" => 1, "TIME_LIMIT" => 13)
+    independent+repair     best 699940.35    feas   1%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (61s)  Dict("LOCALLY_INFEASIBLE" => 75, "OTHER_ERROR" => 10, "TIME_LIMIT" => 14)
+    gaussian               best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (2195s)  Dict("LOCALLY_INFEASIBLE" => 77, "OTHER_ERROR" => 7, "island_deficit" => 4, "TIME_LIMIT" => 12)
+    gaussian+repair        best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.1  (83s)  Dict("LOCALLY_INFEASIBLE" => 81, "OTHER_ERROR" => 7, "TIME_LIMIT" => 12)
+    conditional            best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (2508s)  Dict("LOCALLY_INFEASIBLE" => 72, "OTHER_ERROR" => 8, "island_deficit" => 6, "TIME_LIMIT" => 14)
+    conditional+repair     best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.1  (127s)  Dict("LOCALLY_INFEASIBLE" => 77, "OTHER_ERROR" => 8, "TIME_LIMIT" => 15)
+    conditional_guarded    best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.1  (2563s)  Dict("LOCALLY_INFEASIBLE" => 78, "OTHER_ERROR" => 4, "TIME_LIMIT" => 18)
+    best rounded 692407.34 (0 lines opened); after 1-flip polish 692343.84 (40 evals, 688s)
+  SUMMARY 500-goc-api: best found 685131.34 (paper AC-OTS –, O-DC-OTS 692271); best bound –; gap –; 907 configs
+finished Tue Sep 15 02:45:59 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-15-2026 02:45:59
+Job ID:        13206364
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mm4-500-goc-api
+Resources:     cpu=8,mem=64G,node=1
+Rsrc Used:     cput=2-02:31:44,vmem=0,walltime=06:18:58,mem=16504180K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-006-2-1
+---------------------------------------

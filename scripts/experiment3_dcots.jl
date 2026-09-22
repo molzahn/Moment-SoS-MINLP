@@ -134,11 +134,22 @@ function run_case(name)
     feas = [r.cost for r in values(ev.cache) if r.feasible]
     res["best_found"] = minimum(feas)
     res["n_configs_evaluated"] = length(ev.cache)
-    bounds = [o["bound"] for o in values(res["relaxations"]) if !get(o, "failed", false) && isfinite(o["bound"])]
+    # ours, paper AC-OTS, paper O-DC-OTS, paper AC-OPF (all-closed, feasible by construction)
+    ref = minimum(filter(!isnothing, [res["best_found"], row[5], row[4], row[3]]))
+    res["best_known"] = ref
+    # A lower bound above a known feasible cost is impossible, so the relaxation is not a relaxation of this
+    # problem (1354-pegase: merging had made the model infeasible). Flag it and keep it out of the summary.
+    for o in values(res["relaxations"])
+        o["bound_valid"] = check_bound(get(o, "bound", nothing), ref)
+    end
+    invalid = sort([k for (k, o) in res["relaxations"] if !get(o, "failed", false) && !o["bound_valid"]])
+    res["invalid_bound_variants"] = invalid
+    isempty(invalid) || @warn "INVALID BOUND(S): lower bound exceeds a known feasible cost. Do not report." case = name variants = invalid best_known = ref
+    ok(o) = !get(o, "failed", false) && isfinite(o["bound"]) && o["bound_valid"]
+    bounds = [o["bound"] for o in values(res["relaxations"]) if ok(o)]
     res["best_bound_variant"] = isempty(bounds) ? nothing :
-        first(k for (k, o) in res["relaxations"] if !get(o, "failed", false) && o["bound"] === maximum(bounds))
+        first(k for (k, o) in res["relaxations"] if ok(o) && o["bound"] == maximum(bounds))
     res["best_bound"] = isempty(bounds) ? nothing : maximum(bounds)
-    ref = minimum(filter(!isnothing, [res["best_found"], row[5], row[4]]))   # ours, paper AC-OTS, paper O-DC-OTS (AC cost)
     res["certified_gap_best_known"] = res["best_bound"] === nothing ? nothing : (ref - res["best_bound"]) / ref
     @printf("  SUMMARY %s: best found %.2f vs paper AC-OTS %s / O-DC-OTS %d; best bound %.2f; certified gap of best known %.2f%%; %d configs\n",
         name, res["best_found"], something(row[5], "–"), row[4], something(res["best_bound"], NaN),

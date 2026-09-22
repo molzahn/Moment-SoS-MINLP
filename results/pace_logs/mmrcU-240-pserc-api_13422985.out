@@ -1,0 +1,28 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-21-2026 21:36:23
+Job ID:    13422985
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6-fy20phase3
+Job name:  mmrcU-240-pserc-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/project/r-dmolzahn6-0/dmolzahn6/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/project/r-dmolzahn6-0/dmolzahn6/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 240-pserc-api on atl1-1-02-005-1-1.pace.gatech.edu, cpus 8, mem 65536 MB, certificate optimization time 1800 s, start Mon Sep 21 09:36:24 PM EDT 2026
+240-pserc-api    exp3/mixed         SLOW_PROGRESS  raw 4607123.23 (saved 4607419.91) | box 4601248.38 | box ρ* 4601248.38 | implicit 4603716.27 | hybrid 4604117.58 | optimized 4605964.80 | saved certified 4586789.06 | 731s (opt 307s)
+240-pserc-api    exp3/mixed_nobigM  SLOW_PROGRESS  raw 4606950.68 (saved 4607219.97) | box 4603051.87 | box ρ* 4603051.87 | implicit 4604770.83 | hybrid 4605002.31 | optimized 4606386.34 | saved certified 4604032.68 | 398s (opt 173s)
+240-pserc-api    exp4/base          SLOW_PROGRESS  raw 4606950.68 (saved 4607219.97) | box 4603051.87 | box ρ* 4603051.87 | implicit 4604770.83 | hybrid 4605002.31 | optimized 4606386.34 | saved certified 4604032.68 | 416s (opt 186s)
+240-pserc-api    exp4/conn          SLOW_PROGRESS  raw 4606962.19 (saved 4607223.70) | box 4601099.57 | box ρ* 4601099.57 | implicit 4603387.77 | hybrid 4603795.00 | optimized 4606164.41 | saved certified 4602357.61 | 408s (opt 196s)
+finished Mon Sep 21 10:09:41 PM EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-21-2026 22:09:41
+Job ID:        13422985
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6-fy20phase3
+Job name:      mmrcU-240-pserc-api
+Resources:     cpu=8,mem=64G,node=1
+Rsrc Used:     cput=04:26:48,vmem=0,walltime=00:33:21,mem=14558024K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-1-1
+---------------------------------------

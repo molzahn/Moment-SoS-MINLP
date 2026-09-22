@@ -1,0 +1,23 @@
+	Command being timed: "/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia --project=. scripts/experiment4_islanding.jl 200-activ-api"
+	User time (seconds): 1324.50
+	System time (seconds): 17.49
+	Percent of CPU this job got: 121%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 18:21.00
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 6806996
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 202707
+	Minor (reclaiming a frame) page faults: 1618059
+	Voluntary context switches: 315151
+	Involuntary context switches: 731078
+	Swaps: 0
+	File system inputs: 8062672
+	File system outputs: 224
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

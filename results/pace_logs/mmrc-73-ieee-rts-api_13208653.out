@@ -1,0 +1,26 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 22:53:00
+Job ID:    13208653
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mmrc-73-ieee-rts-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 73-ieee-rts-api on atl1-1-02-005-17-2.pace.gatech.edu, cpus 8, mem 32768 MB, certificate optimization time 1800 s, start Mon Sep 14 22:53:00 EDT 2026
+73-ieee-rts-api  exp3/mixed         SLOW_PROGRESS  raw 368345.10 (saved 368345.71) | box 368210.96 | box ρ* 368210.96 | implicit 368309.29 | hybrid 368309.90 | optimized 368338.12 | saved certified 367152.40 | 261s (opt 60s)
+73-ieee-rts-api  exp3/mixed_nobigM  SLOW_PROGRESS  raw 368244.24 (saved 368244.38) | box 368213.38 | box ρ* 368213.38 | implicit 368237.27 | hybrid 368237.37 | optimized 368243.67 | saved certified 368109.94 | 80s (opt 38s)
+finished Mon Sep 14 23:00:32 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 23:00:32
+Job ID:        13208653
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mmrc-73-ieee-rts-api
+Resources:     cpu=8,mem=32G,node=1
+Rsrc Used:     cput=01:00:16,vmem=0,walltime=00:07:32,mem=4253880K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-17-2
+---------------------------------------

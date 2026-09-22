@@ -1,0 +1,27 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 22:53:00
+Job ID:    13208644
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mmrc-3-lmbd-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 3-lmbd-api on atl1-1-02-005-9-1.pace.gatech.edu, cpus 8, mem 16384 MB, certificate optimization time 1800 s, start Mon Sep 14 22:53:00 EDT 2026
+3-lmbd-api       exp3/mixed         OPTIMAL        raw 10635.95 (saved 10635.95) | box 10635.95 | box ρ* 10635.95 | implicit 10635.95 | hybrid 10635.95 | optimized 10635.95 | saved certified 10635.95 | 28s (opt 1s)
+3-lmbd-api       exp3/adj16         OPTIMAL        raw 10635.95 (saved 10635.95) | box 10635.95 | box ρ* 10635.95 | implicit 10635.95 | hybrid 10635.95 | optimized 10635.95 | saved certified 10635.95 | 4s (opt 1s)
+3-lmbd-api       exp3/adj16_pairs   OPTIMAL        raw 10635.95 (saved 10635.95) | box 10635.95 | box ρ* 10635.95 | implicit 10635.95 | hybrid 10635.95 | optimized 10635.95 | saved certified 10635.95 | 2s (opt 1s)
+finished Mon Sep 14 22:55:17 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 22:55:17
+Job ID:        13208644
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mmrc-3-lmbd-api
+Resources:     cpu=8,mem=16G,node=1
+Rsrc Used:     cput=00:18:16,vmem=0,walltime=00:02:17,mem=1593200K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-9-1
+---------------------------------------

@@ -16,10 +16,10 @@ import PowerModels
 export Poly, pvar, POP, add_var!, add_ineq!, add_eq!, add_pmi!, fix_variables, solve_nlp,
     solve_moment_relaxation, MomentRelaxation, moment, chordal_cliques, binary_clique_order, adjacent_clique_order, capped_augmentation,
     SOSCertificate, certified_value, bundle_certify, smooth_certify,
-    merge_low_impedance, IslandGuard, island_screen, repair_islands!, can_open, radial_fixings, connectivity_cuts,
+    merge_low_impedance, low_impedance_groups, safe_merge_exclusions, IslandGuard, island_screen, repair_islands!, can_open, radial_fixings, connectivity_cuts,
     build_power_pop, ConfigEvaluator, evaluate!, enumerate_configs!, best_config, config_data, screen_config,
     binvars, marginals, binary_correlation, sample_threshold, sample_independent, sample_gaussian,
-    sample_conditional, repair_samples, sample_dive, summarize_samples, mosek_optimizer, ipopt_optimizer
+    sample_conditional, sample_cardinality, repair_samples, sample_dive, summarize_samples, mosek_optimizer, ipopt_optimizer
 
 include("polynomials.jl")
 include("pop.jl")

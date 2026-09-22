@@ -1,1 +1,7 @@
 .DS_Store
+# LaTeX build artifacts (notes/findings.tex)
+notes/*.aux
+notes/*.log
+notes/*.out
+notes/*.toc
+notes/*.synctex.gz

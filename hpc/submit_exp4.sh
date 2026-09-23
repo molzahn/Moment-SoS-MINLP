@@ -4,8 +4,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source hpc/pace_env.sh
+pace_check_account
 submit() {  # case mem time
-    CASE="$1" sbatch --account="$PACE_ACCOUNT" --job-name="mm4-$1" --mem="$2" --time="$3" --export=ALL hpc/experiment4.sbatch
+    local q; q="$(pace_qos_for "$3")"
+    echo "[submit] $1  mem=$2 time=$3 qos=$q account=$PACE_ACCOUNT"
+    CASE="$1" sbatch --account="$PACE_ACCOUNT" --qos="$q" --job-name="mm4-$1" --mem="$2" --time="$3" --export=ALL hpc/experiment4.sbatch
 }
 submit 89-pegase-api    32G 12:00:00
 submit 118-ieee-api     32G 12:00:00

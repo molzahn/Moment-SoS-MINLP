@@ -36,7 +36,8 @@ paper_row(name) = DCOTS_PAPER[findfirst(r -> r[1] == name, DCOTS_PAPER)]
     best_known_cost(name) -> Float64
 
 Lowest AC-feasible cost known for `name`: the paper's AC-OPF (all lines closed, feasible by construction),
-its O-DC-OTS and AC-OTS values, and any `best_found` recorded by experiments 3 and 4.
+its O-DC-OTS and AC-OTS values, `best_found` from experiments 3 and 4, and `best_rounded` from the
+experiment-5 cardinality sweep (which produced new best solutions on 179-goc and 500-goc).
 
 A certified lower bound must never exceed this. When one does, the relaxation is not a relaxation of this
 problem — 1354-pegase reported 2.58e6-3.77e6 against a known feasible 1.498e6 because low-impedance merging
@@ -45,10 +46,11 @@ had made its model infeasible (see `safe_merge_exclusions` and results/merging_f
 function best_known_cost(name)
     row = paper_row(name)
     vals = Float64[Float64(v) for v in (row[3], row[4], row[5]) if v !== nothing]
-    for f in ("experiment3_$(name).json", "experiment4_$(name).json")
+    for (f, key) in (("experiment3_$(name).json", "best_found"), ("experiment4_$(name).json", "best_found"),
+                     ("experiment5_$(name).json", "best_rounded"))
         p = joinpath(@__DIR__, "..", "results", f)
         isfile(p) || continue
-        v = get(JSON.parsefile(p), "best_found", nothing)
+        v = get(JSON.parsefile(p), key, nothing)
         (v isa Real && isfinite(v)) && push!(vals, Float64(v))
     end
     return minimum(vals)

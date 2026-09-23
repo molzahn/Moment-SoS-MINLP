@@ -1,0 +1,114 @@
+{
+ "N": 60,
+ "best_known": 685131.335659973,
+ "best_rounded": 676182.8271890528,
+ "best_scheme": "cardinality_k6",
+ "case": "500-goc-api",
+ "expected_opened": 50.516900567688104,
+ "marginal_source": "experiment3_500-goc-api.json:mixed_nobigM",
+ "n_binaries": 728,
+ "n_configs_evaluated": 531,
+ "schemes": {
+  "cardinality_E": {
+   "best": null,
+   "eval_time": 740.382542835,
+   "feasible": 0.0,
+   "gap_vs_best_known": null,
+   "mean_opened": 51.0,
+   "n_feasible": 0,
+   "unique": 60,
+   "within_1pct": 0.0
+  },
+  "cardinality_k1": {
+   "best": 686908.0945087805,
+   "eval_time": 132.574780108,
+   "feasible": 0.9166666666666666,
+   "gap_vs_best_known": 0.0025933113205164177,
+   "mean_opened": 1.0,
+   "n_feasible": 55,
+   "unique": 47,
+   "within_1pct": 0.06666666666666667
+  },
+  "cardinality_k2": {
+   "best": 677733.916023626,
+   "eval_time": 238.344438203,
+   "feasible": 0.8333333333333334,
+   "gap_vs_best_known": -0.010797082619526078,
+   "mean_opened": 2.0,
+   "n_feasible": 50,
+   "unique": 59,
+   "within_1pct": 0.11666666666666667
+  },
+  "cardinality_k3": {
+   "best": 677733.9160236248,
+   "eval_time": 388.367128114,
+   "feasible": 0.8,
+   "gap_vs_best_known": -0.010797082619527778,
+   "mean_opened": 3.0,
+   "n_feasible": 48,
+   "unique": 60,
+   "within_1pct": 0.16666666666666666
+  },
+  "cardinality_k4": {
+   "best": 676182.827189053,
+   "eval_time": 453.905810184,
+   "feasible": 0.6833333333333333,
+   "gap_vs_best_known": -0.013061011816515611,
+   "mean_opened": 4.0,
+   "n_feasible": 41,
+   "unique": 60,
+   "within_1pct": 0.2
+  },
+  "cardinality_k5": {
+   "best": 676182.8271890531,
+   "eval_time": 472.836895341,
+   "feasible": 0.6,
+   "gap_vs_best_known": -0.013061011816515441,
+   "mean_opened": 5.0,
+   "n_feasible": 36,
+   "unique": 60,
+   "within_1pct": 0.16666666666666666
+  },
+  "cardinality_k6": {
+   "best": 676182.8271890528,
+   "eval_time": 506.100469564,
+   "feasible": 0.5166666666666667,
+   "gap_vs_best_known": -0.013061011816515781,
+   "mean_opened": 6.0,
+   "n_feasible": 31,
+   "unique": 60,
+   "within_1pct": 0.18333333333333332
+  },
+  "cardinality_k8": {
+   "best": 676182.8271890532,
+   "eval_time": 622.821677822,
+   "feasible": 0.4666666666666667,
+   "gap_vs_best_known": -0.013061011816515271,
+   "mean_opened": 8.0,
+   "n_feasible": 28,
+   "unique": 60,
+   "within_1pct": 0.16666666666666666
+  },
+  "independent": {
+   "best": null,
+   "eval_time": 568.38882228,
+   "feasible": 0.0,
+   "gap_vs_best_known": null,
+   "mean_opened": 50.516666666666666,
+   "n_feasible": 0,
+   "unique": 60,
+   "within_1pct": 0.0
+  },
+  "independent+repair": {
+   "best": null,
+   "eval_time": 53.664624947,
+   "feasible": 0.0,
+   "gap_vs_best_known": null,
+   "mean_opened": 50.43333333333333,
+   "n_feasible": 0,
+   "unique": 60,
+   "within_1pct": 0.0
+  }
+ },
+ "seed": 1
+}

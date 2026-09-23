@@ -38,7 +38,8 @@ earlier incorrect ranking of big-M versus no-big-M formulations; (ii) a network 
 \SI{72}{\percent} above a known feasible solution, and removing it changes the certified gap by
 between $+0.04$ and $-0.07$ percentage points --- it is free, and on the largest case an improvement; and (iii) the collapse of randomized rounding above 118 buses is
 caused by the \emph{number} of lines opened simultaneously, not by network islanding, and capping it
-raises the AC-feasible sample rate on \code{300-ieee} from \SI{0}{\percent} to \SI{93}{\percent}.
+raises the AC-feasible sample rate on \code{300-ieee} from \SI{0}{\percent} to \SI{91}{\percent} and
+yields two new best-known solutions, on \code{179-goc} and \code{500-goc}.
 \end{abstract}
 
 \section{Scope}
@@ -110,11 +111,11 @@ case & AC-OPF & O-DC-OTS & AC-OTS & ours & best known & bound & gap \\
 \code{73-ieee-rts}   & \num{422627}  & \num{413133}  & \num{385194}  & \num{389142}  & \num{385194}  & \num{368338}  & $4.38\%$ \\
 \code{89-pegase}$^\dagger$  & \num{130175} & \num{100702} & \num{100344} & \num{100503} & \num{100344} & \num{99858} & $0.48\%$ \\
 \code{118-ieee}      & \num{242237}  & \num{195918}  & \num{180312}  & \num{222376}  & \num{180312}  & \num{169523}  & $5.98\%$ \\
-\code{179-goc}$^\dagger$    & \num{1932044} & \num{1931004} & --        & \num{1930976} & \num{1930976} & \num{1835909} & $4.92\%$ \\
+\code{179-goc}$^\dagger$    & \num{1932044} & \num{1931004} & --        & \textbf{\num{1928125}} & \num{1928125} & \num{1835909} & $4.78\%$ \\
 \code{200-activ}     & \num{35701}   & \num{35701}   & \num{35701}   & \num{35701}   & \num{35701}   & \num{35670}   & $0.09\%$ \\
 \code{240-pserc}$^\dagger$ & \num{4640589} & \num{4627155} & --      & \num{4635816} & \num{4627155} & \num{4606386} & $0.45\%$ \\
 \code{300-ieee}$^\dagger$   & \num{684985} & \num{684985} & \num{683968} & \num{684401} & \num{683968} & \num{678283} & $0.83\%$ \\
-\code{500-goc}       & \num{692407}  & \num{692271}  & --            & \num{685131}  & \num{685131}  & \num{667141}  & $2.63\%$ \\
+\code{500-goc}       & \num{692407}  & \num{692271}  & --            & \textbf{\num{676183}}  & \num{676183}  & \num{667141}  & $1.34\%$ \\
 \code{1354-pegase}$^\dagger$ & \num{1498271} & \num{1496750} & -- & \num{1498117} & \num{1496750} & \num{1487079} & $0.65\%$ \\
 \bottomrule
 \end{longtable}
@@ -123,7 +124,8 @@ case & AC-OPF & O-DC-OTS & AC-OTS & ours & best known & bound & gap \\
 $^\dagger$ Rigorous bound on the exact (unmerged) model; see Section~\ref{sec:rigour}. All other rows
 never involved merging, so \emph{every} bound in this table is rigorous.
 
-\paragraph{Solutions improving on the reference.} \code{39-epri} \num{246561} (opening lines $\{4,6\}$,
+\paragraph{Solutions improving on the reference.} \code{179-goc} \num{1928125} and \code{500-goc}
+\num{676183} (both new; Section~\ref{sec:cardinality}), \code{39-epri} \num{246561} (opening lines $\{4,6\}$,
 better than the paper's Juniper AC-OTS \num{246723}); \code{500-goc} \num{685131} (better than the
 paper's O-DC-OTS \num{692271}); \code{57-ieee} \num{49272}; \code{300-ieee} \num{684401}.
 
@@ -268,6 +270,52 @@ island-screen rejection splits 78/22 on \code{118-ieee}, 78/18 on \code{200-acti
 \code{500-goc}, but 18/82 on \code{179-goc}, 46/54 on \code{300-ieee} and 0/100 on \code{1354-pegase}.
 Cardinality capping helps because it addresses both at once: opening fewer lines produces fewer islands
 \emph{and} less network stress.
+
+\subsection{How many lines should a sample open?}\label{sec:cardinality}
+
+\code{scripts/experiment5\_cardinality.jl} sweeps the cap directly, reusing the stored marginals so no SDP
+is re-solved. $N=100$ ($N=60$ on \code{500-goc}), evaluated on the original network.
+
+\begin{table}[h]\centering
+\begin{tabular}{lrrlrrr}
+\toprule
+case & E[\#opened] & independent & best cap & feasible & best cost & vs best known \\
+\midrule
+\code{118-ieee}  & 10.9 & \SI{0}{\percent}  & $k{=}3$ & \SI{17}{\percent} & \num{225486.25}  & $+25.05\%$ \\
+\code{179-goc}   & 39.3 & \SI{0}{\percent}  & $k{=}2$ & \SI{78}{\percent} & \num{1928124.99} & $\mathbf{-0.15\%}$ \\
+\code{200-activ} & 19.2 & \SI{5}{\percent}  & $k{=}2$ & \SI{77}{\percent} & \num{35700.87}   & $+0.00\%$ \\
+\code{240-pserc} & 33.0 & \SI{26}{\percent} & $k{=}5$ & \SI{89}{\percent} & \num{4638056.84} & $+0.24\%$ \\
+\code{300-ieee}  & 25.0 & \SI{0}{\percent}  & $k{=}1$ & \SI{91}{\percent} & \num{684584.26}  & $+0.09\%$ \\
+\code{500-goc}   & 50.5 & \SI{0}{\percent}  & $k{=}6$ & \SI{52}{\percent} & \num{676182.83}  & $\mathbf{-1.31\%}$ \\
+\code{89-pegase} & 37.2 & \SI{38}{\percent} & $k{=}8$ & \SI{74}{\percent} & \num{101016.95}  & $+0.67\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Two new best-known solutions}, both verified independently by re-solving the AC-OPF for that
+switching configuration from scratch on the original network:
+\begin{itemize}
+  \item \code{179-goc}: \num{1928124.99}, opening only two lines $\{147, 158\}$ --- \num{2851}
+        (\SI{0.148}{\percent}) below our previous incumbent, and below the paper's O-DC-OTS
+        (\num{1931004}) and AC-OPF (\num{1932044}).
+  \item \code{500-goc}: \num{676182.83}, opening six lines $\{131, 228, 464, 607, 629, 698\}$ ---
+        \num{8949} (\SI{1.306}{\percent}) below our incumbent and \SI{2.3}{\percent} below the paper's
+        O-DC-OTS (\num{692271}).
+\end{itemize}
+Both tighten their certified gaps, since the best known cost falls: \code{179-goc}
+$4.923\% \to 4.783\%$ and \code{500-goc} $2.626\% \to 1.337\%$, roughly halving the latter.
+
+The effect is large and consistent: independent rounding lands at 0--\SI{38}{\percent} AC-feasible,
+capping at 52--\SI{91}{\percent}. The useful caps are $1$--$8$, always far below the relaxation's own
+expectation, which remains useless everywhere (0--\SI{2}{\percent}), and quality is flat across
+neighbouring caps, so the result does not depend on tuning the cap. \code{118-ieee} stays the exception:
+feasibility is restored but cost remains $+25\%$, because its optimum opens \num{37} lines while the
+marginals imply about 11.
+
+\code{1354-pegase} is excluded: its stored marginals come from the pre-fix merged model, which was
+infeasible (Section~\ref{sec:rigour}), so they cannot be used for rounding. A dimension guard in the
+script catches this; regenerating them requires re-running experiment 3 or 4 on the corrected model.
 
 \section{Negative results worth recording}
 

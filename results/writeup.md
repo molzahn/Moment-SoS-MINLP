@@ -59,13 +59,13 @@ feasible cost and no violations remain.
 | 57-ieee-api | 49,290 | 49,290 | 49,274 | 49,272 | 49,272 | 49,224 | 0.10% | exp3/adj16 |  |
 | 60-c-api | 185,239 | 182,028 | 182,028 | 182,028 | 182,028 | 180,836 | 0.65% | exp3/adj16_pairs |  |
 | 73-ieee-rts-api | 422,627 | 413,133 | 385,194 | 389,142 | 385,194 | 368,338 | 4.38% | exp3/mixed |  |
-| 89-pegase-api | 130,175 | 100,702 | 100,344 | 100,503 | 100,344 | 99,890 | 0.45% | exp4/base | 19 |
+| 89-pegase-api | 130,175 | 100,702 | 100,344 | 100,503 | 100,344 | 99,858 | 0.48% | exp4/base | 19 |
 | 118-ieee-api | 242,237 | 195,918 | 180,312 | 222,376 | 180,312 | 169,523 | 5.98% | exp4/base |  |
-| 179-goc-api | 1,932,044 | 1,931,004 | – | 1,930,976 | 1,930,976 | 1,836,683 | 4.88% | exp3/mixed | 2 |
+| 179-goc-api | 1,932,044 | 1,931,004 | – | 1,928,125 | 1,928,125 | 1,835,909 | 4.78% | exp3/mixed | 2 |
 | 200-activ-api | 35,701 | 35,701 | 35,701 | 35,701 | 35,701 | 35,670 | 0.09% | exp4/base |  |
 | 240-pserc-api | 4,640,589 | 4,627,155 | – | 4,635,816 | 4,627,155 | 4,606,386 | 0.45% | exp4/base | 55 |
-| 300-ieee-api | 684,985 | 684,985 | 683,968 | 684,401 | 683,968 | 678,467 | 0.80% | exp4/conn | 2 |
-| 500-goc-api | 692,407 | 692,271 | – | 685,131 | 685,131 | 667,141 | 2.63% | exp4/base |  |
+| 300-ieee-api | 684,985 | 684,985 | 683,968 | 684,401 | 683,968 | 678,283 | 0.83% | exp4/conn | 2 |
+| 500-goc-api | 692,407 | 692,271 | – | 676,183 | 676,183 | 667,141 | 1.34% | exp4/base |  |
 | 1354-pegase-api | 1,498,271 | 1,496,750 | – | 1,498,117 | 1,496,750 | 1,487,079 | 0.65% | exp4/base | 178 |
 
 > **Rigour note.** The five rows with merged ties (89-pegase, 179-goc, 240-pserc, 300-ieee,
@@ -73,7 +73,8 @@ feasible cost and no violations remain.
 > All five have since been re-run on the exact unmerged model and the table above already shows those
 > rigorous values, so every bound here is valid for the original problem. See §7.
 
-Notable solutions we found that beat the reference: **39-epri 246561** (opening lines {4,6}, better than
+Notable solutions we found that beat the reference: **179-goc 1928125** and **500-goc 676183** (both
+new, from the experiment-5 cardinality sweep, §5b), **39-epri 246561** (opening lines {4,6}, better than
 the paper's Juniper AC-OTS 246723), **500-goc 685131** (better than the paper's O-DC-OTS 692271),
 **57-ieee 49272**, **300-ieee 684401**.
 
@@ -118,6 +119,43 @@ On 300-ieee this is the first time rounding alone — with no 1-flip polish — 
 solutions at that size. On 118-ieee feasibility is restored but quality is not, and the reason is
 diagnostic: the relaxation implies ~11 openings while the best known solution opens **37**, so no
 sampler drawing from those fixed marginals can reach it. Details in `results/rounding_scale_findings.md`.
+
+## 5b. Experiment 5: how many lines should a sample open?
+
+`scripts/experiment5_cardinality.jl` sweeps the opening cap directly, reusing the stored marginals so no
+SDP is re-solved. N = 100 (N = 60 on 500-goc), evaluated on the original network.
+
+| case | E[#opened] | independent | best cap | feasible at that cap | best cost | vs best known |
+|---|---:|---:|---|---:|---:|---:|
+| 118-ieee | 10.9 | 0% | k3 | 17% | 225486.25 | +25.05% |
+| **179-goc** | 39.3 | 0% | **k2** | 78% | **1928124.99** | **−0.15%** |
+| 200-activ | 19.2 | 5% | k2 | 77% | 35700.87 | +0.00% |
+| 240-pserc | 33.0 | 26% | k5 | 89% | 4638056.84 | +0.24% |
+| 300-ieee | 25.0 | 0% | k1 | 91% | 684584.26 | +0.09% |
+| **500-goc** | 50.5 | 0% | **k6** | 52% | **676182.83** | **−1.31%** |
+| 89-pegase | 37.2 | 38% | k8 | 74% | 101016.95 | +0.67% |
+
+**Two new best-known solutions, both independently verified** by re-solving the AC-OPF for that switching
+configuration from scratch on the original network (`scripts/verify_solution.jl`):
+
+- **179-goc: 1928124.99**, opening just two lines **{147, 158}** — 2851 (0.148%) below our previous
+  incumbent, and below the paper's O-DC-OTS (1931004) and AC-OPF (1932044).
+- **500-goc: 676182.83**, opening six lines **{131, 228, 464, 607, 629, 698}** — 8949 (1.306%) below our
+  incumbent and 2.3% below the paper's O-DC-OTS (692271).
+
+Both tighten their certified gaps, because the best known cost falls: 179-goc 4.923% → **4.783%**, and
+500-goc 2.626% → **1.337%**, roughly halving the latter.
+
+**Findings.** The effect is large and consistent: independent rounding lands at 0–38% AC-feasible,
+capping at 52–91%. The useful caps are **1–8**, always far below the relaxation's own expectation, which
+remains useless everywhere (0–2%). Quality is flat across neighbouring caps, so the result does not
+depend on tuning the cap precisely. 118-ieee remains the exception: feasibility is restored but cost
+stays +25%, because its optimum opens 37 lines while the marginals imply about 11 — the limitation there
+is the pseudo-distribution, not the sampler.
+
+**1354-pegase is excluded, for a real reason.** Its stored marginals come from the pre-fix merged model,
+which was infeasible (§7), so they cannot be used for rounding; the dimension guard in the script catches
+this. Regenerating them requires re-running experiment 3 or 4 on the corrected model.
 
 ## 6. Negative results worth keeping
 

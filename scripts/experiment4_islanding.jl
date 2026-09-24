@@ -21,6 +21,9 @@ const POLISH_EVALS = parse(Int, get(ENV, "POLISH_EVALS", "40"))
 const CUT_SET = parse(Int, get(ENV, "CUT_SET", "2"))
 const CUT_BLOCK_MAX = parse(Int, get(ENV, "CUT_BLOCK_MAX", "6"))   # cuts with <= this many lines get an order-2 block on their binaries
 const RELAX = split(get(ENV, "RELAX", "base,conn"), ",")
+# Suffix for the output file, so a re-run under different modelling options (e.g. MERGE_ZMAX=0) keeps the
+# original results intact. Same convention as scripts/recertify.jl.
+const RESULT_TAG = get(ENV, "RESULT_TAG", "")
 
 jsonsafe(x::AbstractFloat) = isfinite(x) ? x : nothing
 jsonsafe(x::AbstractDict) = Dict(k => jsonsafe(v) for (k, v) in x)
@@ -81,7 +84,11 @@ function run_case(name)
         o = Dict{String,Any}("bound" => rel.bound, "raw_bound" => get(rel.info, "raw_bound", nothing), "status" => string(rel.status),
             "time" => t, "build_time" => t_build, "n_binaries" => length(ids), "radial_fixed" => pop.meta["radial_fixed"],
             "n_conn_cuts" => pop.meta["n_conn_cuts"], "n_cut_blocks" => length(cut_blocks), "max_psd" => maximum(rel.psd_sizes), "n_cliques" => length(rel.cliques),
-            "marginals_below_half" => count(<(0.5), μ), "expected_opened" => sum(1 .- μ), "schemes" => Dict{String,Any}())
+            "marginals_below_half" => count(<(0.5), μ), "expected_opened" => sum(1 .- μ),
+            # Save the marginal vector itself, not just summary statistics: the cardinality sweep
+            # (scripts/experiment5_cardinality.jl) samples from it, and re-solving the SDP just to
+            # recover it costs hours. Indexed over this relaxation's own binaries.
+            "marginals" => μ, "marginals_base" => μbase, "schemes" => Dict{String,Any}())
         @printf("  %-5s bound %.2f (raw %.2f) %s  %.1fs  binaries %d (radial fixed %d, cuts %d)  max PSD %d  E[#opened] %.1f\n",
             lbl, rel.bound, something(o["raw_bound"], NaN), rel.status, t, length(ids), length(pop.meta["radial_fixed"]),
             pop.meta["n_conn_cuts"], o["max_psd"], o["expected_opened"])
@@ -136,7 +143,7 @@ function run_case(name)
             length(o["best_rounded_opened"]), pc, pe, tp)
         flush(stdout)
         res["relaxations"][lbl] = o
-        open(joinpath(@__DIR__, "..", "results", "experiment4_$(name).json"), "w") do io
+        open(joinpath(@__DIR__, "..", "results", "experiment4_$(name)$(RESULT_TAG).json"), "w") do io
             JSON.print(io, jsonsafe(res), 1)
         end
     end
@@ -158,7 +165,7 @@ function run_case(name)
     @printf("  SUMMARY %s: best found %.2f (paper AC-OTS %s, O-DC-OTS %d); best bound %s; gap %s; %d configs\n", name,
         res["best_found"], something(row[5], "–"), row[4], something(res["best_bound"], "–"),
         res["certified_gap_best_known"] === nothing ? "–" : @sprintf("%.2f%%", 100res["certified_gap_best_known"]), length(ev.cache))
-    open(joinpath(@__DIR__, "..", "results", "experiment4_$(name).json"), "w") do io
+    open(joinpath(@__DIR__, "..", "results", "experiment4_$(name)$(RESULT_TAG).json"), "w") do io
         JSON.print(io, jsonsafe(res), 1)
     end
 end

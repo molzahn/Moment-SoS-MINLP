@@ -26,8 +26,12 @@ jsonsafe(x) = x
 
 "Marginals saved by experiment 3 or 4, preferring the no-big-M relaxation."
 function load_marginals(name)
-    for (f, labels) in (("experiment3_$(name).json", ("mixed_nobigM", "mixed")),
-                        ("experiment4_$(name).json", ("base", "conn")))
+    files = Any[("experiment4_$(name)_unmerged.json", ("base", "conn")),   # exact model, preferred
+                ("experiment3_$(name).json", ("mixed_nobigM", "mixed")),
+                ("experiment4_$(name).json", ("base", "conn"))]
+    mf = get(ENV, "MARGINAL_FILE", "")
+    isempty(mf) || pushfirst!(files, (mf, ("base", "conn", "mixed_nobigM", "mixed")))
+    for (f, labels) in files
         p = joinpath(@__DIR__, "..", "results", f)
         isfile(p) || continue
         rel = get(JSON.parsefile(p), "relaxations", Dict())

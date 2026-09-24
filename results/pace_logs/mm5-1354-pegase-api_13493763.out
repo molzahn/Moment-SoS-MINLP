@@ -1,0 +1,35 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-23-2026 15:27:21
+Job ID:    13493763
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mm5-1354-pegase-api
+Partition: cpu-small
+QOS:       embers
+---------------------------------------
+[pace_env] root=/storage/project/r-dmolzahn6-0/dmolzahn6/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/project/r-dmolzahn6-0/dmolzahn6/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 1354-pegase-api on atl1-1-02-005-2-2.pace.gatech.edu, cpus 8, N=30, kmax set 1,2,3,4,5,6,8, merge_zmax 0, start Wed Sep 23 03:27:22 PM EDT 2026
+1354-pegase-api: 1991 binaries, E[#opened] = 204.0, best known 1496750.00 (marginals from experiment4_1354-pegase-api_unmerged.json:base)
+  independent            opened  206.5  unique  30  feasible   0/ 30 (  0%)  best –                            1s
+  independent+repair     opened  193.0  unique  30  feasible   0/ 30 (  0%)  best –                         1621s
+  cardinality_E          opened  204.0  unique  30  feasible   0/ 30 (  0%)  best –                         1713s
+  cardinality_k1         opened    1.0  unique  27  feasible  29/ 30 ( 97%)  best 1498262.08 (+0.10%)        154s
+  cardinality_k2         opened    2.0  unique  30  feasible  27/ 30 ( 90%)  best 1497390.95 (+0.04%)        204s
+  cardinality_k3         opened    3.0  unique  30  feasible  24/ 30 ( 80%)  best 1497390.91 (+0.04%)        291s
+  cardinality_k4         opened    4.0  unique  30  feasible  22/ 30 ( 73%)  best 1497391.00 (+0.04%)        268s
+  cardinality_k5         opened    5.0  unique  30  feasible  21/ 30 ( 70%)  best 1497391.00 (+0.04%)        393s
+  cardinality_k6         opened    6.0  unique  30  feasible  18/ 30 ( 60%)  best 1497850.16 (+0.07%)        444s
+  cardinality_k8         opened    8.0  unique  30  feasible  17/ 30 ( 57%)  best 1497850.16 (+0.07%)        385s
+finished Wed Sep 23 05:05:05 PM EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-23-2026 17:05:05
+Job ID:        13493763
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mm5-1354-pegase-api
+Resources:     cpu=8,mem=64G,node=1
+Rsrc Used:     cput=13:02:08,vmem=0,walltime=01:37:46,mem=2835588K,energy_used=0
+Partition:     cpu-small
+QOS:           embers
+Nodes:         atl1-1-02-005-2-2
+---------------------------------------

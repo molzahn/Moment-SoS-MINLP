@@ -288,6 +288,7 @@ case & E[\#opened] & independent & best cap & feasible & best cost & vs best kno
 \code{300-ieee}  & 25.0 & \SI{0}{\percent}  & $k{=}1$ & \SI{91}{\percent} & \num{684584.26}  & $+0.09\%$ \\
 \code{500-goc}   & 50.5 & \SI{0}{\percent}  & $k{=}6$ & \SI{52}{\percent} & \num{676182.83}  & $\mathbf{-1.31\%}$ \\
 \code{89-pegase} & 37.2 & \SI{38}{\percent} & $k{=}8$ & \SI{74}{\percent} & \num{101016.95}  & $+0.67\%$ \\
+\code{1354-pegase}$^{*}$ & 204.0 & \SI{0}{\percent} & $k{=}3$ & \SI{80}{\percent} & \num{1497390.91} & $+0.04\%$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -307,15 +308,22 @@ Both tighten their certified gaps, since the best known cost falls: \code{179-go
 $4.923\% \to 4.783\%$ and \code{500-goc} $2.626\% \to 1.337\%$, roughly halving the latter.
 
 The effect is large and consistent: independent rounding lands at 0--\SI{38}{\percent} AC-feasible,
-capping at 52--\SI{91}{\percent}. The useful caps are $1$--$8$, always far below the relaxation's own
+capping at 52--\SI{97}{\percent}. The useful caps are $1$--$8$, always far below the relaxation's own
 expectation, which remains useless everywhere (0--\SI{2}{\percent}), and quality is flat across
 neighbouring caps, so the result does not depend on tuning the cap. \code{118-ieee} stays the exception:
 feasibility is restored but cost remains $+25\%$, because its optimum opens \num{37} lines while the
 marginals imply about 11.
 
-\code{1354-pegase} is excluded: its stored marginals come from the pre-fix merged model, which was
-infeasible (Section~\ref{sec:rigour}), so they cannot be used for rounding. A dimension guard in the
-script catches this; regenerating them requires re-running experiment 3 or 4 on the corrected model.
+$^{*}$ \code{1354-pegase} needed fresh marginals: its original ones came from the pre-fix merged model,
+which was infeasible (Section~\ref{sec:rigour}), and a dimension guard in the script caught this. They
+were regenerated on the \emph{exact} unmerged model (experiment 4, \code{base}, \num{1991} binaries,
+\SI{3.5}{\hour}). The difference is instructive --- the infeasible model implied
+$\mathbb{E}[\#\text{opened}] = 724$ of \num{1807} binaries, the exact model $204$ of \num{1991} --- but it
+means this row rests on exact-model marginals while the others use merged-model ones.
+
+With \code{1354-pegase} included the finding is unanimous across all eight cases: independent rounding is
+hopeless (0--\SI{38}{\percent}), capping restores feasibility (52--\SI{97}{\percent}), and the useful cap
+is $1$--$8$ regardless of network size.
 
 \section{Negative results worth recording}
 

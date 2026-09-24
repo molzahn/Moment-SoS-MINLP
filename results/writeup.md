@@ -134,6 +134,7 @@ SDP is re-solved. N = 100 (N = 60 on 500-goc), evaluated on the original network
 | 300-ieee | 25.0 | 0% | k1 | 91% | 684584.26 | +0.09% |
 | **500-goc** | 50.5 | 0% | **k6** | 52% | **676182.83** | **−1.31%** |
 | 89-pegase | 37.2 | 38% | k8 | 74% | 101016.95 | +0.67% |
+| 1354-pegase* | 204.0 | 0% | k3 | 80% | 1497390.91 | +0.04% |
 
 **Two new best-known solutions, both independently verified** by re-solving the AC-OPF for that switching
 configuration from scratch on the original network (`scripts/verify_solution.jl`):
@@ -147,15 +148,23 @@ Both tighten their certified gaps, because the best known cost falls: 179-goc 4.
 500-goc 2.626% → **1.337%**, roughly halving the latter.
 
 **Findings.** The effect is large and consistent: independent rounding lands at 0–38% AC-feasible,
-capping at 52–91%. The useful caps are **1–8**, always far below the relaxation's own expectation, which
+capping at 52–97%. The useful caps are **1–8**, always far below the relaxation's own expectation, which
 remains useless everywhere (0–2%). Quality is flat across neighbouring caps, so the result does not
 depend on tuning the cap precisely. 118-ieee remains the exception: feasibility is restored but cost
 stays +25%, because its optimum opens 37 lines while the marginals imply about 11 — the limitation there
 is the pseudo-distribution, not the sampler.
 
-**1354-pegase is excluded, for a real reason.** Its stored marginals come from the pre-fix merged model,
-which was infeasible (§7), so they cannot be used for rounding; the dimension guard in the script catches
-this. Regenerating them requires re-running experiment 3 or 4 on the corrected model.
+\* **1354-pegase needed fresh marginals.** Its original marginals came from the pre-fix merged model,
+which was infeasible (§7), so they were unusable for rounding — the dimension guard in the script caught
+this. They were regenerated on the **exact unmerged model** (experiment 4, `base`, 1991 binaries, 3 h 28 m),
+and the difference is instructive: the infeasible model implied E[#opened] = 724 of 1807 binaries, the
+exact model 204 of 1991. Its row therefore rests on exact-model marginals while the other seven use
+merged-model ones, so it is not strictly comparable — but the qualitative result is identical.
+
+With 1354-pegase included the finding is **unanimous across all eight cases**: independent rounding is
+hopeless (0–38%), capping restores feasibility (52–97%), and the useful cap is 1–8 regardless of network
+size. 1354's best rounded cost, 1497390.91 opening {42, 1090, 1986}, improves on our previous incumbent
+(1498116.94) but does not beat the paper's O-DC-OTS (1496750), so the best known cost is unchanged.
 
 ## 6. Negative results worth keeping
 

@@ -109,7 +109,7 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     optimizer = mosek_optimizer(), silent::Bool = true, normalize::Bool = true,
     skip_high_order_tags = String[], solver_params = Dict{String,Any}(), diagnostics::Bool = true,
     quotient_basis::Bool = false, scale_vars::Bool = true, out_of_graph_tags = String[], scalar_tags = String[],
-    certify::Symbol = :implicit, bundle_params = Dict{Symbol,Any}())
+    certify::Symbol = :implicit, bundle_params = Dict{Symbol,Any}(), parity_vars = nothing)
     t0 = time()
     if scale_vars
         # substitute x_i = s_i x̂_i with s_i = max(|lb_i|, |ub_i|) so that every variable lies in [-1, 1];
@@ -122,13 +122,15 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
         q.ineqs = sp.(pop.ineqs)
         q.eqs = sp.(pop.eqs)
         q.pmis = [map(sp, G) for G in pop.pmis]
+        # the cones must be substituted too, or they would still reference unscaled variables
+        q.socs = [(sp(a), sp(b), [sp(x) for x in xs]) for (a, b, xs) in pop.socs]
         q.lb = pop.lb ./ svec
         q.ub = pop.ub ./ svec
         r = solve_moment_relaxation(q; order = order, sparse = sparse, cliques = cliques, form = form,
             extra_supports = extra_supports, extra_cliques = extra_cliques, global_linear = global_linear,
             optimizer = optimizer, silent = silent, normalize = normalize, skip_high_order_tags = skip_high_order_tags,
             solver_params = solver_params, diagnostics = diagnostics, quotient_basis = quotient_basis, scale_vars = false,
-            out_of_graph_tags = out_of_graph_tags, scalar_tags = scalar_tags, certify = certify, bundle_params = bundle_params)
+            out_of_graph_tags = out_of_graph_tags, scalar_tags = scalar_tags, certify = certify, bundle_params = bundle_params, parity_vars = parity_vars)
         y = Dict(m => v * prod((svec[i] for i in m); init = 1.0) for (m, v) in r.y)
         r.info["scale_vars"] = true
         return MomentRelaxation(r.status, r.primal_status, r.bound, r.primal_objective, r.build_time, r.solve_time,
@@ -177,12 +179,85 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
         best == 0 && !allow_global && error("support $(s) not contained in any clique")
         return best
     end
+
+    # A constraint whose *full support* lies in no clique can still be imposed on the shared moment
+    # vector as L_y(g) >= 0 / L_y(h) == 0, provided every monomial it uses exists -- i.e. each
+    # monomial's own support lies in some clique. This is the matrix-completion reading of the
+    # sparse relaxation (Fukuda et al.; Jabr; Molzahn et al.) rather than the stricter Waki et al.
+    # condition that each constraint live inside one clique, and it is what lets the clique graph be
+    # the bus adjacency instead of the constraint-support graph. On case200 that is the difference
+    # between 23-bus and 9-bus cliques, i.e. an order-2 block of 1128 against 190.
+    #
+    # Inert unless `cliques` is supplied: the default support-derived decomposition already covers
+    # every constraint, so `covered_by_monomials` is never reached.
+    function covered_by_monomials(p::Poly)
+        for m in keys(p.terms)
+            isempty(m) && continue
+            s = sort(unique(m))
+            any(issubset(s, c) for c in cliques) ||
+                error("monomial $(s) of a constraint is in no clique; the clique decomposition " *
+                      "does not cover this problem")
+        end
+        return true
+    end
+    # ---------------------------------------------------------------------------------------
+    # Parity block splitting.
+    #
+    # When every polynomial in the problem has even total degree in a designated variable set S,
+    # the problem is invariant under x_S -> -x_S, so there is an optimal moment vector with every
+    # odd-in-S moment zero. Each moment and localizing matrix then block-diagonalises by the
+    # parity of its basis monomials, and the two halves can be imposed as independent PSD
+    # constraints. This is the scheme in Molzahn's msos reference (firstRow2mon_moment.m), gated
+    # there by `anyFirstOrderMon`.
+    #
+    # For rectangular AC-OPF, S is the set of voltage variables e[i], f[i]: the power flow
+    # equations carry only even powers of the voltage. Measured saving at order 2 is 21-34% of the
+    # flops for the clique sizes this code produces, and at order 1 the even half collapses to the
+    # constant so the block is just the W matrix.
+    #
+    # The precondition is *checked*, never assumed: one odd constraint makes the split invalid.
+    # On by default: the voltage variables recorded by build_power_pop. The precondition below is
+    # the interlock -- if any constraint is odd in them (e.g. `eref` is still present) nothing is
+    # split and `info["parity_blocked_by"]` says which family objected.
+    Sp = parity_vars === nothing ? collect(get(pop.meta, "voltage_vars", Int[])) : collect(parity_vars)
+    Spset = Set(Sp)
+    vparity(m) = isodd(count(v -> v in Spset, m))
+    function poly_parity(p::Poly)          # :even, :odd, or :mixed
+        e = o = false
+        for m in keys(p.terms)
+            vparity(m) ? (o = true) : (e = true)
+        end
+        o && e && return :mixed
+        return o ? :odd : :even
+    end
+    parity_ok = !isempty(Sp)
+    parity_block = String[]
+    if parity_ok
+        for (p, tag) in vcat(collect(zip(ineqs, pop.ineq_tags)), collect(zip(eqs, pop.eq_tags)))
+            poly_parity(p) == :even || (parity_ok = false; push!(parity_block, tagkey(tag)))
+        end
+        for (G, tag) in zip(pmis, pop.pmi_tags), q in G
+            poly_parity(q) == :even || (parity_ok = false; push!(parity_block, tagkey(tag)))
+        end
+        poly_parity(obj) == :even || (parity_ok = false; push!(parity_block, "OBJECTIVE"))
+    end
+    "Split a basis by monomial parity; returns the halves that are non-empty."
+    split_basis(B) = parity_ok ? filter(!isempty, [filter(m -> !vparity(m), B),
+                                                   filter(vparity, B)]) : [B]
+
     bases = Dict{Tuple{Int,Int},Vector{Vector{Int}}}()
     basis(k, d) = get!(() -> monomial_basis(cliques[k], d, isbin), bases, (k, d))
     skipped = Dict{String,Int}()
     skip!(tag) = (key = tagkey(tag); skipped[key] = get(skipped, key, 0) + 1)
     dropped = Dict{String,Int}()
     drop!(tag) = (key = tagkey(tag); dropped[key] = get(dropped, key, 0) + 1)
+
+    # Rotated second-order cones, imposed on first moments. Only the binary reduction is applied:
+    # 2ab >= ||x||^2 is invariant under scaling a, b and x by a COMMON factor but not under the
+    # per-polynomial normalisation used for the other families, so normalising them separately
+    # would change the cone.
+    socs = [(reduce_poly(a, isbin), reduce_poly(b, isbin), [reduce_poly(x, isbin) for x in xs])
+            for (a, b, xs) in pop.socs]
 
     # PSD blocks: (G, B) means [L_y(G_ab m_i m_j)] ⪰ 0; equality blocks: (h, multipliers)
     one = fill(Poly(1.0), 1, 1)
@@ -208,12 +283,16 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
                 end
             end
         end
-        push!(blocks, (one, B))
+        for Bp in split_basis(B)
+            push!(blocks, (one, Bp))
+        end
     end
+    n_moment_blocks = length(blocks)   # localizing blocks follow; no longer one per clique
     for (g, tag) in zip(ineqs, pop.ineq_tags)
         is_constant(g) && continue
-        k = assign(support(g); allow_global = degree(g) <= 1)
+        k = assign(support(g); allow_global = true)
         if k == 0
+            degree(g) <= 1 || covered_by_monomials(g)
             push!(blocks, (fill(g, 1, 1), [Int[]]))
             continue
         end
@@ -224,17 +303,36 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
         dd = orders[k] - _ceil_half(degree(g))
         # inequalities tagged in `scalar_tags` are enforced as L(g) >= 0 only (no localizing matrix), as at order 1
         tagkey(tag) in scalar_tags && (dd = min(dd, 0))
-        dd < 0 ? skip!(tag) : push!(blocks, (fill(g, 1, 1), basis(k, dd)))
+        if dd < 0
+            skip!(tag)
+        else
+            # An even weight preserves the parity of the multiplier basis, so the localizing
+            # matrix splits like the moment matrix. An odd weight *swaps* the halves (the block is
+            # anti-block-diagonal, not block-diagonal) and a mixed weight mixes them; neither
+            # splits. `parity_ok` already guarantees every weight here is even, but the check is
+            # local so this stays correct if that precondition is ever relaxed.
+            for Bp in (poly_parity(g) == :even ? split_basis(basis(k, dd)) : [basis(k, dd)])
+                push!(blocks, (fill(g, 1, 1), Bp))
+            end
+        end
     end
     for (G, tag) in zip(pmis, pop.pmi_tags)
         k = assign(sort!(unique(reduce(vcat, support.(G)))))
         dd = orders[k] - _ceil_half(maximum(degree.(G)))
-        dd < 0 ? skip!(tag) : push!(blocks, (G, basis(k, dd)))
+        if dd < 0
+            skip!(tag)
+        else
+            for Bp in (all(poly_parity(q) == :even for q in G) ? split_basis(basis(k, dd)) :
+                       [basis(k, dd)])
+                push!(blocks, (G, Bp))
+            end
+        end
     end
     for (h, tag) in zip(eqs, pop.eq_tags)
         is_constant(h) && continue
-        k = assign(support(h); allow_global = degree(h) <= 1)
+        k = assign(support(h); allow_global = true)
         if k == 0
+            degree(h) <= 1 || covered_by_monomials(h)
             push!(eqblocks, (h, [Int[]]))
             continue
         end
@@ -249,6 +347,11 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
         isempty(m) && continue
         k = assign(unique(m))
         length(m) <= 2 * orders[k] || error("objective monomial $(m) exceeds relaxation degree")
+        # A monomial no block can produce becomes `0 == coefficient` further down, i.e. a silently
+        # infeasible SDP. Parity is the way that can now happen.
+        !parity_ok || !vparity(m) ||
+            error("objective monomial $(m) is odd in the parity variables; parity splitting " *
+                  "would make the relaxation infeasible")
     end
     scale = maximum(abs, values(obj.terms); init = 1.0)
     psd_sizes = [size(G, 1) * length(B) for (G, B) in blocks]
@@ -260,10 +363,10 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     end
     if form == :sos
         maxabs = [max(abs(pop.lb[i]), abs(pop.ub[i])) for i in eachindex(pop.lb)]
-        yv, bound, pobj, st, ps, nmom, cert = _solve_sos_form(model, obj, blocks, eqblocks, isbin, scale, maxabs;
+        yv, bound, pobj, st, ps, nmom, cert = _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxabs;
             certify = certify, bundle_params = bundle_params, groups = square_groups(ineqs))
     elseif form == :moment
-        yv, bound, pobj, st, ps, nmom = _solve_moment_form(model, obj, blocks, eqblocks, isbin, scale)
+        yv, bound, pobj, st, ps, nmom = _solve_moment_form(model, obj, blocks, eqblocks, socs, isbin, scale)
         cert = Dict{String,Any}()
     else
         error("unknown form $form")
@@ -273,13 +376,23 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     ratios = Float64[]
     if !isempty(yv)
         for k in eachindex(cliques)
+            # With parity splitting the odd moments are gone, and `get(yv, mm, 0.0)` would turn
+            # every missing entry into a silent zero -- an eigenvalue ratio computed on the wrong
+            # matrix. Use the odd half of the basis alone, whose Gram matrix is exactly the W
+            # block (what msos extracts as W{i}); without splitting, keep the full basis.
             B = basis(k, 1)
-            M1 = [(mm = monoprod(B[i], B[j], isbin); isempty(mm) ? 1.0 : get(yv, mm, 0.0)) for i in eachindex(B), j in eachindex(B)]
+            Bk = parity_ok ? filter(vparity, B) : B
+            isempty(Bk) && (push!(ratios, 0.0); continue)
+            M1 = [(mm = monoprod(Bk[i], Bk[j], isbin); isempty(mm) ? 1.0 : get(yv, mm, 0.0))
+                  for i in eachindex(Bk), j in eachindex(Bk)]
             ev = sort(eigvals(Symmetric(M1)); rev = true)
             push!(ratios, length(ev) > 1 ? ev[2] / ev[1] : 0.0)
         end
     end
-    info = Dict{String,Any}("dropped" => dropped, "normalize" => normalize, "n_pivots" => n_pivots)
+    info = Dict{String,Any}("dropped" => dropped, "normalize" => normalize, "n_pivots" => n_pivots,
+        "parity_split" => parity_ok, "n_moment_blocks" => n_moment_blocks)
+    isempty(Sp) || parity_ok ||
+        (info["parity_blocked_by"] = sort(unique(parity_block)))
     merge!(info, cert)
     try
         info["iterations"] = MOI.get(model, MOI.BarrierIterations())
@@ -293,13 +406,13 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     end
     if diagnostics && !isempty(yv)
         info["min_eig_moment"], info["min_eig_localizing"], info["max_eq_residual"] =
-            _moment_feasibility(yv, blocks, eqblocks, isbin, length(cliques))
+            _moment_feasibility(yv, blocks, eqblocks, isbin, n_moment_blocks)
     end
     return MomentRelaxation(st, ps, bound, pobj, build_time, solve_time(model), cliques, orders, yv,
         skipped, nmom, psd_sizes, ratios, info)
 end
 
-function _solve_sos_form(model, obj, blocks, eqblocks, isbin, scale, maxabs; certify::Symbol = :implicit,
+function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxabs; certify::Symbol = :implicit,
     bundle_params = Dict{Symbol,Any}(), groups = Tuple{Vector{Int},Float64}[])
     coef = Dict{Vector{Int},AffExpr}()
     addc!(m, c, v) = add_to_expression!(get!(() -> AffExpr(0.0), coef, m), c, v)
@@ -326,6 +439,19 @@ function _solve_sos_form(model, obj, blocks, eqblocks, isbin, scale, maxabs; cer
             λ = @variable(model)
             for (mono, c) in h.terms
                 addc!(monoprod(mono, m, isbin), c, λ)
+            end
+        end
+    end
+    # A rotated SOC on the moments (a, b, x) contributes a dual multiplier from the same cone --
+    # RotatedSecondOrderCone is self-dual, so <mu, (a,b,x)> >= 0 on the feasible set and the
+    # certificate stays a valid lower bound. This is the conic analogue of the nonnegative
+    # multiplier used for a scalar inequality above.
+    for (a, b, xs) in socs
+        mu = @variable(model, [1:(2 + length(xs))])
+        @constraint(model, mu in RotatedSecondOrderCone())
+        for (q, v) in zip(vcat([a, b], xs), mu)
+            for (mono, c) in q.terms
+                addc!(reduce_mono(mono, isbin), c, v)
             end
         end
     end
@@ -416,7 +542,7 @@ function _solve_sos_form(model, obj, blocks, eqblocks, isbin, scale, maxabs; cer
     return yv, bound, pobj, st, ps, length(monos) - 1, cert
 end
 
-function _solve_moment_form(model, obj, blocks, eqblocks, isbin, scale)
+function _solve_moment_form(model, obj, blocks, eqblocks, socs, isbin, scale)
     y = Dict{Vector{Int},VariableRef}()
     getY(m) = get!(() -> @variable(model), y, m)
     function lin(p::Poly, mult::Vector{Int})
@@ -437,6 +563,11 @@ function _solve_moment_form(model, obj, blocks, eqblocks, isbin, scale)
     end
     for (h, mults) in eqblocks, m in mults
         @constraint(model, lin(h, m) == 0)
+    end
+    # rotated second-order cones on the first moments (JuMP: 2*u*v >= ||w||^2)
+    for (a, b, xs) in socs
+        @constraint(model, vcat(lin(a, Int[]), lin(b, Int[]), [lin(x, Int[]) for x in xs])
+                    in RotatedSecondOrderCone())
     end
     @objective(model, Min, lin(obj, Int[]) / scale)
     optimize!(model)

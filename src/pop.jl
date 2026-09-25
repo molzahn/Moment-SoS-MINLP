@@ -15,11 +15,18 @@ mutable struct POP
     pmis::Vector{Matrix{Poly}}
     pmi_scalar::Vector{Poly}   # equivalent scalar inequality (>= 0) used by the NLP solver
     pmi_tags::Vector{String}
+    # Rotated second-order cones: (a, b, xs) means 2*a*b >= sum(x^2), a >= 0, b >= 0, with a, b
+    # and every x an AFFINE polynomial. Imposed on the relaxation's first moments, which is
+    # exactly how the QC relaxation's conic constraints act in QC+SDP. Kept separate from `pmis`
+    # because a rotated SOC is a far simpler cone than a PSD block and should not be modelled as
+    # one -- a 2x2 or 3x3 semidefinite constraint costs an SDP cone where a quadratic cone does.
+    socs::Vector{Tuple{Poly,Poly,Vector{Poly}}}
+    soc_tags::Vector{String}
     meta::Dict{String,Any}
 end
 
 POP() = POP(String[], Bool[], Float64[], Float64[], Float64[], Poly(), Poly[], String[], Poly[], String[],
-    Matrix{Poly}[], Poly[], String[], Dict{String,Any}())
+    Matrix{Poly}[], Poly[], String[], Tuple{Poly,Poly,Vector{Poly}}[], String[], Dict{String,Any}())
 
 nvars(pop::POP) = length(pop.names)
 binary_indices(pop::POP) = findall(pop.isbin)
@@ -39,6 +46,16 @@ function add_pmi!(pop::POP, G::Matrix{Poly}, scalar::Poly, tag::String)
     push!(pop.pmis, G)
     push!(pop.pmi_scalar, scalar)
     push!(pop.pmi_tags, tag)
+    return pop
+end
+
+"Add the rotated second-order cone 2*a*b >= sum(x.^2) with a, b >= 0. All arguments affine."
+function add_soc!(pop::POP, a::Poly, b::Poly, xs::Vector{Poly}, tag::String)
+    for q in vcat([a, b], xs)
+        degree(q) <= 1 || error("rotated SOC arguments must be affine, got degree $(degree(q))")
+    end
+    push!(pop.socs, (a, b, xs))
+    push!(pop.soc_tags, tag)
     return pop
 end
 

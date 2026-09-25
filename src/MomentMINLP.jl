@@ -13,7 +13,7 @@ import Ipopt
 import HSL_jll
 import PowerModels
 
-export Poly, pvar, POP, add_var!, add_ineq!, add_eq!, add_pmi!, fix_variables, solve_nlp,
+export Poly, pvar, POP, add_var!, add_ineq!, add_eq!, add_pmi!, add_soc!, fix_variables, solve_nlp,
     solve_moment_relaxation, MomentRelaxation, moment, chordal_cliques, binary_clique_order, adjacent_clique_order, capped_augmentation,
     SOSCertificate, certified_value, bundle_certify, smooth_certify,
     merge_low_impedance, low_impedance_groups, safe_merge_exclusions, IslandGuard, island_screen, repair_islands!, can_open, radial_fixings, connectivity_cuts,

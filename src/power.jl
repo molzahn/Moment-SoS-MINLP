@@ -24,6 +24,8 @@
   recorded in `pop.meta["merge_excluded"]`.
 * `fix_radial`: keep closed (not switchable) every switchable bridge whose removal leaves an island that
   provably cannot balance active power (`radial_fixings`).
+* `angle_sign`: keep `e_refbus >= 0`. It only selects V over -V, and it is the only constraint
+  here with an odd power of the voltage, so it must be off for parity block splitting.
 * `conn_cuts`: add cuts Σ_{l∈δ(S)} z_l >= 1 for bus sets |S| <= `conn_cuts` that cannot balance power on
   their own (`connectivity_cuts`; 0 = none). Cuts with at most `cut_graph_max` lines are tagged
   "conn_cut" (they may enter the sparsity graph), wider ones "conn_cut_wide". Putting cuts into the graph
@@ -35,7 +37,8 @@ Both are valid for every configuration that passes `island_screen`, so bounds st
 function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable = Int[],
     exact_switching::Bool = true, bigM_switching::Bool = true, capacity_cut::Bool = true, name::String = "",
     merge_zmax::Float64 = 0.0, merge_safe::Bool = true, merge_tol::Float64 = 0.01, merge_exclude = Int[],
-    fix_radial::Bool = false, conn_cuts::Int = 0, cut_graph_max::Int = 0)
+    fix_radial::Bool = false, conn_cuts::Int = 0, cut_graph_max::Int = 0,
+    angle_sign::Bool = false)
     ref = PowerModels.build_ref(data)[:it][:pm][:nw][0]
     pop = POP()
     binaries = Tuple{Symbol,Int}[]
@@ -68,7 +71,11 @@ function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable 
         E[i], F[i] = E[rep(i)], F[rep(i)]
     end
     Vsq(i) = E[i] * E[i] + F[i] * F[i]
-    add_ineq!(pop, E[refbus], "eref[$refbus]")
+    # e_refbus >= 0 only picks V over -V (reference angle 0 rather than 180 degrees); the angle
+    # reference itself is already imposed by eliminating f_refbus above. It is the one constraint
+    # in this model with an odd power of the voltage, so it has to go before the moment matrices
+    # can be split by parity -- dropping it cannot change the optimal value.
+    angle_sign && add_ineq!(pop, E[refbus], "eref[$refbus]")
 
     # generators
     PG = Dict{Int,Poly}()
@@ -278,6 +285,8 @@ function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable 
     pop.meta["binaries"] = binaries
     pop.meta["binary_vars"] = [findfirst(==(k == :gen ? "u[$id]" : "z[$id]"), pop.names) for (k, id) in binaries]
     pop.meta["refbus"] = refbus
+    # the voltage variables, i.e. the set the problem is even in -- used for parity splitting
+    pop.meta["voltage_vars"] = [i for (i, n) in enumerate(pop.names) if occursin(r"^[ef]\[", n)]
     pop.meta["merged_ties"] = ties
     pop.meta["merge_excluded"] = excluded
     pop.meta["radial_fixed"] = radial

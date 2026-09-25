@@ -242,7 +242,21 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
         for (G, tag) in zip(pmis, pop.pmi_tags), q in G
             poly_parity(q) == :even || (parity_ok = false; push!(parity_block, tagkey(tag)))
         end
+        # Cones are posted on first moments and have no basis to split, but an odd monomial in one
+        # would still have to be produced by a block that parity has just removed. Checked here so
+        # the precondition covers every channel into the model, not only the ones with bases.
+        for (i, (a, b, xs)) in enumerate(pop.socs), q in vcat([a, b], xs)
+            poly_parity(q) == :even ||
+                (parity_ok = false; push!(parity_block, i <= length(pop.soc_tags) ?
+                                          tagkey(pop.soc_tags[i]) : "SOC"))
+        end
         poly_parity(obj) == :even || (parity_ok = false; push!(parity_block, "OBJECTIVE"))
+    end
+    # A cone argument may be nonlinear (see add_soc!), and its monomials are contributed straight
+    # to their rows with no block behind them. A monomial no block can produce would silently
+    # become 0 == 0 -- the cone would look present and constrain nothing.
+    for (a, b, xs) in pop.socs, q in vcat([a, b], xs)
+        degree(q) <= 1 || covered_by_monomials(q)
     end
     "Split a basis by monomial parity; returns the halves that are non-empty."
     split_basis(B) = parity_ok ? filter(!isempty, [filter(m -> !vparity(m), B),

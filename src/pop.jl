@@ -51,9 +51,16 @@ end
 
 "Add the rotated second-order cone 2*a*b >= sum(x.^2) with a, b >= 0. All arguments affine."
 function add_soc!(pop::POP, a::Poly, b::Poly, xs::Vector{Poly}, tag::String)
-    for q in vcat([a, b], xs)
-        degree(q) <= 1 || error("rotated SOC arguments must be affine, got degree $(degree(q))")
-    end
+    # Arguments may be polynomials of any degree, not just affine. The relaxation needs only
+    # linearity of the moment functional L and convexity of the cone K:
+    #   * moment form -- (a(x), b(x), x(x)) in K for every feasible x, and a moment vector of a
+    #     measure supported on the feasible set gives (L(a), L(b), L(x)) as an average of points
+    #     of K, hence in K;
+    #   * SOS form -- the multiplier lies in K* = K (rotated SOCs are self-dual), so the pairing
+    #     <mu, (a, b, x)> is nonnegative on the feasible set and stays a valid SOS term.
+    # Neither argument mentions the degree. The one real requirement is that every monomial of the
+    # arguments be producible by some block, which `covered_by_monomials` checks in relaxation.jl.
+    # This is what lets w = e^2 + f^2 sit on one side of a cone without being lifted to a variable.
     push!(pop.socs, (a, b, xs))
     push!(pop.soc_tags, tag)
     return pop

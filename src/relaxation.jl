@@ -192,7 +192,10 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     # every constraint, so `covered_by_monomials` is never reached.
     function covered_by_monomials(p::Poly)
         for m in keys(p.terms)
-            isempty(m) && continue
+            # A degree-1 monomial needs no clique: L(v) is created by this very constraint's
+            # contribution to the moment vector. Only a product of two or more variables needs a
+            # block able to produce it.
+            length(m) <= 1 && continue
             s = sort(unique(m))
             any(issubset(s, c) for c in cliques) ||
                 error("monomial $(s) of a constraint is in no clique; the clique decomposition " *
@@ -434,9 +437,13 @@ function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxab
             end
         end
     end
+    # The equality multipliers are the free part of the dual: unconstrained, and absent from every
+    # penalty term of the certificate. `free_absorb` uses them as a zero-cost residual sink.
+    eqmults = VariableRef[]
     for (h, mults) in eqblocks
         for m in mults
             λ = @variable(model)
+            push!(eqmults, λ)
             for (mono, c) in h.terms
                 addc!(monoprod(mono, m, isbin), c, λ)
             end
@@ -504,12 +511,45 @@ function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxab
     # the certificate (bundle_params[:method] = :smooth (default, L-BFGS on a smoothed surrogate) or :bundle).
     if certify in (:implicit, :optimize, :bundle) && has_values(model)
         tc = time()
-        sc = SOSCertificate(model, coef, obj, monos, blocks, Xs, t, isbin, scale, maxabs; groups = groups)
+        sc = SOSCertificate(model, coef, obj, monos, blocks, Xs, t, isbin, scale, maxabs; groups = groups,
+            eqmults = eqmults)
         θ0 = value.(all_variables(model))
         haskey(cert, "raw_bound") || (cert["raw_bound"] = θ0[sc.tcol] * scale)
-        cert["certified_box_tight_rho"] = first(certified_value(sc, θ0; mode = :box, gradient = false))
-        cert["certified_implicit"] = first(certified_value(sc, θ0; gradient = false))
-        cert["certified_hybrid"] = first(certified_value(sc, θ0; mode = :hybrid, gradient = false))
+        # Dual repair. F is valid at every θ, so these are candidate points and the best one wins;
+        # none of them can make the bound unsound. Two moves, which fix different things:
+        #   * `project_dual` puts the Gram blocks back in their cone, killing the ρ_k·λ_min term
+        #     that dominates the correction (case57 -0.80 of -0.81; case200 -7.14 of -8.46);
+        #   * `free_absorb` routes residual onto the free equality multipliers, which cost nothing,
+        #     including the residual that projection displaces -- which is why they are tried
+        #     together as well as separately.
+        θmos = θ0
+        Fmos = first(certified_value(sc, θ0; gradient = false))
+        cert["certified_implicit_mosek"] = Fmos
+        best, bestF = θ0, Fmos
+        θp, nproj = project_dual(sc, θ0)
+        cert["n_dual_projected"] = nproj
+        θpf, nabs = nproj > 0 ? free_absorb(sc, θp) : (θp, 0)
+        cert["n_free_absorbed"] = nabs
+        # Absorption without projection, and absorption widened to the represented rows, were both
+        # measured and neither ever won: free multipliers alone moved case200 from 16220.43 to
+        # 16195.89, because the residual they shed lands on rows whose Gram entry then pays for it.
+        # Projection first, absorption second is the pairing that works, so it is the only one run.
+        for (name, θc) in (("proj", θp), ("proj_free", θpf))
+            nproj > 0 || continue
+            Fc = first(certified_value(sc, θc; gradient = false))
+            cert["certified_implicit_" * name] = Fc
+            isfinite(Fc) && Fc > bestF && ((best, bestF) = (θc, Fc))
+        end
+        θ0 = best
+        # Evaluated at BOTH the repaired point and MOSEK's: the repair is chosen on the implicit
+        # value, and the box and hybrid certificates do not have to prefer the same point. Taking
+        # the max over both is what makes the repair unable to lower any reported bound.
+        bothmax(mode) = max(first(certified_value(sc, θ0; mode = mode, gradient = false)),
+                            θ0 === θmos ? -Inf :
+                            first(certified_value(sc, θmos; mode = mode, gradient = false)))
+        cert["certified_box_tight_rho"] = bothmax(:box)
+        cert["certified_implicit"] = max(bestF, Fmos)
+        cert["certified_hybrid"] = bothmax(:hybrid)
         cert["n_unrepresented_monomials"] = count(==(0), sc.repcol)
         cert["n_square_groups"] = length(groups)
         for k in ("certified_box_tight_rho", "certified_implicit", "certified_hybrid")
@@ -522,10 +562,23 @@ function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxab
         method = pop!(bp, :method, certify == :bundle ? :bundle : :smooth)
         if certify in (:optimize, :bundle)
             tb = time()
-            Fb, _, hist = method == :bundle ? bundle_certify(sc, θ0; bp...) : smooth_certify(sc, θ0; bp...)
+            run1(θs) = method == :bundle ? bundle_certify(sc, θs; bp...) : smooth_certify(sc, θs; bp...)
+            # Start from BOTH the repaired point and MOSEK's own. `project_dual` leaves many blocks
+            # with λ_min exactly 0, which is precisely the kink of min(λ_min, 0): the smoothed
+            # gradient there is tiny and the ascent stalls at once. On case200 that cost 6.7 --
+            # the repaired point scored higher to begin with and then climbed nowhere, while
+            # MOSEK's point started lower and climbed past it. Neither dominates, so run both.
+            Fb, _, hist = run1(θ0)
+            nev = length(hist)
+            if θ0 !== θmos
+                Fb2, _, h2 = run1(θmos)
+                nev += length(h2)
+                Fb2 > Fb && (Fb = Fb2)
+                cert["certified_optimized_from_mosek"] = Fb2
+            end
             cert["certified_optimized"] = Fb
             cert["optimize_method"] = string(method)
-            cert["optimize_evals"] = length(hist)
+            cert["optimize_evals"] = nev
             cert["optimize_time"] = time() - tb
             isfinite(Fb) && Fb > bound && (bound = Fb)
         end

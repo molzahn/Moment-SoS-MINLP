@@ -17,9 +17,16 @@
 #   bound when MOSEK stops without a feasible point (step 2).
 # * "bundle" (step 3): maximize F with a proximal bundle method started at MOSEK's point.
 #
+# Free-multiplier absorption (`free_absorb`): the equality multipliers λ are unconstrained
+# variables that appear in F only through r, never in a penalty term. Residual moved onto them is
+# therefore not paid for at all, where an unrepresented monomial costs |r_α| max|x^α| (first order
+# in the residual) and a Gram entry costs a negative eigenvalue (second order). Since F is valid at
+# every θ, this is purely a better starting point and needs no change to the argument above.
+#
 # Floating-point caveat: eigenvalues and sums are computed in Float64 (the paper uses rational arithmetic).
 
 using SparseArrays
+using LinearAlgebra
 
 struct SOSCertificate
     C::SparseMatrixCSC{Float64,Int}        # rows = monomials, cols = SOS variables
@@ -31,6 +38,7 @@ struct SOSCertificate
     repcoef::Vector{Float64}               # per row: coefficient of the representative column in that row
     mb::Vector{Float64}                    # per row: max |x^α| over the box
     blockrows::Vector{Vector{Int}}         # rows whose representative lies in each block
+    freecols::Vector{Int}                  # columns of the free (equality) multipliers
     scale::Float64
 end
 
@@ -90,7 +98,7 @@ end
 
 "Build the certificate data from the SOS model (after `optimize!`)."
 function SOSCertificate(model, coef::Dict{Vector{Int},AffExpr}, obj::Poly, monos, blocks, Xs, t, isbin, scale, maxabs;
-    groups = Tuple{Vector{Int},Float64}[])
+    groups = Tuple{Vector{Int},Float64}[], eqmults = [])
     vars = all_variables(model)
     col = Dict(v => k for (k, v) in enumerate(vars))
     rows = collect(monos)
@@ -139,7 +147,167 @@ function SOSCertificate(model, coef::Dict{Vector{Int},AffExpr}, obj::Poly, monos
     for (i, c) in enumerate(repcol)
         c > 0 && push!(blockrows[colblock[c]], i)
     end
-    return SOSCertificate(C, f, col[t], bmats, rho, repcol, repcoef, mb, blockrows, scale)
+    return SOSCertificate(C, f, col[t], bmats, rho, repcol, repcoef, mb, blockrows,
+        [col[v] for v in eqmults if haskey(col, v)], scale)
+end
+
+"""
+    project_dual(cert, θ) -> (θ′, n_projected)
+
+Project every Gram block of the dual point onto the positive semidefinite cone (a 1×1 block onto
+the nonnegative ray), so that `Σ_k ρ_k min(λ_min(X_k), 0)` starts from zero.
+
+This is worth doing because that term, not the unrepresented monomials, is what dominates the
+certificate correction: MOSEK returns multipliers a few times 1e-7 negative, and each one is
+charged ρ_k times its violation. On case57 that is -0.80 of a -0.81 total correction; on case200
+-7.14 of -8.46.
+
+Projection is not free -- it moves the residual it removes onto the monomials the block touches --
+so on its own it is roughly a wash: for a 1×1 localizing block, ρ_k is exactly Σ_α |g_α| max|x^α|,
+which is also what the displaced residual costs on the box term. It pays only in combination with
+`free_absorb`, which can route that displaced residual onto the free equality multipliers, where it
+costs nothing at all. Hence the pairing, and hence the caller keeping whichever point scores best.
+"""
+function project_dual(cert::SOSCertificate, θ::Vector{Float64})
+    θn = copy(θ)
+    n = 0
+    for B in cert.blocks
+        m = size(B, 1)
+        if m == 1
+            if θn[B[1, 1]] < 0
+                θn[B[1, 1]] = 0.0
+                n += 1
+            end
+            continue
+        end
+        M = Symmetric([θn[B[i, j]] for i in 1:m, j in 1:m])
+        E = eigen(M)
+        minimum(E.values) < 0 || continue
+        Mp = E.vectors * Diagonal(max.(E.values, 0.0)) * E.vectors'
+        for i in 1:m, j in i:m
+            θn[B[i, j]] = (Mp[i, j] + Mp[j, i]) / 2
+        end
+        n += 1
+    end
+    return θn, n
+end
+
+"""
+    free_absorb(cert, θ; ridge = 1e-8, tol = 1e-8) -> (θ′, n_absorbed)
+
+Move residual off the monomials that have no Gram representative and onto the free equality
+multipliers.
+
+Those multipliers are unconstrained variables that enter `certified_value` only through the
+residual -- they appear in no penalty term -- so residual moved there costs nothing at all. An
+unrepresented monomial instead costs |r_α| max|x^α|, first order in the residual, and a Gram entry
+costs a negative eigenvalue, second order. Free is better than either, which is why an auxiliary
+variable does not need a moment block of its own just to own a residual.
+
+This changes the dual point, not the certificate: F is a valid lower bound at every θ, so the
+caller evaluates both points and keeps the better one. Nothing here can make a bound unsound; the
+worst case is that it does not help.
+
+Two passes, because they fail in opposite directions:
+
+ 1. A weighted least-squares solve over the whole free subspace, min ‖W(Aδ − b)‖² + ridge‖δ‖² with
+    A the unrepresented rows of the free columns, b their residual and W = max|x^α| their cost.
+    This spreads the correction across every multiplier at once, which a greedy pass cannot do.
+    The ridge keeps δ bounded when A is rank-deficient -- an unbounded multiplier would dump the
+    residual it removes onto the represented rows, where it is paid for again.
+ 2. A greedy triangular pass over what pass 1 could not reach, taking rows fewest-candidates-first
+    and using a column only when it touches no row already eliminated, so an absorbed residual
+    stays at zero rather than being refilled. `tol` rejects a pivot negligible against its column.
+
+Pass 2 alone absorbed 616 of case57's 1965 unrepresented monomials; the least-squares pass is what
+takes it the rest of the way.
+"""
+function free_absorb(cert::SOSCertificate, θ::Vector{Float64}; ridge::Float64 = 1e-8,
+    tol::Float64 = 1e-8, include_represented::Bool = false)
+    θn = copy(θ)
+    isempty(cert.freecols) && return θn, 0
+    r = cert.f .- cert.C * θn
+    nrow = size(cert.C, 1)
+    isrow = falses(nrow)
+    rows = Int[]
+    for i in 1:nrow
+        cert.repcol[i] == 0 && r[i] != 0 && (isrow[i] = true; push!(rows, i))
+    end
+    isempty(rows) && return θn, 0
+    before = count(i -> r[i] != 0, rows)
+
+    # ---- pass 1: weighted, ridge-regularised least squares over the free subspace -------------
+    # With `include_represented` the represented rows join the system. Their residual is absorbed
+    # into a Gram entry rather than paid on the box, which is cheaper but not free: it perturbs
+    # that block's smallest eigenvalue, and after `project_dual` has just put the block back in its
+    # cone, that perturbation is the whole remaining correction. Shrinking it is worth a try, and
+    # costs one extra solve because the caller keeps the better point either way.
+    cols = cert.freecols
+    lsrows = include_represented ? [i for i in 1:nrow if r[i] != 0] : rows
+    A = cert.C[lsrows, cols]
+    if nnz(A) > 0
+        w = [cert.mb[i] > 0 ? cert.mb[i] : 1.0 for i in lsrows]
+        b = w .* r[lsrows]
+        Aw = Diagonal(w) * A
+        nc = length(cols)
+        # stacking √ridge·I is the standard way to get a ridge solution out of a plain LS solve
+        M = [Aw; sqrt(ridge) * sparse(I, nc, nc)]
+        rhs = vcat(b, zeros(nc))
+        δ = try
+            qr(M) \ rhs
+        catch
+            Float64[]
+        end
+        if length(δ) == nc && all(isfinite, δ)
+            for (j, c) in enumerate(cols)
+                δ[j] == 0 && continue
+                θn[c] += δ[j]
+            end
+            r = cert.f .- cert.C * θn
+        end
+    end
+
+    # ---- pass 2: greedy triangular elimination on whatever is left ----------------------------
+    rv, nz = rowvals(cert.C), nonzeros(cert.C)
+    cand = Dict{Int,Vector{Tuple{Int,Float64}}}()     # row -> [(free column, coefficient)]
+    colrows = Dict{Int,Vector{Int}}()                 # free column -> unrepresented rows it touches
+    colmax = Dict{Int,Float64}()                      # free column -> largest |entry|, for the pivot test
+    for c in cols
+        touched, mx = Int[], 0.0
+        for k in nzrange(cert.C, c)
+            mx = max(mx, abs(nz[k]))
+            isrow[rv[k]] || continue
+            push!(touched, rv[k])
+            push!(get!(() -> Tuple{Int,Float64}[], cand, rv[k]), (c, nz[k]))
+        end
+        isempty(touched) || (colrows[c] = touched; colmax[c] = mx)
+    end
+    if !isempty(cand)
+        order = sort(collect(keys(cand)); by = i -> length(cand[i]))
+        eliminated = falses(nrow)
+        used = Set{Int}()
+        for i in order
+            r[i] == 0 && continue
+            best, bestcoef, bestlen = 0, 0.0, typemax(Int)
+            for (c, a) in cand[i]
+                c in used && continue
+                abs(a) >= tol * colmax[c] || continue
+                any(j -> eliminated[j], colrows[c]) && continue   # keeps the elimination triangular
+                l = length(colrows[c])
+                (l < bestlen || (l == bestlen && abs(a) > abs(bestcoef))) &&
+                    ((best, bestcoef, bestlen) = (c, a, l))
+            end
+            best == 0 && continue
+            d = r[i] / bestcoef
+            θn[best] += d
+            for k in nzrange(cert.C, best)
+                r[rv[k]] -= nz[k] * d
+            end
+            eliminated[i] = true
+            push!(used, best)
+        end
+    end
+    return θn, before - count(i -> abs(r[i]) > 1e-14, rows)
 end
 
 """

@@ -109,7 +109,8 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     optimizer = mosek_optimizer(), silent::Bool = true, normalize::Bool = true,
     skip_high_order_tags = String[], solver_params = Dict{String,Any}(), diagnostics::Bool = true,
     quotient_basis::Bool = false, scale_vars::Bool = true, out_of_graph_tags = String[], scalar_tags = String[],
-    certify::Symbol = :implicit, bundle_params = Dict{Symbol,Any}(), parity_vars = nothing)
+    certify::Symbol = :implicit, bundle_params = Dict{Symbol,Any}(), parity_vars = nothing,
+    identity_slack::Float64 = 0.0)
     t0 = time()
     if scale_vars
         # substitute x_i = s_i x̂_i with s_i = max(|lb_i|, |ub_i|) so that every variable lies in [-1, 1];
@@ -130,7 +131,8 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
             extra_supports = extra_supports, extra_cliques = extra_cliques, global_linear = global_linear,
             optimizer = optimizer, silent = silent, normalize = normalize, skip_high_order_tags = skip_high_order_tags,
             solver_params = solver_params, diagnostics = diagnostics, quotient_basis = quotient_basis, scale_vars = false,
-            out_of_graph_tags = out_of_graph_tags, scalar_tags = scalar_tags, certify = certify, bundle_params = bundle_params, parity_vars = parity_vars)
+            out_of_graph_tags = out_of_graph_tags, scalar_tags = scalar_tags, certify = certify, bundle_params = bundle_params, parity_vars = parity_vars,
+            identity_slack = identity_slack)
         y = Dict(m => v * prod((svec[i] for i in m); init = 1.0) for (m, v) in r.y)
         r.info["scale_vars"] = true
         return MomentRelaxation(r.status, r.primal_status, r.bound, r.primal_objective, r.build_time, r.solve_time,
@@ -281,6 +283,7 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     blocks = Tuple{Matrix{Poly},Vector{Vector{Int}}}[]
     eqblocks = Tuple{Poly,Vector{Vector{Int}}}[]
     n_pivots = 0
+    pivot_mags = Float64[]
     for k in eachindex(cliques)
         B = basis(k, orders[k])
         if quotient_basis && orders[k] >= 2
@@ -289,7 +292,8 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
             # L(h·m) = 0 for all m in the full basis, so that the full moment matrix is a congruence of
             # the reduced one (exact reformulation, strictly feasible reduced matrix).
             Ek = [h for h in eqs if degree(h) == 2 && !is_constant(h) && issubset(support(h), cliques[k])]
-            piv = _pivot_monomials(Ek)
+            piv, pmags = _pivot_monomials(Ek)
+            append!(pivot_mags, pmags)
             if !isempty(piv)
                 pset = Set(piv)
                 B = filter(m -> !(m in pset), B)
@@ -381,7 +385,8 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     if form == :sos
         maxabs = [max(abs(pop.lb[i]), abs(pop.ub[i])) for i in eachindex(pop.lb)]
         yv, bound, pobj, st, ps, nmom, cert = _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxabs;
-            certify = certify, bundle_params = bundle_params, groups = square_groups(ineqs))
+            certify = certify, bundle_params = bundle_params, groups = square_groups(ineqs),
+            identity_slack = identity_slack)
     elseif form == :moment
         yv, bound, pobj, st, ps, nmom = _solve_moment_form(model, obj, blocks, eqblocks, socs, isbin, scale)
         cert = Dict{String,Any}()
@@ -402,12 +407,17 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
             isempty(Bk) && (push!(ratios, 0.0); continue)
             M1 = [(mm = monoprod(Bk[i], Bk[j], isbin); isempty(mm) ? 1.0 : get(yv, mm, 0.0))
                   for i in eachindex(Bk), j in eachindex(Bk)]
+            all(isfinite, M1) || (push!(ratios, NaN); continue)
             ev = sort(eigvals(Symmetric(M1)); rev = true)
             push!(ratios, length(ev) > 1 ? ev[2] / ev[1] : 0.0)
         end
     end
     info = Dict{String,Any}("dropped" => dropped, "normalize" => normalize, "n_pivots" => n_pivots,
         "parity_split" => parity_ok, "n_moment_blocks" => n_moment_blocks)
+    if !isempty(pivot_mags)
+        info["pivot_min"] = minimum(pivot_mags)
+        info["pivot_max"] = maximum(pivot_mags)
+    end
     isempty(Sp) || parity_ok ||
         (info["parity_blocked_by"] = sort(unique(parity_block)))
     merge!(info, cert)
@@ -430,7 +440,8 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
 end
 
 function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxabs; certify::Symbol = :implicit,
-    bundle_params = Dict{Symbol,Any}(), groups = Tuple{Vector{Int},Float64}[])
+    bundle_params = Dict{Symbol,Any}(), groups = Tuple{Vector{Int},Float64}[],
+    identity_slack::Float64 = 0.0)
     coef = Dict{Vector{Int},AffExpr}()
     addc!(m, c, v) = add_to_expression!(get!(() -> AffExpr(0.0), coef, m), c, v)
     Xs = Any[]
@@ -480,8 +491,33 @@ function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxab
     add_to_expression!(get!(() -> AffExpr(0.0), coef, Int[]), 1.0, t)
     monos = union(keys(coef), keys(obj.terms))
     cons = Dict{Vector{Int},ConstraintRef}()
+    conslo = Dict{Vector{Int},ConstraintRef}()
+    # `identity_slack` > 0 relaxes the SOS identity from C_a(theta) = f_a to |C_a(theta) - f_a| <= eps.
+    #
+    # The point is NOT to get a bound out of the relaxed problem -- it is not one. It is to hand
+    # MOSEK a problem with an interior. The equality form has none whenever the moment matrix is
+    # confined to a face, which is exactly the SLOW_PROGRESS case, and a stalled solve returns a
+    # dual point that is bad in ways no amount of solver tuning fixes. The slackened problem is
+    # solved only to PRODUCE a theta; `certified_value` then evaluates that theta against the
+    # ORIGINAL f and C, prices every residual it finds, and returns a bound valid for the original
+    # problem. The certificate is built for nonzero residuals -- this just gives it a better point.
+    #
+    # eps is a genuine trade: too small and the interior is still too thin to help, too large and
+    # the residual charge exceeds what the better centring gains. Sweep it.
     for m in monos
-        cons[m] = @constraint(model, get(coef, m, AffExpr(0.0)) == get(obj.terms, m, 0.0) / scale)
+        e = get(coef, m, AffExpr(0.0))
+        f = get(obj.terms, m, 0.0) / scale
+        if identity_slack > 0
+            # The moment vector is read back from these duals, so keep BOTH sides: for
+            # e - f <= eps with multiplier mu+ >= 0 and f - e <= eps with mu- >= 0, the multiplier
+            # of the underlying equality is mu+ - mu-. Reading only one side gives a one-sided
+            # multiplier, and normalising by a constant-monomial dual that is then zero produces
+            # the NaNs that made this look like a certificate failure.
+            cons[m] = @constraint(model, e - f <= identity_slack)
+            conslo[m] = @constraint(model, f - e <= identity_slack)
+        else
+            cons[m] = @constraint(model, e == f)
+        end
     end
     @objective(model, Max, t)
     optimize!(model)
@@ -600,9 +636,14 @@ function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxab
     yv = Dict{Vector{Int},Float64}()
     ps = dual_status(model)
     if has_duals(model)
-        d0 = dual(cons[Int[]])
-        for (m, c) in cons
-            isempty(m) || (yv[m] = dual(c) / d0)
+        eqdual(m) = isempty(conslo) ? dual(cons[m]) : dual(cons[m]) - dual(conslo[m])
+        d0 = eqdual(Int[])
+        if isfinite(d0) && abs(d0) > 1e-12
+            for (m, _) in cons
+                isempty(m) && continue
+                v = eqdual(m) / d0
+                isfinite(v) && (yv[m] = v)
+            end
         end
     end
     pobj = isempty(yv) ? NaN : sum(c * (isempty(m) ? 1.0 : yv[m]) for (m, c) in obj.terms)
@@ -698,11 +739,27 @@ function _moment_feasibility(yv, blocks, eqblocks, isbin, nmom)
     return emin_m, emin_l, res
 end
 
-"Degree-2 pivot monomials of a set of degree-2 polynomials (Gaussian elimination with partial pivoting)."
+"""
+    _pivot_monomials(E; tol = 1e-9) -> (pivots, magnitudes)
+
+Monomials that the degree-2 equalities `E` let us eliminate from a moment basis: one per
+independent equality. This is the explicit half of a facial reduction. Imposing L(h*m) = 0 for all
+m of degree <= 2 forces M*v_h = 0 with v_h the coefficient vector of h, so the moment matrix is
+confined to a known face, and deleting one basis monomial per independent h is a congruence onto
+it -- an exact reformulation whose reduced matrix can be strictly feasible where the full one
+cannot.
+
+Elimination is COLUMN-pivoted, not just row-pivoted. The previous version walked the columns in
+sorted monomial order and took the first with a nonzero pivot, so a monomial carrying a tiny
+coefficient could be chosen to eliminate while a well-scaled one sat further right; deleting on a
+small pivot is what makes the congruence ill-conditioned. Choosing the largest remaining entry is
+the standard rank-revealing fix and costs nothing here. Returned magnitudes are the pivots
+actually used, so the caller can report how well-conditioned the reduction was.
+"""
 function _pivot_monomials(E::Vector{Poly}; tol = 1e-9)
-    isempty(E) && return Vector{Int}[]
+    isempty(E) && return (Vector{Int}[], Float64[])
     cols = sort!(unique([m for h in E for m in keys(h.terms) if length(m) == 2]))
-    isempty(cols) && return Vector{Int}[]
+    isempty(cols) && return (Vector{Int}[], Float64[])
     cidx = Dict(m => j for (j, m) in enumerate(cols))
     A = zeros(length(E), length(cols))
     for (i, h) in enumerate(E), (m, c) in h.terms
@@ -712,18 +769,25 @@ function _pivot_monomials(E::Vector{Poly}; tol = 1e-9)
         r = maximum(abs, A[i, :]; init = 0.0)
         r > 0 && (A[i, :] ./= r)
     end
-    piv = Vector{Int}[]
+    piv, mags = Vector{Int}[], Float64[]
+    free = trues(size(A, 2))
     row = 1
-    for j in axes(A, 2)
-        row > size(A, 1) && break
-        i = argmax(abs.(A[row:end, j])) + row - 1
-        abs(A[i, j]) < tol && continue
-        A[[row, i], :] = A[[i, row], :]
-        for r in row+1:size(A, 1)
-            A[r, :] .-= (A[r, j] / A[row, j]) .* A[row, :]
+    while row <= size(A, 1)
+        best, bi, bj = tol, 0, 0
+        for j in axes(A, 2)
+            free[j] || continue
+            for i in row:size(A, 1)
+                abs(A[i, j]) > best && ((best, bi, bj) = (abs(A[i, j]), i, j))
+            end
         end
-        push!(piv, cols[j])
+        bj == 0 && break
+        A[[row, bi], :] = A[[bi, row], :]
+        for r in row+1:size(A, 1)
+            A[r, :] .-= (A[r, bj] / A[row, bj]) .* A[row, :]
+        end
+        push!(piv, cols[bj]); push!(mags, best)
+        free[bj] = false
         row += 1
     end
-    return piv
+    return (piv, mags)
 end

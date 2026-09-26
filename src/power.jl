@@ -12,6 +12,11 @@
   (enforced only in cliques of order >= 2).
 * `bigM_switching`: add degree-2 on/off big-M constraints (usable at order 1).
 * `capacity_cut`: valid inequality Σ_g u_g pmax_g >= Σ pd (only if losses are nonnegative).
+* `degenerate_bound_tol`: a generator whose pmin and pmax (or qmin and qmax) coincide to within this
+  RELATIVE tolerance gets one equality rather than two opposing inequalities. 0 (the default) means
+  exact equality only, which is an exact reformulation; a positive value tightens near-degenerate
+  generators to a point and is a modelling choice, not a relaxation. Count in
+  `pop.meta["n_degenerate_gen_bounds"]`.
 * `merge_zmax`: buses joined by non-transformer branches ("ties") with |r + jx| < `merge_zmax` share one
   voltage (see `low_impedance_groups`). Each tie becomes a lossless flow (p, q) with its thermal limit and
   is never switchable; every bus keeps its own power balance. This is the zero-impedance limit of the tie
@@ -38,10 +43,11 @@ function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable 
     exact_switching::Bool = true, bigM_switching::Bool = true, capacity_cut::Bool = true, name::String = "",
     merge_zmax::Float64 = 0.0, merge_safe::Bool = true, merge_tol::Float64 = 0.01, merge_exclude = Int[],
     fix_radial::Bool = false, conn_cuts::Int = 0, cut_graph_max::Int = 0,
-    angle_sign::Bool = false)
+    angle_sign::Bool = false, degenerate_bound_tol::Float64 = 0.0)
     ref = PowerModels.build_ref(data)[:it][:pm][:nw][0]
     pop = POP()
     binaries = Tuple{Symbol,Int}[]
+    n_degenerate_gen_bounds = 0
     buses = sort(collect(keys(ref[:bus])))
     refbus = first(sort(collect(keys(ref[:ref_buses]))))
     excluded = sort(collect(merge_exclude))
@@ -94,10 +100,31 @@ function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable 
             start = (pmin + pmax) / 2))
         QG[g] = pvar(add_var!(pop, "qg[$g]"; lb = on ? min(0.0, qmin) : qmin, ub = on ? max(0.0, qmax) : qmax,
             start = (qmin + qmax) / 2))
-        add_ineq!(pop, PG[g] - pmin * U, "pg_min[$g]")
-        add_ineq!(pop, pmax * U - PG[g], "pg_max[$g]")
-        add_ineq!(pop, QG[g] - qmin * U, "qg_min[$g]")
-        add_ineq!(pop, qmax * U - QG[g], "qg_max[$g]")
+        # A generator with pmin == pmax (a synchronous condenser, pmax = pmin = 0, is the common
+        # case) would otherwise get the pair PG - pmin*U >= 0 and pmax*U - PG >= 0, two
+        # inequalities whose only common solution is the single point PG = pmax*U. That is a
+        # back-to-back pair, and it is poison for an interior-point solve of the RELAXATION rather
+        # than of the OPF: at order 2 each inequality gets a localizing MATRIX over the clique
+        # basis, the two weights are negatives of each other, so both matrices are forced to zero
+        # and neither block has a strictly feasible point. At order 1 the localizing block is a
+        # 1x1 scalar and the damage is slight, which is why this shows up only at order 2.
+        # Emitting the equality instead is an exact reformulation -- same feasible set, one
+        # constraint instead of two, and no empty-interior block.
+        degen(lo, hi) = abs(hi - lo) <= degenerate_bound_tol * max(1.0, abs(lo), abs(hi))
+        if degen(pmin, pmax)
+            add_eq!(pop, PG[g] - pmax * U, "pg_fix[$g]")
+            n_degenerate_gen_bounds += 1
+        else
+            add_ineq!(pop, PG[g] - pmin * U, "pg_min[$g]")
+            add_ineq!(pop, pmax * U - PG[g], "pg_max[$g]")
+        end
+        if degen(qmin, qmax)
+            add_eq!(pop, QG[g] - qmax * U, "qg_fix[$g]")
+            n_degenerate_gen_bounds += 1
+        else
+            add_ineq!(pop, QG[g] - qmin * U, "qg_min[$g]")
+            add_ineq!(pop, qmax * U - QG[g], "qg_max[$g]")
+        end
         gen["model"] == 2 || error("only polynomial generator costs are supported")
         c = gen["cost"]
         n = length(c)
@@ -285,6 +312,7 @@ function build_power_pop(data::Dict{String,Any}; switchable = Int[], commitable 
     pop.meta["binaries"] = binaries
     pop.meta["binary_vars"] = [findfirst(==(k == :gen ? "u[$id]" : "z[$id]"), pop.names) for (k, id) in binaries]
     pop.meta["refbus"] = refbus
+    pop.meta["n_degenerate_gen_bounds"] = n_degenerate_gen_bounds
     # the voltage variables, i.e. the set the problem is even in -- used for parity splitting
     pop.meta["voltage_vars"] = [i for (i, n) in enumerate(pop.names) if occursin(r"^[ef]\[", n)]
     pop.meta["merged_ties"] = ties

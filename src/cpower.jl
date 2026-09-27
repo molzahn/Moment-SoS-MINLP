@@ -84,10 +84,8 @@ function build_complex_power_pop(data::Dict{String,Any}; thermal_limits::Bool = 
     gens = Dict{Int,Vector{Any}}()
     for (_, g) in ref[:gen]
         Int(get(g, "gen_status", 1)) == 0 && continue
-        c = g["cost"]
-        (length(c) <= 2 || Float64(c[1]) == 0) ||
-            error("generator at bus $(g["gen_bus"]) has a quadratic cost; the complex POP " *
-                  "supports linear costs only (see the note in src/cpower.jl)")
+        length(g["cost"]) <= 3 ||
+            error("generator at bus $(g["gen_bus"]) has a cost of degree > 2; unsupported")
         push!(get!(gens, Int(g["gen_bus"]), Any[]), g)
     end
     pd = Dict(b => 0.0 for b in buses); qd = Dict(b => 0.0 for b in buses)
@@ -95,6 +93,8 @@ function build_complex_power_pop(data::Dict{String,Any}; thermal_limits::Bool = 
         pd[Int(l["load_bus"])] += Float64(l["pd"]); qd[Int(l["load_bus"])] += Float64(l["qd"])
     end
     cost1(g) = (c = g["cost"]; length(c) >= 2 ? Float64(c[end-1]) : 0.0)
+    cost2(g) = (c = g["cost"]; length(c) >= 3 ? Float64(c[end-2]) : 0.0)
+    isquad(g) = cost2(g) > 0
 
     obj = CPoly()
     obj_aux = Dict{Int,Float64}()
@@ -112,7 +112,7 @@ function build_complex_power_pop(data::Dict{String,Any}; thermal_limits::Bool = 
         if isempty(gl)
             add_ceq!(pop, Pk + pd[b], "p_balance[$b]")
             add_ceq!(pop, Qk + qd[b], "q_balance[$b]")
-        elseif length(gl) == 1
+        elseif length(gl) == 1 && !isquad(gl[1])
             g = gl[1]
             add_cineq!(pop, Pk - (Float64(g["pmin"]) - pd[b]), "pg_min[$b]")
             add_cineq!(pop, (Float64(g["pmax"]) - pd[b]) - Pk, "pg_max[$b]")
@@ -120,7 +120,9 @@ function build_complex_power_pop(data::Dict{String,Any}; thermal_limits::Bool = 
             add_cineq!(pop, (Float64(g["qmax"]) - qd[b]) - Qk, "qg_max[$b]")
             obj = obj + cost1(g) * (Pk + pd[b])
         else
-            # several generators here: one real auxiliary per generator, summed into the balance
+            # several generators, or one with a quadratic cost: a real auxiliary per generator,
+            # summed into the balance. A quadratic cost is then quadratic in an ORDINARY REAL
+            # variable and goes in as a rotated cone, so it never reaches the moment matrix.
             n_aux_buses += 1
             pidx = Int[]; qidx = Int[]
             for g in gl
@@ -128,6 +130,11 @@ function build_complex_power_pop(data::Dict{String,Any}; thermal_limits::Bool = 
                 iq = add_caux!(pop, "qg[$(g["index"])]"; lo = Float64(g["qmin"]), hi = Float64(g["qmax"]))
                 push!(pidx, ip); push!(qidx, iq)
                 obj_aux[ip] = get(obj_aux, ip, 0.0) + cost1(g)
+                if isquad(g)
+                    it = add_caux!(pop, "tcost[$(g["index"])]"; lo = 0.0)
+                    add_caux_quad!(pop, it, cost2(g), ip)
+                    obj_aux[it] = get(obj_aux, it, 0.0) + 1.0
+                end
             end
             # sum_g pg_g - pd_b - P_k(v) = 0, and likewise for reactive
             add_cmixed!(pop, Dict(i => 1.0 for i in pidx), (-1.0) * Pk - pd[b], :eq, "p_balance[$b]")
@@ -162,6 +169,7 @@ function build_complex_power_pop(data::Dict{String,Any}; thermal_limits::Bool = 
 
     pop.obj = obj
     pop.meta["obj_aux"] = obj_aux
+    pop.meta["ybus"] = Y
     pop.meta["buses"] = buses
     pop.meta["bus_index"] = idx
     pop.meta["n_aux_buses"] = n_aux_buses
@@ -173,3 +181,39 @@ end
 
 "n x n matrix with a single 1 at (k, k), i.e. e_k e_k^T."
 ekcol(n::Int, k::Int) = (M = zeros(ComplexF64, n, n); M[k, k] = 1; M)
+
+"""
+    complex_bus_cliques(data, bus_index; order2_buses = Int[]) -> Vector{Vector{Int}}
+
+Clique decomposition for the complex hierarchy, from the BUS ADJACENCY. This is where the complex
+formulation is structurally simpler than the real one: a bus is ONE complex variable, so the
+interaction graph is the network graph itself, with no e/f pairing to undo.
+
+Buses promoted to order 2 have their closed neighbourhood clique-ified first, exactly as in
+Molzahn & Hiskens and as the paper's E^con prescribes -- a high-order constraint couples all the
+variables it touches, so its support must sit inside a single clique. The rest of the graph is
+left alone and a min-degree chordal extension supplies the maximal cliques.
+"""
+function complex_bus_cliques(data::Dict{String,Any}, bus_index::Dict{Int,Int};
+        order2_buses = Int[])
+    supports = Vector{Int}[]
+    nbrs = Dict{Int,Set{Int}}()
+    for (_, br) in get(data, "branch", Dict{String,Any}())
+        Int(get(br, "br_status", 1)) == 0 && continue
+        f, t = Int(br["f_bus"]), Int(br["t_bus"])
+        f == t && continue
+        (haskey(bus_index, f) && haskey(bus_index, t)) || continue
+        push!(supports, sort!([bus_index[f], bus_index[t]]))
+        push!(get!(nbrs, f, Set{Int}([f])), t)
+        push!(get!(nbrs, t, Set{Int}([t])), f)
+    end
+    for b in order2_buses
+        haskey(nbrs, b) || continue
+        cl = sort!([bus_index[j] for j in nbrs[b] if haskey(bus_index, j)])
+        length(cl) >= 2 && push!(supports, cl)
+    end
+    for (b, i) in bus_index
+        push!(supports, [i])          # isolated buses still need a block
+    end
+    return chordal_cliques(supports)
+end

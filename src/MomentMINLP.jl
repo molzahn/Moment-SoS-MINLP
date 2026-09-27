@@ -14,7 +14,7 @@ import HSL_jll
 import PowerModels
 
 export Poly, pvar, POP, CPoly, CPOP, cvar, cbar, cconj, cmonomial_basis,
-    build_complex_power_pop, solve_complex_moment_relaxation, complex_ybus, add_var!, add_ineq!, add_eq!, add_pmi!, add_soc!, fix_variables, solve_nlp,
+    build_complex_power_pop, solve_complex_moment_relaxation, complex_ybus, complex_bus_cliques, cmoment, clique_W, rank_one_point, solve_complex_adaptive, complex_injection_mismatch, add_var!, add_ineq!, add_eq!, add_pmi!, add_soc!, fix_variables, solve_nlp,
     solve_moment_relaxation, MomentRelaxation, moment, chordal_cliques, binary_clique_order, adjacent_clique_order, capped_augmentation,
     SOSCertificate, certified_value, free_absorb, project_dual, bundle_certify, smooth_certify,
     merge_low_impedance, low_impedance_groups, safe_merge_exclusions, IslandGuard, island_screen, repair_islands!, can_open, radial_fixings, connectivity_cuts,
@@ -26,6 +26,7 @@ include("polynomials.jl")
 include("cpoly.jl")
 include("crelaxation.jl")
 include("cpower.jl")
+include("cadaptive.jl")
 include("pop.jl")
 include("sparsity.jl")
 include("relaxation.jl")

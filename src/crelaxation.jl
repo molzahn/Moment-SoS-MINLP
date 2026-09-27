@@ -29,6 +29,7 @@ struct ComplexMomentRelaxation
     psd_sizes::Vector{Int}          # sizes of the REAL blocks actually posted
     n_moments::Int
     t_invariant::Bool
+    y::Dict{CMono,ComplexF64}       # the moment vector, for rank-one recovery
     info::Dict{String,Any}
 end
 
@@ -45,12 +46,17 @@ step and is not applied here.
 """
 function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         cliques::Union{Nothing,Vector{Vector{Int}}} = nothing,
+        clique_orders::Union{Nothing,Vector{Int}} = nothing,
         t_invariant::Union{Nothing,Bool} = nothing,
         optimizer = mosek_optimizer(), silent::Bool = true,
         solver_params = Dict{String,Any}())
     t0 = time()
     n = cnvars(pop)
     cls = cliques === nothing ? [collect(1:n)] : cliques
+    # the paper's multi-ordered relaxation (3.31): one order per clique, so second-order blocks
+    # are paid for only where they are wanted
+    ords = clique_orders === nothing ? fill(order, length(cls)) : clique_orders
+    length(ords) == length(cls) || error("clique_orders must have one entry per clique")
 
     # T-invariance precondition: every term of every polynomial must have |alpha| == |beta|
     tinv_ok = all(length(a) == length(b)
@@ -131,36 +137,57 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
 
     one_poly = CPoly(1)
     nblocks = 0
-    for cl in cls
-        B = cmonomial_basis(cl, order)
+    for (ci, cl) in enumerate(cls)
+        B = cmonomial_basis(cl, ords[ci])
         for Bp in split_basis(B)
             A, C = loc_matrix(one_poly, Bp)
             hermitian_psd!(A, C); nblocks += 1
         end
     end
     skipped = Dict{String,Int}()
+    # A monomial y_{alpha,beta} is available whenever alpha and beta together sit inside SOME
+    # clique -- that is all a LINEAR functional of the moments needs. Requiring a constraint's
+    # whole support to lie in one clique is the right condition for a localizing MATRIX and quite
+    # wrong for a scalar multiplier, and getting that backwards silently dropped every injection
+    # constraint spanning two cliques: case14's order-1 bound collapsed from 1147.59 to -12701.95.
+    produced(g) = all(any(issubset(vcat(a, b), c) for c in cls) for (a, b) in keys(g.terms))
     for (g, tag) in zip(pop.ineqs, pop.ineq_tags)
         cis_constant(g) && continue
         sup = csupport(g)
         k = findfirst(c -> issubset(sup, c), cls)
-        dd = order - cld(cdegree(g), 2)
-        if k === nothing || dd < 0
-            skipped[tag] = get(skipped, tag, 0) + 1
-            continue
-        end
-        B = cmonomial_basis(cls[k], dd)
-        for Bp in split_basis(B)
-            A, C = loc_matrix(g, Bp)
+        dd = k === nothing ? -1 : ords[k] - cld(cdegree(g), 2)
+        if k !== nothing && dd >= 1
+            B = cmonomial_basis(cls[k], dd)
+            for Bp in split_basis(B)
+                A, C = loc_matrix(g, Bp)
+                hermitian_psd!(A, C); nblocks += 1
+            end
+        elseif produced(g)
+            # scalar multiplier: impose L(g) >= 0 directly
+            A, C = loc_matrix(g, [Int[]])
             hermitian_psd!(A, C); nblocks += 1
+        else
+            skipped[tag] = get(skipped, tag, 0) + 1
         end
     end
     for (h, tag) in zip(pop.eqs, pop.eq_tags)
         cis_constant(h) && continue
         sup = csupport(h)
         k = findfirst(c -> issubset(sup, c), cls)
-        dd = k === nothing ? -1 : 2 * order - cdegree(h)
+        dd = k === nothing ? -1 : 2 * ords[k] - cdegree(h)
         if dd < 0
-            skipped[tag] = get(skipped, tag, 0) + 1
+            if produced(h)
+                # L(h) = 0 alone, the scalar-multiplier analogue for equalities
+                re, im = AffExpr(0.0), AffExpr(0.0)
+                for ((g, d), c) in h.terms
+                    r, i2 = ymom(g, d)
+                    add_to_expression!(re, real(c), r); add_to_expression!(re, -imag(c), i2)
+                    add_to_expression!(im, real(c), i2); add_to_expression!(im, imag(c), r)
+                end
+                @constraint(model, re == 0); @constraint(model, im == 0)
+            else
+                skipped[tag] = get(skipped, tag, 0) + 1
+            end
             continue
         end
         for m in cmonomial_basis(cls[k], dd ÷ 2), m2 in cmonomial_basis(cls[k], dd ÷ 2)
@@ -205,6 +232,11 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         for (i, c) in coefs; add_to_expression!(e, c, auxv[i]); end
         sense === :eq ? @constraint(model, e == 0) : @constraint(model, e >= 0)
     end
+    # convex quadratic epigraphs on the auxiliaries, as rotated cones: 2*(t/(2a))*1 >= x^2
+    for (ti, a, xi) in pop.aux_quad
+        a > 0 || continue
+        @constraint(model, [auxv[ti] / (2a), 1.0, auxv[xi]] in RotatedSecondOrderCone())
+    end
     # second-order cones on the moment image (thermal limits); valid at every order
     for ((a, xs), tag) in zip(pop.socs, pop.soc_tags)
         @constraint(model, vcat(lin_real(a), [lin_real(x) for x in xs]) in SecondOrderCone())
@@ -235,8 +267,61 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         try objective_value(model) catch; NaN end
     end)
     pobj = oscale * (try objective_value(model) catch; NaN end)
+    yval = Dict{CMono,ComplexF64}()
+    if has_values(model)
+        for (key, rv) in yre
+            iv = yim[key]
+            yval[key] = complex(value(rv), iv === nothing ? 0.0 : value(iv))
+        end
+    end
     info = Dict{String,Any}("skipped" => skipped, "n_blocks" => nblocks,
-        "t_invariant_possible" => tinv_ok, "obj_scale" => oscale)
+        "t_invariant_possible" => tinv_ok, "obj_scale" => oscale,
+        "clique_orders" => ords)
     return ComplexMomentRelaxation(st, bound, pobj, build_time, solve_time(model), cls,
-        psd_sizes, length(yre), tinv, info)
+        psd_sizes, length(yre), tinv, yval, info)
+end
+
+"""
+    cmoment(y, a, b) -> ComplexF64
+
+Read y_{alpha,beta} from a solved moment vector, honouring y_{beta,alpha} = conj(y_{alpha,beta}).
+"""
+function cmoment(y::Dict{CMono,ComplexF64}, a::Vector{Int}, b::Vector{Int})
+    (key, swapped) = _ckey(a, b)
+    v = get(y, key, ComplexF64(0))
+    return swapped ? conj(v) : v
+end
+
+"""
+    clique_W(y, clique) -> Matrix{ComplexF64}
+
+The Hermitian W = v v^H block of a clique, W[i,j] = y_{(c_i),(c_j)}. Under T-invariance this is
+the |alpha| = 1 diagonal block of the clique's moment matrix, and at order 1 it IS the standard
+SDP relaxation's W restricted to the clique.
+"""
+function clique_W(y::Dict{CMono,ComplexF64}, clique::Vector{Int})
+    k = length(clique)
+    W = zeros(ComplexF64, k, k)
+    for i in 1:k, j in 1:k
+        W[i, j] = cmoment(y, [clique[i]], [clique[j]])
+    end
+    return W
+end
+
+"""
+    rank_one_point(W) -> (v, lambda2_over_lambda1)
+
+Closest rank-one Hermitian factor of W: the leading eigenvector scaled by sqrt(lambda_1). The
+eigenvalue ratio is returned alongside because it is the standard exactness indicator -- a ratio
+near zero means W is essentially rank one and the relaxation is tight on that clique.
+"""
+function rank_one_point(W::Matrix{ComplexF64})
+    k = size(W, 1)
+    k == 0 && return (ComplexF64[], 0.0)
+    E = eigen(Hermitian(W))
+    lam = E.values
+    i = argmax(lam)
+    v = E.vectors[:, i] * sqrt(max(lam[i], 0.0))
+    ratio = length(lam) > 1 ? (sort(lam; rev = true)[2] / max(lam[i], 1e-300)) : 0.0
+    return (v, ratio)
 end

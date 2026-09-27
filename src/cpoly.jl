@@ -113,12 +113,20 @@ mutable struct CPOP
     # moment constraints do: L is linear and the relation holds pointwise on the feasible set.
     mixed::Vector{Tuple{Dict{Int,Float64},CPoly,Symbol}}
     mixed_tags::Vector{String}
+    # Convex quadratic epigraphs on the auxiliaries: (t, a, x) means t >= a * x^2 with a >= 0,
+    # posted as a rotated second-order cone. This is how a QUADRATIC generation cost enters
+    # without touching the hierarchy: the cost is quadratic in pg, pg is a real auxiliary rather
+    # than a complex coordinate, so nothing is lifted, no monomial is added, and T-invariance --
+    # which is what makes order 1 equal the standard SDP -- is untouched. The paper's own epigraph
+    # lift puts t on the moment vector and does break it.
+    aux_quad::Vector{Tuple{Int,Float64,Int}}
     meta::Dict{String,Any}
 end
 
 CPOP() = CPOP(String[], Float64[], Float64[], CPoly(), CPoly[], String[], CPoly[], String[],
               Tuple{CPoly,Vector{CPoly}}[], String[], Tuple{String,Float64,Float64}[],
-              Tuple{Dict{Int,Float64},CPoly,Symbol}[], String[], Dict{String,Any}())
+              Tuple{Dict{Int,Float64},CPoly,Symbol}[], String[],
+              Tuple{Int,Float64,Int}[], Dict{String,Any}())
 
 """Add L(a) >= ||L(xs)||_2. Every argument must be real-valued; the cone is on the moments."""
 function add_csoc!(pop::CPOP, a::CPoly, xs::Vector{CPoly}, tag::String = "")
@@ -133,6 +141,12 @@ end
 function add_caux!(pop::CPOP, name::String; lo = -Inf, hi = Inf)
     push!(pop.aux, (name, Float64(lo), Float64(hi)))
     return length(pop.aux)
+end
+
+"""Add `t >= a * x^2` between two auxiliaries, with `a >= 0` (a rotated second-order cone)."""
+function add_caux_quad!(pop::CPOP, t::Int, a::Real, x::Int)
+    a >= 0 || error("quadratic epigraph needs a nonnegative coefficient")
+    push!(pop.aux_quad, (t, Float64(a), x)); return pop
 end
 
 """Add `sum_i coef_i * aux_i + L(p) {== 0 | >= 0}`, with `sense` one of `:eq`, `:geq`."""

@@ -179,12 +179,48 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
     r0, _ = ymom(Int[], Int[])
     @constraint(model, r0 == 1)
 
+    "Real part of L(p) for a real-valued p (the imaginary part vanishes by Hermitian symmetry)."
+    function lin_real(p::CPoly)
+        e = AffExpr(0.0)
+        for ((a, b), c) in p.terms
+            re, im = ymom(a, b)
+            add_to_expression!(e, real(c), re)
+            add_to_expression!(e, -imag(c), im)
+        end
+        return e
+    end
+
+    # auxiliary REAL variables: generator outputs at buses carrying more than one generator. They
+    # are ordinary JuMP variables and never enter a moment matrix, which is the point -- they add
+    # no monomials and so cost nothing in the hierarchy's size.
+    auxv = VariableRef[]
+    for (nm, lo, hi) in pop.aux
+        v = @variable(model, base_name = nm)
+        isfinite(lo) && set_lower_bound(v, lo)
+        isfinite(hi) && set_upper_bound(v, hi)
+        push!(auxv, v)
+    end
+    for ((coefs, p, sense), tag) in zip(pop.mixed, pop.mixed_tags)
+        e = lin_real(p)
+        for (i, c) in coefs; add_to_expression!(e, c, auxv[i]); end
+        sense === :eq ? @constraint(model, e == 0) : @constraint(model, e >= 0)
+    end
+    # second-order cones on the moment image (thermal limits); valid at every order
+    for ((a, xs), tag) in zip(pop.socs, pop.soc_tags)
+        @constraint(model, vcat(lin_real(a), [lin_real(x) for x in xs]) in SecondOrderCone())
+    end
+
     # Normalise the objective. Cost coefficients are O(1e3) while every moment is O(1), and handing
     # MOSEK that spread is what made the first gate run return SLOW_PROGRESS. The real hierarchy
     # does the same thing via `scale`.
-    oscale = maximum((abs(c) for c in values(pop.obj.terms)); init = 1.0)
+    oscale = max(maximum((abs(c) for c in values(pop.obj.terms)); init = 1.0),
+                 maximum((abs(c) for c in values(get(pop.meta, "obj_aux", Dict{Int,Float64}())));
+                         init = 1.0))
     oscale > 0 || (oscale = 1.0)
     obj = AffExpr(0.0)
+    for (i, c) in get(pop.meta, "obj_aux", Dict{Int,Float64}())
+        add_to_expression!(obj, c / oscale, auxv[i])
+    end
     for ((a, b), c) in pop.obj.terms
         re, im = ymom(a, b)
         add_to_expression!(obj, real(c) / oscale, re); add_to_expression!(obj, -imag(c) / oscale, im)

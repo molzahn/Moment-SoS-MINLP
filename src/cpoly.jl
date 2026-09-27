@@ -96,11 +96,51 @@ mutable struct CPOP
     ineq_tags::Vector{String}
     eqs::Vector{CPoly}
     eq_tags::Vector{String}
+    # Second-order cones on the moment image: (a, xs) means L(a) >= ||L(xs)||_2, with a and every
+    # x a REAL-VALUED CPoly. This is how thermal limits enter. |S_lm|^2 <= rate^2 is degree 4 in v
+    # and so unreachable at order 1 as a polynomial inequality, but P_lm and Q_lm are each degree
+    # (1,1), and for any feasible v the triple (rate, P(v), Q(v)) lies in the cone. The cone is
+    # convex and L is linear, so the moment image lies in it too -- valid at EVERY order, order 1
+    # included, and with no lifting.
+    socs::Vector{Tuple{CPoly,Vector{CPoly}}}
+    soc_tags::Vector{String}
+    # Auxiliary REAL variables that are not complex coordinates and never enter a moment matrix:
+    # one per generator at a bus carrying more than one. Stored as (name, lo, hi).
+    aux::Vector{Tuple{String,Float64,Float64}}
+    # Constraints mixing the auxiliary reals with the moments:
+    #   sum_i coef_i * aux_i + L(p)  {== 0 | >= 0}
+    # Linear in both, so the relaxation stays a valid lower bound for the same reason the ordinary
+    # moment constraints do: L is linear and the relation holds pointwise on the feasible set.
+    mixed::Vector{Tuple{Dict{Int,Float64},CPoly,Symbol}}
+    mixed_tags::Vector{String}
     meta::Dict{String,Any}
 end
 
 CPOP() = CPOP(String[], Float64[], Float64[], CPoly(), CPoly[], String[], CPoly[], String[],
-              Dict{String,Any}())
+              Tuple{CPoly,Vector{CPoly}}[], String[], Tuple{String,Float64,Float64}[],
+              Tuple{Dict{Int,Float64},CPoly,Symbol}[], String[], Dict{String,Any}())
+
+"""Add L(a) >= ||L(xs)||_2. Every argument must be real-valued; the cone is on the moments."""
+function add_csoc!(pop::CPOP, a::CPoly, xs::Vector{CPoly}, tag::String = "")
+    is_real_valued(a) || error("SOC bound $tag is not real-valued")
+    for x in xs
+        is_real_valued(x) || error("SOC component of $tag is not real-valued")
+    end
+    push!(pop.socs, (a, xs)); push!(pop.soc_tags, tag); return pop
+end
+
+"""Add a real auxiliary variable (not a complex coordinate, never in a moment matrix)."""
+function add_caux!(pop::CPOP, name::String; lo = -Inf, hi = Inf)
+    push!(pop.aux, (name, Float64(lo), Float64(hi)))
+    return length(pop.aux)
+end
+
+"""Add `sum_i coef_i * aux_i + L(p) {== 0 | >= 0}`, with `sense` one of `:eq`, `:geq`."""
+function add_cmixed!(pop::CPOP, coefs::Dict{Int,Float64}, p::CPoly, sense::Symbol, tag::String = "")
+    sense in (:eq, :geq) || error("sense must be :eq or :geq")
+    is_real_valued(p) || error("mixed constraint $tag has a non-real-valued polynomial part")
+    push!(pop.mixed, (coefs, p, sense)); push!(pop.mixed_tags, tag); return pop
+end
 
 cnvars(pop::CPOP) = length(pop.names)
 

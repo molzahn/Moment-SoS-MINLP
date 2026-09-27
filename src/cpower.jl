@@ -57,11 +57,22 @@ end
 """
     build_complex_power_pop(data) -> CPOP
 
-AC-OPF in complex voltages. Requires at most one in-service generator per bus and linear
-generation costs; both are checked, because silently aggregating generators or dropping a
-quadratic cost term would make the comparison against the real hierarchy meaningless.
+AC-OPF in complex voltages.
+
+GENERATORS. A bus with zero or one generator needs no auxiliary variable: its generation IS the
+bus injection plus the load, so the limits and the cost go straight onto the injection polynomial.
+A bus with SEVERAL generators gets one real auxiliary variable per generator, summed into the
+balance. Those auxiliaries are ordinary reals that never enter a moment matrix, so they add no
+monomials and cost nothing in the hierarchy's size -- only buses that actually need them pay.
+
+THERMAL LIMITS go in through the cone channel. |S_lm|^2 <= rate^2 is degree 4 in v, so it is out
+of reach at order 1 as a polynomial inequality, but P_lm and Q_lm are each degree (1,1) and the
+cone is convex, so (rate, L(P), L(Q)) in SOC is valid at EVERY order.
+
+COSTS are linear only; a quadratic cost is quartic in v and the paper lifts it with real epigraph
+variables, which breaks T-invariance and with it the order-1 = SDP structure.
 """
-function build_complex_power_pop(data::Dict{String,Any})
+function build_complex_power_pop(data::Dict{String,Any}; thermal_limits::Bool = true)
     ref = PowerModels.build_ref(data)[:it][:pm][:nw][0]
     Y, buses, idx = complex_ybus(data)
     n = length(buses)
@@ -70,55 +81,95 @@ function build_complex_power_pop(data::Dict{String,Any})
         bus = ref[:bus][b]
         add_cvar!(pop, "v[$b]"; absmin = Float64(bus["vmin"]), absmax = Float64(bus["vmax"]))
     end
-    gens = Dict{Int,Any}()
+    gens = Dict{Int,Vector{Any}}()
     for (_, g) in ref[:gen]
         Int(get(g, "gen_status", 1)) == 0 && continue
-        k = Int(g["gen_bus"])
-        haskey(gens, k) && error("bus $k has more than one in-service generator; the complex " *
-                                 "formulation here writes generation as the bus injection")
-        length(g["cost"]) <= 2 || (g["cost"][1] == 0 ||
-            error("generator at bus $k has a quadratic cost; the complex POP supports linear " *
-                  "costs only (see the note in src/cpower.jl)"))
-        gens[k] = g
+        c = g["cost"]
+        (length(c) <= 2 || Float64(c[1]) == 0) ||
+            error("generator at bus $(g["gen_bus"]) has a quadratic cost; the complex POP " *
+                  "supports linear costs only (see the note in src/cpower.jl)")
+        push!(get!(gens, Int(g["gen_bus"]), Any[]), g)
     end
     pd = Dict(b => 0.0 for b in buses); qd = Dict(b => 0.0 for b in buses)
     for (_, l) in ref[:load]
         pd[Int(l["load_bus"])] += Float64(l["pd"]); qd[Int(l["load_bus"])] += Float64(l["qd"])
     end
+    cost1(g) = (c = g["cost"]; length(c) >= 2 ? Float64(c[end-1]) : 0.0)
 
     obj = CPoly()
+    obj_aux = Dict{Int,Float64}()
+    n_aux_buses = 0
     for b in buses
         k = idx[b]
-        ek = zeros(ComplexF64, n, n); ek[k, k] = 1
-        YHe = adjoint(Y) * ekcol(n, k)
-        Hk = (YHe + adjoint(YHe)) / 2
-        Hqk = (YHe - adjoint(YHe)) / (2im)
-        Pk = quadform(Hk); Qk = quadform(Hqk); Wk = quadform(ek)
+        ek = ekcol(n, k)
+        YHe = adjoint(Y) * ek
+        Pk = quadform((YHe + adjoint(YHe)) / 2)
+        Qk = quadform((YHe - adjoint(YHe)) / (2im))
         bus = ref[:bus][b]
-        add_cineq!(pop, Wk - (Float64(bus["vmin"])^2), "vmin[$b]")
-        add_cineq!(pop, (Float64(bus["vmax"])^2) - Wk, "vmax[$b]")
-        if haskey(gens, b)
-            g = gens[b]
+        add_cineq!(pop, quadform(ek) - (Float64(bus["vmin"])^2), "vmin[$b]")
+        add_cineq!(pop, (Float64(bus["vmax"])^2) - quadform(ek), "vmax[$b]")
+        gl = get(gens, b, Any[])
+        if isempty(gl)
+            add_ceq!(pop, Pk + pd[b], "p_balance[$b]")
+            add_ceq!(pop, Qk + qd[b], "q_balance[$b]")
+        elseif length(gl) == 1
+            g = gl[1]
             add_cineq!(pop, Pk - (Float64(g["pmin"]) - pd[b]), "pg_min[$b]")
             add_cineq!(pop, (Float64(g["pmax"]) - pd[b]) - Pk, "pg_max[$b]")
             add_cineq!(pop, Qk - (Float64(g["qmin"]) - qd[b]), "qg_min[$b]")
             add_cineq!(pop, (Float64(g["qmax"]) - qd[b]) - Qk, "qg_max[$b]")
-            c = g["cost"]
-            c1 = length(c) >= 2 ? Float64(c[end-1]) : 0.0
-            obj = obj + c1 * (Pk + pd[b])
+            obj = obj + cost1(g) * (Pk + pd[b])
         else
-            # no generator: the injection is exactly minus the load
-            add_ceq!(pop, Pk + pd[b], "p_balance[$b]")
-            add_ceq!(pop, Qk + qd[b], "q_balance[$b]")
+            # several generators here: one real auxiliary per generator, summed into the balance
+            n_aux_buses += 1
+            pidx = Int[]; qidx = Int[]
+            for g in gl
+                ip = add_caux!(pop, "pg[$(g["index"])]"; lo = Float64(g["pmin"]), hi = Float64(g["pmax"]))
+                iq = add_caux!(pop, "qg[$(g["index"])]"; lo = Float64(g["qmin"]), hi = Float64(g["qmax"]))
+                push!(pidx, ip); push!(qidx, iq)
+                obj_aux[ip] = get(obj_aux, ip, 0.0) + cost1(g)
+            end
+            # sum_g pg_g - pd_b - P_k(v) = 0, and likewise for reactive
+            add_cmixed!(pop, Dict(i => 1.0 for i in pidx), (-1.0) * Pk - pd[b], :eq, "p_balance[$b]")
+            add_cmixed!(pop, Dict(i => 1.0 for i in qidx), (-1.0) * Qk - qd[b], :eq, "q_balance[$b]")
         end
     end
+
+    n_thermal = 0
+    if thermal_limits
+        for (l, br) in ref[:branch]
+            rate = Float64(get(br, "rate_a", Inf))
+            (isfinite(rate) && rate > 0) || continue
+            f, t = idx[br["f_bus"]], idx[br["t_bus"]]
+            gs, bs = PowerModels.calc_branch_y(br)
+            trr, tii = PowerModels.calc_branch_t(br)
+            y = complex(gs, bs); T = complex(trr, tii); tm2 = abs2(T)
+            # S_fr = v_f conj(i_fr), i_fr = Yff v_f + Yft v_t
+            Yff = (y + complex(br["g_fr"], br["b_fr"])) / tm2
+            Yft = -y / conj(T)
+            Ytt = y + complex(br["g_to"], br["b_to"])
+            Ytf = -y / T
+            for (a, c, d, tagend) in ((f, conj(Yff), conj(Yft), "fr"), (t, conj(Ytt), conj(Ytf), "to"))
+                o = a == f ? t : f
+                S = CPoly(); caddterm!(S, ([a], [a]), c); caddterm!(S, ([o], [a]), d)
+                P = 0.5 * (S + cconj(S))
+                Q = (-0.5im) * (S - cconj(S))
+                add_csoc!(pop, CPoly(rate), [P, Q], "thermal[$l _$tagend]")
+                n_thermal += 1
+            end
+        end
+    end
+
     pop.obj = obj
+    pop.meta["obj_aux"] = obj_aux
     pop.meta["buses"] = buses
     pop.meta["bus_index"] = idx
-    pop.meta["const_cost"] = sum((length(g["cost"]) >= 1 ? Float64(g["cost"][end]) : 0.0)
-                                 for g in values(gens); init = 0.0)
+    pop.meta["n_aux_buses"] = n_aux_buses
+    pop.meta["n_thermal_cones"] = n_thermal
+    pop.meta["const_cost"] = sum(sum((length(g["cost"]) >= 1 ? Float64(g["cost"][end]) : 0.0)
+                                     for g in gl; init = 0.0) for gl in values(gens); init = 0.0)
     return pop
 end
 
-"n x n matrix with a single 1 in column k of row k, i.e. e_k e_k^T, as a full matrix product helper."
+"n x n matrix with a single 1 at (k, k), i.e. e_k e_k^T."
 ekcol(n::Int, k::Int) = (M = zeros(ComplexF64, n, n); M[k, k] = 1; M)

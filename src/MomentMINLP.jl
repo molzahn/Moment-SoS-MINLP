@@ -13,7 +13,8 @@ import Ipopt
 import HSL_jll
 import PowerModels
 
-export Poly, pvar, POP, add_var!, add_ineq!, add_eq!, add_pmi!, add_soc!, fix_variables, solve_nlp,
+export Poly, pvar, POP, CPoly, CPOP, cvar, cbar, cconj, cmonomial_basis,
+    build_complex_power_pop, solve_complex_moment_relaxation, complex_ybus, add_var!, add_ineq!, add_eq!, add_pmi!, add_soc!, fix_variables, solve_nlp,
     solve_moment_relaxation, MomentRelaxation, moment, chordal_cliques, binary_clique_order, adjacent_clique_order, capped_augmentation,
     SOSCertificate, certified_value, free_absorb, project_dual, bundle_certify, smooth_certify,
     merge_low_impedance, low_impedance_groups, safe_merge_exclusions, IslandGuard, island_screen, repair_islands!, can_open, radial_fixings, connectivity_cuts,
@@ -22,6 +23,9 @@ export Poly, pvar, POP, add_var!, add_ineq!, add_eq!, add_pmi!, add_soc!, fix_va
     sample_conditional, sample_cardinality, repair_samples, sample_dive, summarize_samples, mosek_optimizer, ipopt_optimizer
 
 include("polynomials.jl")
+include("cpoly.jl")
+include("crelaxation.jl")
+include("cpower.jl")
 include("pop.jl")
 include("sparsity.jl")
 include("relaxation.jl")

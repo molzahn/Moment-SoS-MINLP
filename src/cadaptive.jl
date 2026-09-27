@@ -16,35 +16,71 @@
 # selection.
 
 """
+    complex_rank_one_point(y, cliques, nvars) -> (vhat, ratios)
+
+A GLOBAL rank-one voltage estimate stitched from the per-clique Hermitian W blocks, plus each
+clique's lambda2/lambda1.
+
+Stitching is what makes every bus usable. Taking each clique's rank-one point in isolation only
+lets you evaluate an injection when that bus's whole electrical neighbourhood happens to sit inside
+one clique -- true for 5 of case14's 14 buses and 100 of case200's 200 -- so half the network could
+never be scored, and therefore never selected for promotion. The real hierarchy has always built a
+global point (`xhat` in moment_adaptive_worker.jl); this is the complex counterpart.
+
+The complex twist is PHASE. T-invariance means v and exp(i*theta)*v are equally valid rank-one
+factors, so each clique's point arrives with an arbitrary global phase. Cliques are visited in
+order and each is rotated by the phase that best matches the buses already fixed, obtained in
+closed form as angle(sum over the overlap of conj(v_local) * vhat). The first clique is anchored so
+that its largest-magnitude entry is real and positive.
+"""
+function complex_rank_one_point(y::Dict{CMono,ComplexF64}, cliques::Vector{Vector{Int}}, n::Int)
+    vhat = fill(ComplexF64(NaN), n)
+    ratios = zeros(length(cliques))
+    order = sortperm(cliques; by = c -> -length(c))       # biggest first: a better phase anchor
+    for ci in order
+        c = cliques[ci]
+        W = clique_W(y, c)
+        v, r = rank_one_point(W)
+        ratios[ci] = r
+        isempty(v) && continue
+        ov = [(a, c[a]) for a in eachindex(c) if isfinite(real(vhat[c[a]]))]
+        if isempty(ov)
+            k = argmax(abs.(v))
+            abs(v[k]) > 1e-12 && (v = v .* conj(v[k] / abs(v[k])))
+        else
+            acc = sum(conj(v[a]) * vhat[g] for (a, g) in ov)
+            abs(acc) > 1e-12 && (v = v .* (acc / abs(acc)))
+        end
+        for a in eachindex(c)
+            isfinite(real(vhat[c[a]])) || (vhat[c[a]] = v[a])
+        end
+    end
+    for i in 1:n
+        isfinite(real(vhat[i])) || (vhat[i] = ComplexF64(1))
+    end
+    return vhat, ratios
+end
+
+"""
     complex_injection_mismatch(cpop, data, y, cliques) -> Dict{Int,Float64}
 
-Per-bus |S| mismatch in MVA between the injection implied by each clique's closest rank-one point
-and the injection the relaxation reports. A bus covered by several cliques takes the largest.
+Per-bus |S| mismatch in MVA between the injection implied by the global rank-one point and the
+injection the relaxation reports. EVERY bus gets a score, so every bus is a promotion candidate.
 """
 function complex_injection_mismatch(pop::CPOP, data::Dict{String,Any},
         y::Dict{CMono,ComplexF64}, cliques::Vector{Vector{Int}})
     Y = pop.meta["ybus"]::Matrix{ComplexF64}
-    idx = pop.meta["bus_index"]::Dict{Int,Int}
     buses = pop.meta["buses"]::Vector{Int}
     baseMVA = Float64(get(data, "baseMVA", 100.0))
+    n = length(buses)
+    vhat, _ = complex_rank_one_point(y, cliques, n)
     mism = Dict{Int,Float64}()
-    for cl in cliques
-        length(cl) >= 1 || continue
-        W = clique_W(y, cl)
-        v, _ = rank_one_point(W)
-        pos = Dict(c => i for (i, c) in enumerate(cl))
-        for (ci, c) in enumerate(cl)
-            # injection at this bus needs every neighbour of it to be inside the clique, else the
-            # rank-one point does not determine it
-            row = @view Y[c, :]
-            nb = [j for j in axes(Y, 2) if row[j] != 0]
-            all(j -> haskey(pos, j), nb) || continue
-            s_rank = v[ci] * conj(sum(Y[c, j] * v[pos[j]] for j in nb))
-            s_relax = sum(conj(Y[c, j]) * cmoment(y, [j], [c]) for j in nb)
-            d = abs(s_rank - s_relax) * baseMVA
-            b = buses[c]
-            mism[b] = max(get(mism, b, 0.0), d)
-        end
+    for c in 1:n
+        nb = [j for j in axes(Y, 2) if Y[c, j] != 0]
+        isempty(nb) && continue
+        s_rank  = vhat[c] * conj(sum(Y[c, j] * vhat[j] for j in nb))
+        s_relax = sum(conj(Y[c, j]) * cmoment(y, [j], [c]) for j in nb)
+        mism[buses[c]] = abs(s_rank - s_relax) * baseMVA
     end
     return mism
 end

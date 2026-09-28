@@ -15,7 +15,7 @@ import PowerModels
 
 export Poly, pvar, POP, CPoly, CPOP, cvar, cbar, cconj, cmonomial_basis,
     build_complex_power_pop, solve_complex_moment_relaxation, complex_ybus, complex_bus_cliques, cmoment, clique_W, rank_one_point, solve_complex_adaptive, complex_injection_mismatch, complex_rank_one_point, certify_complex, complex_certified_value, add_var!, add_ineq!, add_eq!, add_pmi!, add_soc!, fix_variables, solve_nlp,
-    solve_moment_relaxation, MomentRelaxation, minor_subsets, post_minor_real!, post_minor_hermitian!, complex_row_groups, real_bus_row_groups, moment, chordal_cliques, binary_clique_order, adjacent_clique_order, capped_augmentation,
+    solve_moment_relaxation, MomentRelaxation, minor_subsets, basis_minor_subsets, cover_cost, post_minor_real!, post_minor_hermitian!, complex_row_groups, real_bus_row_groups, moment, chordal_cliques, binary_clique_order, adjacent_clique_order, capped_augmentation,
     SOSCertificate, certified_value, free_absorb, project_dual, bundle_certify, smooth_certify,
     merge_low_impedance, low_impedance_groups, safe_merge_exclusions, IslandGuard, island_screen, repair_islands!, can_open, radial_fixings, connectivity_cuts,
     build_power_pop, ConfigEvaluator, evaluate!, enumerate_configs!, best_config, config_data, screen_config,

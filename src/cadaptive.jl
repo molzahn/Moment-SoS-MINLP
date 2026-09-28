@@ -95,7 +95,10 @@ strictly tighter than the last, so any decrease is solver error rather than a re
 function solve_complex_adaptive(pop::CPOP, data::Dict{String,Any};
         h::Int = 3, max_iter::Int = 10, mismatch_tol::Float64 = 1e-3,
         max_order::Int = 2, total_seconds::Float64 = 3600.0,
-        max_seconds::Float64 = 900.0, verbose::Bool = true, certify::Bool = true)
+        max_seconds::Float64 = 900.0, verbose::Bool = true, certify::Bool = true,
+        psd_mode::Symbol = :full, minor_kmax::Int = 2, psd_threshold::Int = 0,
+        minor_core_degree::Int = 1,
+        adjacency::Union{Nothing,Set{Tuple{Int,Int}}} = nothing)
     t0 = time()
     idx = pop.meta["bus_index"]::Dict{Int,Int}
     buses = pop.meta["buses"]::Vector{Int}
@@ -113,8 +116,14 @@ function solve_complex_adaptive(pop::CPOP, data::Dict{String,Any};
                 issubset(nb, c) && (ords[ci] = max_order)
             end
         end
+        # The determinant relaxation is WEAKER than full PSD at a fixed order, so it cannot tighten
+        # anything directly. The premise is tractability: where a full order-2 block of 156-240 rows
+        # sends MOSEK to TIME_LIMIT and the bound degenerates, small cones may solve, and a solved
+        # weaker relaxation at order 2 can still beat a solved exact one at order 1.
         rel = solve_complex_moment_relaxation(pop; cliques = cls, clique_orders = ords,
-            certify = certify,
+            certify = certify, psd_mode = psd_mode, minor_kmax = minor_kmax,
+            psd_threshold = psd_threshold, adjacency = adjacency,
+            minor_core_degree = minor_core_degree,
             solver_params = Dict{String,Any}("MSK_DPAR_OPTIMIZER_MAX_TIME" => max_seconds))
         raw = rel.bound + c0
         # The RIGOROUS bound is what counts, and it is what the running maximum is taken over. A

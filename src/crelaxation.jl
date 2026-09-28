@@ -53,6 +53,7 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         t_invariant::Union{Nothing,Bool} = nothing,
         optimizer = mosek_optimizer(), silent::Bool = true, certify::Bool = false,
         psd_mode::Symbol = :full, minor_kmax::Int = 2, psd_threshold::Int = 0,
+        minor_core_degree::Int = 1,
         adjacency::Union{Nothing,Set{Tuple{Int,Int}}} = nothing,
         solver_params = Dict{String,Any}())
     t0 = time()
@@ -104,20 +105,6 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
     psd_sizes = Int[]
     blockmeta = Tuple{CPoly,Vector{Vector{Int}}}[]   # (weight, basis) per posted block
     psd_refs = Any[]                 # (constraint, k) for Gram recovery in the certificate
-    "True when every pair of indices in S sits on an edge of `adjacency` (or adjacency is off)."
-    function _subset_ok(S, basis)
-        adjacency === nothing && return true
-        length(S) <= 1 && return true
-        for p in eachindex(S), q in (p + 1):length(S)
-            mp, mq = basis[S[p]], basis[S[q]]
-            (length(mp) == 1 && length(mq) == 1) || return false
-            u, v = mp[1], mq[1]
-            u == v && continue
-            ((min(u, v), max(u, v)) in adjacency) || return false
-        end
-        return true
-    end
-
     """
     Post a Hermitian PSD constraint from its entry-wise (real, imag) affine parts.
 
@@ -131,8 +118,12 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         k == 0 && return
         if psd_mode === :minors && k > psd_threshold && !isempty(basis)
             posted = 0
-            for S in minor_subsets(complex_row_groups(k); kmax = minor_kmax)
-                _subset_ok(S, basis) || continue
+            # With T-invariance each block holds monomials of a single |alpha|, so
+            # `minor_core_degree = 1` keeps the |alpha| = 1 block (the Hermitian W) EXACT and
+            # relaxes only the higher-order blocks -- PowerTech (16) generalised, and exactly what
+            # makes order 3 reachable without giving up the order-1 strength that is nearly free.
+            for S in basis_minor_subsets(basis; kmax = minor_kmax,
+                                         core_degree = minor_core_degree, adjacency = adjacency)
                 cref = post_minor_hermitian!(model, A, B, S)
                 push!(psd_sizes, length(S) <= 2 ? length(S) : 2 * length(S))
                 push!(psd_refs, (cref, length(S)))
@@ -451,7 +442,8 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
     info = Dict{String,Any}("skipped" => skipped, "n_blocks" => nblocks,
         "t_invariant_possible" => tinv_ok, "obj_scale" => oscale,
         "clique_orders" => ords, "psd_mode" => string(psd_mode),
-        "minor_kmax" => minor_kmax)
+        "minor_kmax" => minor_kmax,
+        "minor_core_degree" => minor_core_degree)
     isempty(certdata) || (info["cert_data"] = certdata)
     return ComplexMomentRelaxation(st, bound, pobj, build_time, solve_time(model), cls,
         psd_sizes, length(yre), tinv, yval, info)

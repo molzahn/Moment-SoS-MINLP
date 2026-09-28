@@ -142,3 +142,74 @@ function real_bus_row_groups(B::Vector{Vector{Int}}, varbus::Dict{Int,Int})
     end
     return vcat([bybus[k] for k in sort(collect(keys(bybus)))], other)
 end
+
+"""
+    basis_minor_subsets(basis; kmax = 2, core_degree = 1, adjacency = nothing) -> Vector{Vector{Int}}
+
+Cover for a block whose rows are MONOMIALS rather than single variables, which is what orders 2 and
+3 produce. This is the order-1 branch-pair rule generalised.
+
+Two parts, following PowerTech (16) and then (15):
+
+* every row of degree <= `core_degree` goes into ONE full PSD sub-block. At order 1 that is the
+  whole block; at orders 2 and 3 it is the cheap, strong part that should stay exact.
+* above it, two rows are paired when their variable supports OVERLAP or are joined by an edge of
+  `adjacency`. Pairing densely instead would cost C(165,2) = 13530 cones for a single 9-bus
+  order-3 block and C(364,2) = 66066 for a 12-bus one; support-overlap pairing is a small multiple
+  of the clique's edge count, which is what makes order 3 reachable at all.
+
+With single-variable rows and an `adjacency` of branches this reduces exactly to the branch-pair
+cover that reproduces SOCWR, so the order-1 gate still applies unchanged.
+"""
+function basis_minor_subsets(basis::Vector{Vector{Int}}; kmax::Int = 2, core_degree::Int = 1,
+        adjacency::Union{Nothing,Set{Tuple{Int,Int}}} = nothing)
+    n = length(basis)
+    n == 0 && return Vector{Int}[]
+    sup = [Set(m) for m in basis]
+    core = [i for i in 1:n if length(basis[i]) <= core_degree]
+    rest = [i for i in 1:n if length(basis[i]) > core_degree]
+    linked(i, j) = begin
+        isempty(intersect(sup[i], sup[j])) || return true
+        adjacency === nothing && return true
+        for u in sup[i], v in sup[j]
+            u == v && return true
+            ((min(u, v), max(u, v)) in adjacency) && return true
+        end
+        return false
+    end
+    subs = Vector{Int}[]
+    isempty(core) || push!(subs, sort(core))
+    for i in rest
+        push!(subs, [i])
+    end
+    if kmax >= 2
+        for a in eachindex(rest)
+            i = rest[a]
+            for j in core
+                linked(i, j) && push!(subs, sort([i, j]))
+            end
+            for b in (a + 1):length(rest)
+                j = rest[b]
+                linked(i, j) && push!(subs, sort([i, j]))
+            end
+        end
+    end
+    if kmax >= 3
+        pairs = [s for s in subs if length(s) == 2]
+        for p in pairs, i in rest
+            i in p && continue
+            (linked(i, p[1]) && linked(i, p[2])) || continue
+            push!(subs, sort(vcat(p, i)))
+        end
+    end
+    sort!(subs; by = length, rev = true)
+    maximal = Vector{Int}[]
+    for s in subs
+        any(m -> issubset(s, m), maximal) || push!(maximal, s)
+    end
+    return maximal
+end
+
+"Number of scalar cone entries a cover implies, as a cheap cost proxy for the promotion schedule."
+cover_cost(subs::Vector{Vector{Int}}) =
+    sum(length(S) == 1 ? 1 : (length(S) == 2 ? 4 : (2 * length(S))^2) for S in subs; init = 0)

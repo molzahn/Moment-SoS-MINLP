@@ -52,6 +52,8 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         clique_orders::Union{Nothing,Vector{Int}} = nothing,
         t_invariant::Union{Nothing,Bool} = nothing,
         optimizer = mosek_optimizer(), silent::Bool = true, certify::Bool = false,
+        psd_mode::Symbol = :full, minor_kmax::Int = 2, psd_threshold::Int = 0,
+        adjacency::Union{Nothing,Set{Tuple{Int,Int}}} = nothing,
         solver_params = Dict{String,Any}())
     t0 = time()
     n = cnvars(pop)
@@ -98,22 +100,58 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         return (rex, swapped ? -imx : imx)
     end
 
+    one_poly = CPoly(1)
     psd_sizes = Int[]
     blockmeta = Tuple{CPoly,Vector{Vector{Int}}}[]   # (weight, basis) per posted block
     psd_refs = Any[]                 # (constraint, k) for Gram recovery in the certificate
-    "Post a Hermitian PSD constraint given entry-wise (real, imag) affine expressions."
-    function hermitian_psd!(A, B)
+    "True when every pair of indices in S sits on an edge of `adjacency` (or adjacency is off)."
+    function _subset_ok(S, basis)
+        adjacency === nothing && return true
+        length(S) <= 1 && return true
+        for p in eachindex(S), q in (p + 1):length(S)
+            mp, mq = basis[S[p]], basis[S[q]]
+            (length(mp) == 1 && length(mq) == 1) || return false
+            u, v = mp[1], mq[1]
+            u == v && continue
+            ((min(u, v), max(u, v)) in adjacency) || return false
+        end
+        return true
+    end
+
+    """
+    Post a Hermitian PSD constraint from its entry-wise (real, imag) affine parts.
+
+    With `psd_mode = :minors` a block wider than `psd_threshold` is replaced by PSD constraints on
+    the principal submatrices of up to `minor_kmax` rows -- a valid relaxation, since a PSD matrix
+    has PSD principal submatrices. `blockmeta` is pushed HERE rather than by the callers, because
+    one call now emits many constraints and the three registries would otherwise drift apart.
+    """
+    function hermitian_psd!(A, B, weight = one_poly, basis = Vector{Int}[])
         k = size(A, 1)
         k == 0 && return
+        if psd_mode === :minors && k > psd_threshold && !isempty(basis)
+            posted = 0
+            for S in minor_subsets(complex_row_groups(k); kmax = minor_kmax)
+                _subset_ok(S, basis) || continue
+                cref = post_minor_hermitian!(model, A, B, S)
+                push!(psd_sizes, length(S) <= 2 ? length(S) : 2 * length(S))
+                push!(psd_refs, (cref, length(S)))
+                push!(blockmeta, (weight, [basis[i] for i in S]))
+                posted += 1
+            end
+            posted > 0 && return
+            # nothing survived the adjacency filter: fall through to the full block rather than
+            # silently dropping the constraint entirely
+        end
         if k == 1
             c1 = @constraint(model, A[1, 1] >= 0)
-            push!(psd_sizes, 1); push!(psd_refs, (c1, 1))
+            push!(psd_sizes, 1); push!(psd_refs, (c1, 1)); push!(blockmeta, (weight, basis))
             return
         end
         X = [i <= k ? (j <= k ? A[i, j] : -B[i, j - k]) :
                       (j <= k ? B[i - k, j] : A[i - k, j - k]) for i in 1:2k, j in 1:2k]
         cc = @constraint(model, Symmetric(X) in PSDCone())
-        push!(psd_sizes, 2k); push!(psd_refs, (cc, k))
+        push!(psd_sizes, 2k); push!(psd_refs, (cc, k)); push!(blockmeta, (weight, basis))
     end
 
     "Blocks of a basis: split by |alpha| when T-invariant, else one block."
@@ -140,14 +178,12 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         return A, C
     end
 
-    one_poly = CPoly(1)
     nblocks = 0
     for (ci, cl) in enumerate(cls)
         B = cmonomial_basis(cl, ords[ci])
         for Bp in split_basis(B)
             A, C = loc_matrix(one_poly, Bp)
-            hermitian_psd!(A, C); nblocks += 1
-            push!(blockmeta, (one_poly, Bp))
+            hermitian_psd!(A, C, one_poly, Bp); nblocks += 1
         end
     end
     skipped = Dict{String,Int}()
@@ -166,14 +202,12 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
             B = cmonomial_basis(cls[k], dd)
             for Bp in split_basis(B)
                 A, C = loc_matrix(g, Bp)
-                hermitian_psd!(A, C); nblocks += 1
-                push!(blockmeta, (g, Bp))
+                hermitian_psd!(A, C, g, Bp); nblocks += 1
             end
         elseif produced(g)
             # scalar multiplier: impose L(g) >= 0 directly
             A, C = loc_matrix(g, [Int[]])
-            hermitian_psd!(A, C); nblocks += 1
-            push!(blockmeta, (g, [Int[]]))
+            hermitian_psd!(A, C, g, [Int[]]); nblocks += 1
         else
             skipped[tag] = get(skipped, tag, 0) + 1
         end
@@ -416,7 +450,8 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
 
     info = Dict{String,Any}("skipped" => skipped, "n_blocks" => nblocks,
         "t_invariant_possible" => tinv_ok, "obj_scale" => oscale,
-        "clique_orders" => ords)
+        "clique_orders" => ords, "psd_mode" => string(psd_mode),
+        "minor_kmax" => minor_kmax)
     isempty(certdata) || (info["cert_data"] = certdata)
     return ComplexMomentRelaxation(st, bound, pobj, build_time, solve_time(model), cls,
         psd_sizes, length(yre), tinv, yval, info)

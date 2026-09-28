@@ -48,7 +48,7 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         cliques::Union{Nothing,Vector{Vector{Int}}} = nothing,
         clique_orders::Union{Nothing,Vector{Int}} = nothing,
         t_invariant::Union{Nothing,Bool} = nothing,
-        optimizer = mosek_optimizer(), silent::Bool = true,
+        optimizer = mosek_optimizer(), silent::Bool = true, certify::Bool = false,
         solver_params = Dict{String,Any}())
     t0 = time()
     n = cnvars(pop)
@@ -96,19 +96,21 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
     end
 
     psd_sizes = Int[]
+    blockmeta = Tuple{CPoly,Vector{Vector{Int}}}[]   # (weight, basis) per posted block
+    psd_refs = Any[]                 # (constraint, k) for Gram recovery in the certificate
     "Post a Hermitian PSD constraint given entry-wise (real, imag) affine expressions."
     function hermitian_psd!(A, B)
         k = size(A, 1)
         k == 0 && return
         if k == 1
-            @constraint(model, A[1, 1] >= 0)
-            push!(psd_sizes, 1)
+            c1 = @constraint(model, A[1, 1] >= 0)
+            push!(psd_sizes, 1); push!(psd_refs, (c1, 1))
             return
         end
         X = [i <= k ? (j <= k ? A[i, j] : -B[i, j - k]) :
                       (j <= k ? B[i - k, j] : A[i - k, j - k]) for i in 1:2k, j in 1:2k]
-        @constraint(model, Symmetric(X) in PSDCone())
-        push!(psd_sizes, 2k)
+        cc = @constraint(model, Symmetric(X) in PSDCone())
+        push!(psd_sizes, 2k); push!(psd_refs, (cc, k))
     end
 
     "Blocks of a basis: split by |alpha| when T-invariant, else one block."
@@ -142,6 +144,7 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         for Bp in split_basis(B)
             A, C = loc_matrix(one_poly, Bp)
             hermitian_psd!(A, C); nblocks += 1
+            push!(blockmeta, (one_poly, Bp))
         end
     end
     skipped = Dict{String,Int}()
@@ -161,11 +164,13 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
             for Bp in split_basis(B)
                 A, C = loc_matrix(g, Bp)
                 hermitian_psd!(A, C); nblocks += 1
+                push!(blockmeta, (g, Bp))
             end
         elseif produced(g)
             # scalar multiplier: impose L(g) >= 0 directly
             A, C = loc_matrix(g, [Int[]])
             hermitian_psd!(A, C); nblocks += 1
+            push!(blockmeta, (g, [Int[]]))
         else
             skipped[tag] = get(skipped, tag, 0) + 1
         end
@@ -267,6 +272,129 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         try objective_value(model) catch; NaN end
     end)
     pobj = oscale * (try objective_value(model) catch; NaN end)
+    # ---- certificate data -------------------------------------------------------------------
+    # The residual of the SOS identity is the DUAL-FEASIBILITY residual of the moment form: each
+    # moment y is a free variable, so at an exact solution its reduced cost is zero, and what
+    # MOSEK actually leaves is what the certificate has to pay for. Computed by one pass over
+    # every constraint, so every channel -- PSD blocks, equalities, cones, the auxiliary
+    # variables -- is covered without reconstructing any of them by hand.
+    certdata = Dict{String,Any}()
+    if certify && has_duals(model)
+        rc = Dict{VariableRef,Float64}()
+        addrc!(v, c) = (rc[v] = get(rc, v, 0.0) + c)
+        # The real-part variable of y_{a,b} is fed by BOTH y_{a,b} and its conjugate partner
+        # y_{b,a}, since Re(y_{b,a}) = Re(y_{a,b}). Counting only one of them left a residual the
+        # size of the objective's own coefficients.
+        function objcoef_re(key::CMono)
+            (a, b) = key
+            t = 0.0
+            for ((p1, p2), cc) in pop.obj.terms
+                ((p1, p2) == (a, b) || (p1, p2) == (b, a)) && (t += real(cc))
+            end
+            return t / oscale
+        end
+        function walk!(fexpr, dv)
+            for (t, d) in zip(fexpr, dv)
+                for (v, c) in linear_terms_of(t)
+                    addrc!(v, d * c)
+                end
+            end
+        end
+        # A PSD constraint posted as `Symmetric(X) in PSDCone()` has a MATRIX function and a
+        # matrix dual, not vectors. Sending it down the vector path silently contributed nothing,
+        # which left a residual of 21.2 where it should be ~1e-8 -- the whole semidefinite channel
+        # was missing. Matrices are paired entry by entry; `offdiag` is the weight for i != j and
+        # is settled by measurement below rather than by assuming a convention.
+        function sweep!(offdiag, sgn)
+            empty!(rc)
+            for (F, S) in list_of_constraint_types(model)
+                for c in all_constraints(model, F, S)
+                    d = try dual(c) catch; continue end
+                    fn = constraint_object(c).func
+                    if fn isa AbstractVector && d isa AbstractMatrix
+                        # PSD: JuMP hands back the VECTORISED UPPER TRIANGLE as the function and a
+                        # Symmetric MATRIX as the dual. zip-ing the two pairs them in different
+                        # orders -- column-major over the matrix against triangle order over the
+                        # vector -- which is what scrambled the identity and left a residual of
+                        # 21.2. Walk the triangle explicitly instead, weighting off-diagonals by
+                        # `offdiag` because <D, X> counts each of them twice.
+                        kdim = size(d, 1)
+                        t = 0
+                        for j in 1:kdim, i in 1:j
+                            t += 1
+                            t <= length(fn) || break
+                            w = i == j ? 1.0 : offdiag
+                            for (v, cf) in linear_terms_of(fn[t])
+                                addrc!(v, sgn * w * d[i, j] * cf)
+                            end
+                        end
+                    elseif fn isa AbstractVector
+                        walk!(fn, sgn .* d)
+                    else
+                        walk!([fn], [sgn * d])
+                    end
+                end
+            end
+        end
+        # the correct off-diagonal weight is the one that makes the identity hold
+        # JuMP's dual sign convention varies with the cone and the problem sense, and the
+        # off-diagonal weight of a matrix pairing is a convention too. Rather than assume either,
+        # try all four and keep whichever actually makes the identity hold -- the residual is a
+        # sharp test, since the right combination gives ~1e-8 and every wrong one gives O(1).
+        best_off, best_sgn, best_err = 1.0, 1.0, Inf
+        for off in (1.0, 2.0), sg in (1.0, -1.0)
+            sweep!(off, sg)
+            err = 0.0
+            for (key, rv) in yre
+                fc = objcoef_re(key)
+                err = max(err, abs(fc - get(rc, rv, 0.0)))
+            end
+            err < best_err && ((best_off, best_sgn, best_err) = (off, sg, err))
+        end
+        sweep!(best_off, best_sgn)
+        certdata["psd_offdiag_weight"] = best_off
+        certdata["dual_sign"] = best_sgn
+        certdata["identity_err"] = best_err
+        # r for the real and imaginary part of each moment; the identity row is the real part
+        rows = CMono[]; fvec = Float64[]; resid = Float64[]
+        for (key, rv) in yre
+            push!(rows, key)
+            fc = objcoef_re(key)
+            push!(fvec, fc)
+            push!(resid, fc - get(rc, rv, 0.0))
+        end
+        blocksH = Matrix{ComplexF64}[]
+        rhos = Float64[]
+        absmax = [isfinite(a) ? a : 1.0 for a in pop.absmax]
+        for (bi, (cref, k)) in enumerate(psd_refs)
+            X = zeros(ComplexF64, k, k)
+            try
+                D = dual(cref)
+                if k == 1
+                    X[1, 1] = ComplexF64(D isa Number ? D : D[1])
+                else
+                    M = Matrix(D)                      # 2k x 2k real dual of the lift
+                    # adjoint of the lift: the structure-preserving projection back to Hermitian
+                    D11 = M[1:k, 1:k]; D22 = M[k+1:2k, k+1:2k]
+                    D12 = M[1:k, k+1:2k]; D21 = M[k+1:2k, 1:k]
+                    X = (D11 .+ D22) ./ 2 .+ im .* ((D21 .- D12) ./ 2)
+                end
+            catch
+            end
+            push!(blocksH, X)
+            g, B = bi <= length(blockmeta) ? blockmeta[bi] : (CPoly(1), [Int[]])
+            # rho >= max over the box of ||p(z)||^2 * g(z)
+            gmax = sum((abs(c) * prod((absmax[v] for v in vcat(a, b)); init = 1.0)
+                        for ((a, b), c) in g.terms); init = 0.0)
+            psq = sum((prod((absmax[v] for v in m); init = 1.0)^2 for m in B); init = 0.0)
+            push!(rhos, gmax * psq)
+        end
+        certdata["rows"] = rows; certdata["f"] = fvec; certdata["resid"] = resid
+        certdata["blocks"] = blocksH; certdata["rho"] = rhos
+        certdata["scale"] = oscale
+        certdata["lambda"] = try objective_value(model) catch; NaN end
+    end
+
     yval = Dict{CMono,ComplexF64}()
     if has_values(model)
         for (key, rv) in yre
@@ -274,9 +402,11 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
             yval[key] = complex(value(rv), iv === nothing ? 0.0 : value(iv))
         end
     end
+
     info = Dict{String,Any}("skipped" => skipped, "n_blocks" => nblocks,
         "t_invariant_possible" => tinv_ok, "obj_scale" => oscale,
         "clique_orders" => ords)
+    isempty(certdata) || (info["cert_data"] = certdata)
     return ComplexMomentRelaxation(st, bound, pobj, build_time, solve_time(model), cls,
         psd_sizes, length(yre), tinv, yval, info)
 end
@@ -325,3 +455,8 @@ function rank_one_point(W::Matrix{ComplexF64})
     ratio = length(lam) > 1 ? (sort(lam; rev = true)[2] / max(lam[i], 1e-300)) : 0.0
     return (v, ratio)
 end
+
+"Linear (variable, coefficient) pairs of an affine expression, as a plain iterator."
+linear_terms_of(e::AffExpr) = ((v, c) for (v, c) in e.terms)
+linear_terms_of(v::VariableRef) = ((v, 1.0),)
+linear_terms_of(x) = ()

@@ -86,6 +86,46 @@ function complex_injection_mismatch(pop::CPOP, data::Dict{String,Any},
 end
 
 """
+Order of each clique under a per-bus promotion `level`: a clique runs at order `d` exactly when it
+covers the closed neighbourhood of some bus promoted to `d`. Unpromoted buses sit at level 1.
+"""
+function _clique_orders(cls::Vector{Vector{Int}}, level::Dict{Int,Int}, data::Dict{String,Any},
+        idx::Dict{Int,Int})
+    ords = ones(Int, length(cls))
+    for (b, l) in level
+        l <= 1 && continue
+        nb = [idx[j] for j in _closed_nbrs(data, b) if haskey(idx, j)]
+        for (ci, c) in enumerate(cls)
+            issubset(nb, c) && (ords[ci] = max(ords[ci], l))
+        end
+    end
+    return ords
+end
+
+"""
+Scalar cone entries a single clique costs at order `d`, memoised in `cache`.
+
+Under `:full` this is the dense Hermitian block lifted to the reals; under `:minors` it is the
+determinant cover's own cost. Pricing the two with the same unit is the whole point -- it is what
+lets the schedule trade a cheap deep block against an expensive wide one.
+"""
+function _clique_cost(cl::Vector{Int}, d::Int, cache::Dict{Tuple{Vector{Int},Int},Int};
+        psd_mode::Symbol, minor_kmax::Int, minor_core_degree::Int,
+        adjacency::Union{Nothing,Set{Tuple{Int,Int}}})
+    key = (cl, d)
+    haskey(cache, key) && return cache[key]
+    basis = cmonomial_basis(cl, d)
+    c = if psd_mode === :minors
+        cover_cost(basis_minor_subsets(basis; kmax = minor_kmax,
+            core_degree = minor_core_degree, adjacency = adjacency))
+    else
+        (2 * length(basis))^2
+    end
+    cache[key] = c
+    return c
+end
+
+"""
     solve_complex_adaptive(cpop, data; h, max_iter, ...) -> NamedTuple
 
 Iteratively promote the `h` worst-mismatch buses to order 2 and re-solve, keeping the best bound
@@ -94,7 +134,8 @@ strictly tighter than the last, so any decrease is solver error rather than a re
 """
 function solve_complex_adaptive(pop::CPOP, data::Dict{String,Any};
         h::Int = 3, max_iter::Int = 10, mismatch_tol::Float64 = 1e-3,
-        max_order::Int = 2, total_seconds::Float64 = 3600.0,
+        max_order::Int = 2, schedule::Symbol = :widen, cost_exponent::Float64 = 0.5,
+        total_seconds::Float64 = 3600.0,
         max_seconds::Float64 = 900.0, verbose::Bool = true, certify::Bool = true,
         psd_mode::Symbol = :full, minor_kmax::Int = 2, psd_threshold::Int = 0,
         minor_core_degree::Int = 1,
@@ -103,19 +144,15 @@ function solve_complex_adaptive(pop::CPOP, data::Dict{String,Any};
     idx = pop.meta["bus_index"]::Dict{Int,Int}
     buses = pop.meta["buses"]::Vector{Int}
     c0 = Float64(get(pop.meta, "const_cost", 0.0))
-    promoted = Int[]
+    # level[b] is the relaxation order bus b is promoted to; absent means 1.
+    level = Dict{Int,Int}()
+    promoted() = sort([b for (b, l) in level if l >= 2])
+    costcache = Dict{Tuple{Vector{Int},Int},Int}()
     best = -Inf
     iters = Any[]
     for it in 1:max_iter
-        cls = complex_bus_cliques(data, idx; order2_buses = promoted)
-        # a clique is order 2 exactly when it covers the closed neighbourhood of a promoted bus
-        ords = ones(Int, length(cls))
-        for b in promoted
-            nb = [idx[j] for j in _closed_nbrs(data, b) if haskey(idx, j)]
-            for (ci, c) in enumerate(cls)
-                issubset(nb, c) && (ords[ci] = max_order)
-            end
-        end
+        cls = complex_bus_cliques(data, idx; order2_buses = promoted())
+        ords = _clique_orders(cls, level, data, idx)
         # The determinant relaxation is WEAKER than full PSD at a fixed order, so it cannot tighten
         # anything directly. The premise is tractability: where a full order-2 block of 156-240 rows
         # sends MOSEK to TIME_LIMIT and the bound degenerates, small cones may solve, and a solved
@@ -134,15 +171,17 @@ function solve_complex_adaptive(pop::CPOP, data::Dict{String,Any};
         isfinite(bound) && bound > best && (best = bound)
         mism = isempty(rel.y) ? Dict{Int,Float64}() :
                complex_injection_mismatch(pop, data, rel.y, cls)
-        # only UNPROMOTED buses count: a promoted bus keeps its mismatch, and including it made
-        # the reported maximum constant across iterations and the stopping rule unreachable
-        rem = [v for (b, v) in mism if !(b in promoted)]
+        # only buses that could still be promoted count: one already at `max_order` keeps its
+        # mismatch, and including it made the reported maximum constant across iterations and the
+        # stopping rule unreachable
+        rem = [v for (b, v) in mism if get(level, b, 1) < max_order]
         worst = isempty(rem) ? 0.0 : maximum(rem)
         push!(iters, (iter = it, bound = bound, raw = raw, best = best,
                       psd_corr = get(cinfo, "psd_correction", NaN),
                       box_corr = get(cinfo, "box_correction", NaN),
                       max_resid = get(cinfo, "max_resid", NaN), status = string(rel.status),
-                      n_order2 = count(==(max_order), ords), psd_max = maximum(rel.psd_sizes; init = 0),
+                      n_order2 = count(>=(2), ords), max_clique_order = maximum(ords; init = 1),
+                      psd_max = maximum(rel.psd_sizes; init = 0),
                       n_cliques = length(cls), max_mismatch_MVA = worst,
                       solve_time = rel.solve_time))
         verbose && println("  iter ", lpad(it, 2),
@@ -151,17 +190,24 @@ function solve_complex_adaptive(pop::CPOP, data::Dict{String,Any};
             "  best ", round(best, digits = 4),
             "  |r| ", round(get(cinfo, "max_resid", NaN), sigdigits = 2),
             "  max_mismatch ", round(worst, sigdigits = 4), " MVA",
-            "  order2 ", count(==(max_order), ords), "/", length(cls),
+            "  order2+ ", count(>=(2), ords), "/", length(cls),
+            "  dmax ", maximum(ords; init = 1),
             "  psd_max ", maximum(rel.psd_sizes; init = 0),
             "  ", rel.status, "  ", round(rel.solve_time, digits = 1), "s")
         flush(stdout)
         worst < mismatch_tol && break
         time() - t0 > total_seconds && break
-        cand = sort([b for b in buses if !(b in promoted)]; by = b -> -get(mism, b, 0.0))
-        isempty(cand) && break
-        append!(promoted, cand[1:min(h, length(cand))])
+        moves = _rank_moves(buses, level, mism, cls, ords, data, idx, costcache;
+            max_order = max_order, schedule = schedule, cost_exponent = cost_exponent,
+            psd_mode = psd_mode,
+            minor_kmax = minor_kmax, minor_core_degree = minor_core_degree, adjacency = adjacency)
+        isempty(moves) && break
+        for (b, l) in first(moves, h)
+            level[b] = l
+        end
     end
-    return (bound = best, iterations = iters, promoted = promoted, time = time() - t0)
+    return (bound = best, iterations = iters, promoted = promoted(),
+            levels = copy(level), time = time() - t0)
 end
 
 "Closed neighbourhood of a bus over in-service branches."
@@ -174,4 +220,70 @@ function _closed_nbrs(data::Dict{String,Any}, b::Int)
         t == b && push!(s, f)
     end
     return collect(s)
+end
+
+"""
+Rank candidate promotions by estimated mismatch reduction per unit cone cost.
+
+Two move types share one ranking: WIDEN raises an unpromoted bus from order 1 to 2, DEEPEN raises
+an order-2 bus to order 3. Benefit is the mismatch carried by the bus's closed neighbourhood; cost
+is the extra scalar cone entries the move forces across every clique whose order would rise. Under
+`schedule = :widen` (the default) keeps the legacy rule verbatim -- promote the `h` worst-mismatch
+buses to order 2, uncosted -- so existing results are reproduced bit-for-bit. Under `:mixed` both
+move types compete on the same score, and `max_order` is the deepest level offered (set it to 3 to
+allow deepening at all).
+
+`cost_exponent` gamma sets how hard cost is priced: score = benefit / cost^gamma. gamma = 0 is pure
+mismatch with deepening allowed. gamma = 1 measured BADLY on case14 (1180.93 against the legacy
+rule's 1917.46), and the reason is a units mismatch, not a coding error: benefit grows about
+linearly in a bus's degree while cone cost grows about quadratically in its clique, so full pricing
+systematically buys peripheral low-degree buses that tighten nothing. gamma = 0.5 balances the two
+growth rates, and is the default.
+
+Costing a deepen move is what keeps it honest: an order-3 block over a 9-bus clique is 165 Hermitian
+rows against order 2's 55, so deepening only wins the ranking when the mismatch it targets is
+concentrated enough to pay for that.
+"""
+function _rank_moves(buses, level, mism, cls, ords, data, idx, costcache;
+        max_order::Int, schedule::Symbol, cost_exponent::Float64, psd_mode::Symbol,
+        minor_kmax::Int, minor_core_degree::Int, adjacency)
+    if schedule !== :mixed
+        # legacy rule, kept bit-for-bit: promote the worst-mismatch unpromoted buses to order 2
+        cand = sort([b for b in buses if get(level, b, 1) < 2]; by = b -> -get(mism, b, 0.0))
+        return [(b, 2) for b in cand]
+    end
+    scored = Tuple{Float64,Int,Int}[]
+    for b in buses
+        cur = get(level, b, 1)
+        cur >= max_order && continue
+        nxt = cur + 1
+        nb = [idx[j] for j in _closed_nbrs(data, b) if haskey(idx, j)]
+        benefit = sum(get(mism, j, 0.0) for j in _closed_nbrs(data, b); init = 0.0)
+        benefit <= 0 && continue
+        cst(c, d) = _clique_cost(c, d, costcache; psd_mode = psd_mode, minor_kmax = minor_kmax,
+                        minor_core_degree = minor_core_degree, adjacency = adjacency)
+        # Cliques already covering b's closed neighbourhood get lifted to `nxt`.
+        cost = 0
+        covered = false
+        for (ci, c) in enumerate(cls)
+            issubset(nb, c) || continue
+            covered = true
+            ords[ci] < nxt && (cost += cst(c, nxt) - cst(c, ords[ci]))
+        end
+        if !covered
+            # No current clique covers nb, so promoting b makes `complex_bus_cliques` MERGE cliques
+            # into one that does. Pricing this as zero was a bug that silently excluded every such
+            # bus from the ranking -- and those are the buses that actually tighten the relaxation,
+            # which is why the scored schedule was losing to the legacy rule by 740 units on case14.
+            # Charge the merged clique, credited with the largest clique it absorbs.
+            merged = sort(nb)
+            absorbed = maximum((cst(c, ords[ci]) for (ci, c) in enumerate(cls) if !isempty(intersect(c, nb)));
+                               init = 0)
+            cost = max(cst(merged, nxt) - absorbed, 1)
+        end
+        cost <= 0 && continue   # already at `nxt` everywhere: the move buys nothing
+        push!(scored, (benefit / cost^cost_exponent, b, nxt))
+    end
+    sort!(scored; by = t -> -t[1])
+    return [(b, l) for (_, b, l) in scored]
 end

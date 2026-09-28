@@ -12,6 +12,12 @@
 #                  moment. Pseudo-moments are recovered from the equality duals. Much smaller Schur
 #                  complement for interior-point solvers.
 #   form = :moment primal moment form with affine PSD constraints (bridged by JuMP; memory-hungry).
+#   form = :hybrid solves BOTH and certifies at whichever dual point is better. Which form MOSEK
+#                  handles well is instance-dependent and the spread is large: on case14 the SOS
+#                  form wins by 40 at order 2, while on case200 with QC the moment form reaches
+#                  OPTIMAL at 16228.85 where the SOS form stalls at 16213.91. The certificate is
+#                  valid at any dual point, so taking the max over both costs a second solve and
+#                  can never lose.
 
 struct MomentRelaxation
     status::MOI.TerminationStatusCode
@@ -382,18 +388,34 @@ function solve_moment_relaxation(pop::POP; order = 1, sparse::Bool = true, cliqu
     for (k, v) in solver_params
         set_attribute(model, k, v)
     end
-    if form == :sos
+    if form in (:sos, :hybrid)
         maxabs = [max(abs(pop.lb[i]), abs(pop.ub[i])) for i in eachindex(pop.lb)]
+        md = nothing
+        aux_solve = 0.0
+        if form == :hybrid
+            # Solve the primal (moment) form FIRST, in its own model, purely to obtain a second
+            # dual point. Measured on case200+QC the moment form reaches OPTIMAL where the SOS
+            # form stalls, so this buys conditioning; the price is building and solving both.
+            mm = Model(optimizer)
+            silent && set_silent(mm)
+            for (k, v) in solver_params
+                set_attribute(mm, k, v)
+            end
+            _, _, _, _, _, _, md = _solve_moment_form(mm, obj, blocks, eqblocks, socs, isbin, scale)
+            # charge this to solving, not building, or `build_time` silently absorbs a whole SDP
+            aux_solve = try solve_time(mm) catch; 0.0 end
+        end
         yv, bound, pobj, st, ps, nmom, cert = _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxabs;
             certify = certify, bundle_params = bundle_params, groups = square_groups(ineqs),
-            identity_slack = identity_slack)
+            identity_slack = identity_slack, moment_duals = md)
     elseif form == :moment
-        yv, bound, pobj, st, ps, nmom = _solve_moment_form(model, obj, blocks, eqblocks, socs, isbin, scale)
+        aux_solve = 0.0
+        yv, bound, pobj, st, ps, nmom, _ = _solve_moment_form(model, obj, blocks, eqblocks, socs, isbin, scale)
         cert = Dict{String,Any}()
     else
         error("unknown form $form")
     end
-    build_time = time() - t0 - solve_time(model)
+    build_time = time() - t0 - solve_time(model) - aux_solve
 
     ratios = Float64[]
     if !isempty(yv)
@@ -441,7 +463,7 @@ end
 
 function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxabs; certify::Symbol = :implicit,
     bundle_params = Dict{Symbol,Any}(), groups = Tuple{Vector{Int},Float64}[],
-    identity_slack::Float64 = 0.0)
+    identity_slack::Float64 = 0.0, moment_duals = nothing)
     coef = Dict{Vector{Int},AffExpr}()
     addc!(m, c, v) = add_to_expression!(get!(() -> AffExpr(0.0), coef, m), c, v)
     Xs = Any[]
@@ -465,6 +487,7 @@ function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxab
     # The equality multipliers are the free part of the dual: unconstrained, and absent from every
     # penalty term of the certificate. `free_absorb` uses them as a zero-cost residual sink.
     eqmults = VariableRef[]
+    socmults = Vector{VariableRef}[]
     for (h, mults) in eqblocks
         for m in mults
             λ = @variable(model)
@@ -480,6 +503,7 @@ function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxab
     # multiplier used for a scalar inequality above.
     for (a, b, xs) in socs
         mu = @variable(model, [1:(2 + length(xs))])
+        push!(socmults, collect(mu))
         @constraint(model, mu in RotatedSecondOrderCone())
         for (q, v) in zip(vcat([a, b], xs), mu)
             for (mono, c) in q.terms
@@ -565,6 +589,18 @@ function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxab
             eqmults = eqmults)
         θ0 = value.(all_variables(model))
         haskey(cert, "raw_bound") || (cert["raw_bound"] = θ0[sc.tcol] * scale)
+        # The MOMENT form's conic dual, mapped into this model's variable order, is another valid
+        # candidate point -- and measurably a better-conditioned one on some instances (case200
+        # with QC: the moment form solves to OPTIMAL where this one stalls). It is only ever an
+        # EXTRA candidate: `certified_value` is valid at any theta and the best one wins, so adding
+        # it cannot lower a reported bound.
+        θhyb = nothing
+        if moment_duals !== nothing
+            θhyb, hres, hconv = _hybrid_theta(model, coef, obj, monos, Xs, eqmults, socmults, t,
+                                              scale, moment_duals)
+            cert["hybrid_row_resid"] = hres
+            cert["hybrid_convention"] = hconv
+        end
         # Dual repair. F is valid at every θ, so these are candidate points and the best one wins;
         # none of them can make the bound unsound. Two moves, which fix different things:
         #   * `project_dual` puts the Gram blocks back in their cone, killing the ρ_k·λ_min term
@@ -584,6 +620,11 @@ function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxab
         # measured and neither ever won: free multipliers alone moved case200 from 16220.43 to
         # 16195.89, because the residual they shed lands on rows whose Gram entry then pays for it.
         # Projection first, absorption second is the pairing that works, so it is the only one run.
+        if θhyb !== nothing
+            Fh = first(certified_value(sc, θhyb; gradient = false))
+            cert["certified_implicit_hybrid"] = Fh
+            isfinite(Fh) && Fh > bestF && ((best, bestF) = (θhyb, Fh))
+        end
         for (name, θc) in (("proj", θp), ("proj_free", θpf))
             nproj > 0 || continue
             Fc = first(certified_value(sc, θc; gradient = false))
@@ -618,13 +659,30 @@ function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxab
             # gradient there is tiny and the ascent stalls at once. On case200 that cost 6.7 --
             # the repaired point scored higher to begin with and then climbed nowhere, while
             # MOSEK's point started lower and climbed past it. Neither dominates, so run both.
-            Fb, _, hist = run1(θ0)
+            Fb, θb, hist = run1(θ0)
             nev = length(hist)
             if θ0 !== θmos
-                Fb2, _, h2 = run1(θmos)
+                Fb2, θb2, h2 = run1(θmos)
                 nev += length(h2)
-                Fb2 > Fb && (Fb = Fb2)
+                Fb2 > Fb && ((Fb, θb) = (Fb2, θb2))
                 cert["certified_optimized_from_mosek"] = Fb2
+            end
+            # SOUNDNESS GUARD. `smooth_certify` maximises the :hybrid certificate over theta, and
+            # :hybrid is only trustworthy while the SOS residual is small -- an optimiser pointed at
+            # a bound that is loose in the WRONG direction will find exactly where it is loosest.
+            # Measured with `identity_slack = 1e-2` on case200: :box returned -1.24e6 while :hybrid
+            # returned +2.12e5 at the same solve, against a known feasible 56053.02. So :hybrid was
+            # not a lower bound there at all.
+            #
+            # :box is the conservative evaluation and stayed valid throughout, so record it AT THE
+            # OPTIMISED POINT. A large `certified_optimized_box_gap` means the reported number rests
+            # on :hybrid alone and should not be trusted; at identity_slack = 0 it is ~75 on case200
+            # out of 16228, and the :hybrid-vs-:optimized spread is 1.66, which is why headline
+            # results are unaffected. Do NOT silence this by widening the reported max.
+            if θb !== nothing
+                Fbox = first(certified_value(sc, θb; mode = :box, gradient = false))
+                cert["certified_optimized_box"] = Fbox
+                cert["certified_optimized_box_gap"] = Fb - Fbox
             end
             cert["certified_optimized"] = Fb
             cert["optimize_method"] = string(method)
@@ -651,6 +709,7 @@ function _solve_sos_form(model, obj, blocks, eqblocks, socs, isbin, scale, maxab
 end
 
 function _solve_moment_form(model, obj, blocks, eqblocks, socs, isbin, scale)
+    psdcons, eqcons, soccons = Any[], Any[], Any[]
     y = Dict{Vector{Int},VariableRef}()
     getY(m) = get!(() -> @variable(model), y, m)
     function lin(p::Poly, mult::Vector{Int})
@@ -667,15 +726,17 @@ function _solve_moment_form(model, obj, blocks, eqblocks, socs, isbin, scale)
         for a in 1:ng, b in 1:ng, i in 1:nb, j in 1:nb
             M[(a-1)*nb+i, (b-1)*nb+j] = lin(G[a, b], monoprod(B[i], B[j], isbin))
         end
-        size(M, 1) == 1 ? @constraint(model, M[1, 1] >= 0) : @constraint(model, Symmetric(M) in PSDCone())
+        push!(psdcons, size(M, 1) == 1 ? @constraint(model, M[1, 1] >= 0) :
+                                        @constraint(model, Symmetric(M) in PSDCone()))
     end
     for (h, mults) in eqblocks, m in mults
-        @constraint(model, lin(h, m) == 0)
+        push!(eqcons, @constraint(model, lin(h, m) == 0))
     end
     # rotated second-order cones on the first moments (JuMP: 2*u*v >= ||w||^2)
     for (a, b, xs) in socs
-        @constraint(model, vcat(lin(a, Int[]), lin(b, Int[]), [lin(x, Int[]) for x in xs])
-                    in RotatedSecondOrderCone())
+        push!(soccons, @constraint(model,
+            vcat(lin(a, Int[]), lin(b, Int[]), [lin(x, Int[]) for x in xs])
+            in RotatedSecondOrderCone()))
     end
     @objective(model, Min, lin(obj, Int[]) / scale)
     optimize!(model)
@@ -689,7 +750,26 @@ function _solve_moment_form(model, obj, blocks, eqblocks, socs, isbin, scale)
     end
     pobj = have ? objective_value(model) * scale : NaN
     yv = have ? Dict(m => value(v) for (m, v) in y) : Dict{Vector{Int},Float64}()
-    return yv, bound, pobj, st, ps, length(y)
+    # The conic dual of this model IS the SOS solution: by construction the two forms iterate over
+    # `blocks`, `eqblocks` and `socs` in the same order, so the dual of PSD constraint k is the
+    # Gram matrix of block k, the dual of an equality is that equality's free multiplier, and the
+    # rotated-SOC dual is the self-dual cone multiplier. Handing these back lets the SOS-side
+    # certificate be evaluated at the point the MOMENT form found -- see `:hybrid`.
+    duals = nothing
+    if has_duals(model)
+        try
+            dm(c) = begin
+                d = dual(c)
+                d isa AbstractMatrix ? Matrix{Float64}(d) : reshape([Float64(d)], 1, 1)
+            end
+            duals = (psd = [dm(c) for c in psdcons],
+                     eq = [Float64(dual(c)) for c in eqcons],
+                     soc = [Vector{Float64}(dual(c)) for c in soccons])
+        catch
+            duals = nothing
+        end
+    end
+    return yv, bound, pobj, st, ps, length(y), duals
 end
 
 "Pseudo-moment of a monomial (1 for the empty monomial, `missing` if not in the relaxation)."
@@ -790,4 +870,66 @@ function _pivot_monomials(E::Vector{Poly}; tol = 1e-9)
         row += 1
     end
     return (piv, mags)
+end
+
+"""
+Map the moment form's constraint duals into the SOS model's variable vector.
+
+By conic duality the two formulations are transposes of one another, and because both are built by
+iterating `blocks`, `eqblocks` and `socs` in the same order the correspondence is positional:
+PSD constraint k's dual is Gram block k, equality i's dual is free multiplier i, rotated-SOC j's
+dual is cone multiplier j. `t` is then pinned by the constant-monomial row so that row's residual
+is exactly zero.
+
+The one thing not fixed by duality is MOSEK/MOI's storage convention for a symmetric dual -- sign,
+and whether off-diagonals carry a factor of 1/2, 1 or 2. Rather than assume, every combination is
+tried and the one minimising the SOS identity residual wins. The residual is returned so a caller
+can tell a genuine mapping from a mis-scaled one; if no convention gets it near zero, the point is
+simply a poor candidate and the max over candidates discards it.
+"""
+function _hybrid_theta(model, coef, obj, monos, Xs, eqmults, socmults, t, scale, md)
+    pos = Dict(v => i for (i, v) in enumerate(all_variables(model)))
+    base = zeros(length(pos))
+    for (i, λ) in enumerate(eqmults)
+        i <= length(md.eq) && (base[pos[λ]] = md.eq[i])
+    end
+    for (k, mu) in enumerate(socmults), i in eachindex(mu)
+        k <= length(md.soc) && i <= length(md.soc[k]) && (base[pos[mu[i]]] = md.soc[k][i])
+    end
+    function evalaff(e::AffExpr, θ)
+        v = constant(e)
+        for (var, c) in e.terms
+            v += c * θ[pos[var]]
+        end
+        return v
+    end
+    bestθ, bestr, bestc = nothing, Inf, ""
+    for sgn in (1.0, -1.0), off in (1.0, 0.5, 2.0)
+        θ = copy(base)
+        for (i, λ) in enumerate(eqmults)
+            i <= length(md.eq) && (θ[pos[λ]] = sgn * md.eq[i])
+        end
+        for (k, mu) in enumerate(socmults), i in eachindex(mu)
+            k <= length(md.soc) && i <= length(md.soc[k]) && (θ[pos[mu[i]]] = sgn * md.soc[k][i])
+        end
+        for (k, X) in enumerate(Xs)
+            k <= length(md.psd) || continue
+            D = md.psd[k]
+            size(D, 1) == size(X, 1) || continue
+            for i in axes(X, 1), j in axes(X, 2)
+                θ[pos[X[i, j]]] = sgn * (i == j ? D[i, j] : off * D[i, j])
+            end
+        end
+        # pin t so the constant-monomial identity holds exactly
+        e0 = get(coef, Int[], AffExpr(0.0))
+        θ[pos[t]] += get(obj.terms, Int[], 0.0) / scale - evalaff(e0, θ)
+        r = 0.0
+        for m in monos
+            r = max(r, abs(evalaff(get(coef, m, AffExpr(0.0)), θ) - get(obj.terms, m, 0.0) / scale))
+        end
+        if r < bestr
+            bestθ, bestr, bestc = θ, r, string("sign=", Int(sgn), " offdiag=", off)
+        end
+    end
+    return bestθ, bestr, bestc
 end

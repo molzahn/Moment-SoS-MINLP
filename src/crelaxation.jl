@@ -19,6 +19,9 @@
 
 using LinearAlgebra
 
+"Cached (off-diagonal weight, dual sign) for the SOS identity; see the certificate assembly."
+const _DUAL_CONVENTION = Ref{Union{Nothing,Tuple{Float64,Float64}}}(nothing)
+
 struct ComplexMomentRelaxation
     status::Any
     bound::Float64
@@ -341,8 +344,13 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         # off-diagonal weight of a matrix pairing is a convention too. Rather than assume either,
         # try all four and keep whichever actually makes the identity hold -- the residual is a
         # sharp test, since the right combination gives ~1e-8 and every wrong one gives O(1).
+        # The convention is a property of JuMP/MOI, not of this model, so it is determined once
+        # and cached. Re-deriving it means four full passes over every constraint, which on a
+        # 200-bus model is the dominant cost of the certificate.
+        cand = _DUAL_CONVENTION[] === nothing ? ((1.0, 1.0), (1.0, -1.0), (2.0, 1.0), (2.0, -1.0)) :
+               (_DUAL_CONVENTION[]::Tuple{Float64,Float64},)
         best_off, best_sgn, best_err = 1.0, 1.0, Inf
-        for off in (1.0, 2.0), sg in (1.0, -1.0)
+        for (off, sg) in cand
             sweep!(off, sg)
             err = 0.0
             for (key, rv) in yre
@@ -351,6 +359,9 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
             end
             err < best_err && ((best_off, best_sgn, best_err) = (off, sg, err))
         end
+        # only trust the cache when it actually reproduced the identity
+        best_err < 1e-6 ? (_DUAL_CONVENTION[] = (best_off, best_sgn)) :
+                          (_DUAL_CONVENTION[] = nothing)
         sweep!(best_off, best_sgn)
         certdata["psd_offdiag_weight"] = best_off
         certdata["dual_sign"] = best_sgn

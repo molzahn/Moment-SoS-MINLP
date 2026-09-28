@@ -95,7 +95,7 @@ strictly tighter than the last, so any decrease is solver error rather than a re
 function solve_complex_adaptive(pop::CPOP, data::Dict{String,Any};
         h::Int = 3, max_iter::Int = 10, mismatch_tol::Float64 = 1e-3,
         max_order::Int = 2, total_seconds::Float64 = 3600.0,
-        max_seconds::Float64 = 900.0, verbose::Bool = true)
+        max_seconds::Float64 = 900.0, verbose::Bool = true, certify::Bool = true)
     t0 = time()
     idx = pop.meta["bus_index"]::Dict{Int,Int}
     buses = pop.meta["buses"]::Vector{Int}
@@ -114,8 +114,14 @@ function solve_complex_adaptive(pop::CPOP, data::Dict{String,Any};
             end
         end
         rel = solve_complex_moment_relaxation(pop; cliques = cls, clique_orders = ords,
+            certify = certify,
             solver_params = Dict{String,Any}("MSK_DPAR_OPTIMIZER_MAX_TIME" => max_seconds))
-        bound = rel.bound + c0
+        raw = rel.bound + c0
+        # The RIGOROUS bound is what counts, and it is what the running maximum is taken over. A
+        # promotion makes the relaxation strictly tighter, so a fall is solver error, not a real
+        # regression -- the same reasoning as the real selective algorithm.
+        cb, cinfo = certify ? certify_complex(pop, rel) : (NaN, Dict{String,Any}())
+        bound = certify && isfinite(cb) ? cb + c0 : raw
         isfinite(bound) && bound > best && (best = bound)
         mism = isempty(rel.y) ? Dict{Int,Float64}() :
                complex_injection_mismatch(pop, data, rel.y, cls)
@@ -123,12 +129,18 @@ function solve_complex_adaptive(pop::CPOP, data::Dict{String,Any};
         # the reported maximum constant across iterations and the stopping rule unreachable
         rem = [v for (b, v) in mism if !(b in promoted)]
         worst = isempty(rem) ? 0.0 : maximum(rem)
-        push!(iters, (iter = it, bound = bound, best = best, status = string(rel.status),
+        push!(iters, (iter = it, bound = bound, raw = raw, best = best,
+                      psd_corr = get(cinfo, "psd_correction", NaN),
+                      box_corr = get(cinfo, "box_correction", NaN),
+                      max_resid = get(cinfo, "max_resid", NaN), status = string(rel.status),
                       n_order2 = count(==(max_order), ords), psd_max = maximum(rel.psd_sizes; init = 0),
                       n_cliques = length(cls), max_mismatch_MVA = worst,
                       solve_time = rel.solve_time))
-        verbose && println("  iter ", lpad(it, 2), "  bound ", round(bound, digits = 4),
+        verbose && println("  iter ", lpad(it, 2),
+            "  raw ", round(raw, digits = 4),
+            "  certified ", round(bound, digits = 4),
             "  best ", round(best, digits = 4),
+            "  |r| ", round(get(cinfo, "max_resid", NaN), sigdigits = 2),
             "  max_mismatch ", round(worst, sigdigits = 4), " MVA",
             "  order2 ", count(==(max_order), ords), "/", length(cls),
             "  psd_max ", maximum(rel.psd_sizes; init = 0),

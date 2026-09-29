@@ -82,7 +82,8 @@ function solve_complex_lazy_minors(pop::CPOP;
         adjacency::Union{Nothing,Set{Tuple{Int,Int}}} = nothing,
         subset_size::Int = 3, n_add::Int = 8, max_rounds::Int = 12,
         tol::Float64 = 1e-6, max_seconds::Float64 = 1800.0, round_seconds::Float64 = 600.0,
-        crosscheck::Bool = true, crosscheck_streak::Int = 3, verbose::Bool = true)
+        backend::Symbol = :both, crosscheck::Bool = true, crosscheck_streak::Int = 3,
+        crosscheck_tol::Float64 = 1e-7, verbose::Bool = true)
     t0 = time()
     c0 = Float64(get(pop.meta, "const_cost", 0.0))
     # block index -> posted subsets. Populated on the first build from the 2x2 cover, then grown.
@@ -100,32 +101,52 @@ function solve_complex_lazy_minors(pop::CPOP;
     best = -Inf
     warm = nothing
     agree = 0
-    checking = crosscheck
+    # `:conic` solves the lazy cover with Mosek only, which the measurements favour: Ipopt
+    # saturates well below the conic optimum of the SAME cover once nonconvex 3x3 descriptions
+    # accumulate (case14 order 2: 1145.8 against 1169.4). The cover is the contribution; the
+    # backend is a separate choice.
+    want_ipopt = backend in (:ipopt, :both)
+    want_conic = backend in (:conic, :both)
+    checking = crosscheck && want_ipopt && want_conic
     for it in 1:max_rounds
         cbound, cstat = NaN, "-"
-        if checking
+        cref = Ref{Any}(nothing)
+        if checking || (want_conic && !want_ipopt)
             rc = solve_complex_moment_relaxation(pop; common..., psd_mode = :minors,
-                    optimizer = mosek_optimizer(),
+                    optimizer = mosek_optimizer(), retain = cref,
                     solver_params = Dict{String,Any}("MSK_DPAR_OPTIMIZER_MAX_TIME" => round_seconds))
             cbound, cstat = rc.bound + c0, string(rc.status)
             isempty(rc.y) || (warm = rc.y)
+            if want_conic && !want_ipopt
+                rc.status in (MOI.OPTIMAL, MOI.ALMOST_OPTIMAL, MOI.SLOW_PROGRESS) &&
+                    isfinite(cbound) && cbound > best && (best = cbound)
+            end
         end
-        ref = Ref{Any}(nothing)
-        r = solve_complex_moment_relaxation(pop; common..., optimizer = ipopt_optimizer(),
-                retain = ref, warm_start = warm,
-                solver_params = Dict{String,Any}("max_iter" => 5000, "tol" => 1e-8,
-                                                 "mu_strategy" => "adaptive",
-                                                 "max_cpu_time" => round_seconds))
-        ib = r.bound + c0
-        ipr = r.primal_objective + c0
-        converged = r.status in (MOI.LOCALLY_SOLVED, MOI.ALMOST_LOCALLY_SOLVED, MOI.OPTIMAL)
+        ref = cref
+        ib, ipr = NaN, NaN
+        r = nothing
+        converged = isfinite(cbound)
+        if want_ipopt
+            ref = Ref{Any}(nothing)
+            r = solve_complex_moment_relaxation(pop; common..., optimizer = ipopt_optimizer(),
+                    retain = ref, warm_start = warm,
+                    solver_params = Dict{String,Any}("max_iter" => 5000, "tol" => 1e-8,
+                                                     "mu_strategy" => "adaptive",
+                                                     "max_cpu_time" => round_seconds))
+            ib = r.bound + c0
+            ipr = r.primal_objective + c0
+            converged = r.status in (MOI.LOCALLY_SOLVED, MOI.ALMOST_LOCALLY_SOLVED, MOI.OPTIMAL)
+        end
         # Only a CONVERGED round carries the local-minimum-of-a-convex-set argument, so only a
         # converged round may raise the reported bound.
-        converged && isfinite(ib) && ib > best && (best = ib)
-        isempty(r.y) || (warm = r.y)
+        want_ipopt && converged && isfinite(ib) && ib > best && (best = ib)
+        r === nothing || isempty(r.y) || (warm = r.y)
         d = (checking && isfinite(cbound) && isfinite(ib)) ? abs(ib - cbound) : NaN
         if checking && isfinite(d)
-            agree = d < 1e-4 * max(1.0, abs(cbound)) ? agree + 1 : 0
+            # The tolerance is RELATIVE and must be tight. At 1e-4 on case200 a 1.4-unit
+            # Ipopt/Mosek discrepancy on a 16225 bound counted as agreement and switched the conic
+            # solve off after three rounds, discarding the better backend for the remaining eight.
+            agree = d < crosscheck_tol * max(1.0, abs(cbound)) ? agree + 1 : 0
             if agree >= crosscheck_streak
                 checking = false
                 verbose && println("  cross-check agreed $agree rounds running; Ipopt alone from here")
@@ -154,10 +175,11 @@ function solve_complex_lazy_minors(pop::CPOP;
             end
         end
         push!(rounds, (iter = it, ipopt = ib, ipopt_primal = ipr, mosek = cbound, diff = d, best = best,
-                       status = string(r.status), worst_violation = worst, added = added,
+                       status = r === nothing ? cstat : string(r.status),
+                       worst_violation = worst, added = added,
                        n_subsets = sum(length, values(cover); init = 0), time = time() - t0))
         verbose && @printf("  r%-2d ipopt d %13.4f p %13.4f %-22s mosek %13.4f  |d| %8.1e  worst %9.2e  +%d subs (%d)  %5.1fs\n",
-            it, ib, ipr, string(r.status), cbound, d, worst, added,
+            it, ib, ipr, r === nothing ? cstat : string(r.status), cbound, d, worst, added,
             sum(length, values(cover); init = 0), time() - t0)
         flush(stdout)
         (worst <= tol || added == 0) && break

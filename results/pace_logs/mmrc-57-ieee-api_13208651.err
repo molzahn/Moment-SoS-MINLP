@@ -1,0 +1,25 @@
+Command terminated by signal 9
+	Command being timed: "/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia --project=. scripts/recertify.jl 57-ieee-api"
+	User time (seconds): 1873.45
+	System time (seconds): 27.75
+	Percent of CPU this job got: 230%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 13:43.23
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 16743616
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 62571
+	Minor (reclaiming a frame) page faults: 1333183
+	Voluntary context switches: 267769
+	Involuntary context switches: 23069
+	Swaps: 0
+	File system inputs: 2605944
+	File system outputs: 32
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[2026-09-14T23:06:44.086] error: Detected 1 oom_kill event in StepId=13208651.batch. Some of the step tasks have been OOM Killed.

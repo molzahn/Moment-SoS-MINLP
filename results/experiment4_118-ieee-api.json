@@ -1,0 +1,454 @@
+{
+ "N": 100,
+ "acopf": 242236.78875838636,
+ "best_bound": 169277.04634963337,
+ "best_found": 222375.5276775244,
+ "buses": 118,
+ "case": "118-ieee-api",
+ "certified_gap_best_known": 0.061199219410614,
+ "cut_set": 2,
+ "n_binaries_base": 186,
+ "n_configs_evaluated": 980,
+ "paper_acots": 180312,
+ "paper_odcots": 195918,
+ "relaxations": {
+  "base": {
+   "best_rounded": 229567.0345391601,
+   "best_rounded_opened": [
+    44,
+    79,
+    102,
+    105,
+    106,
+    146,
+    149,
+    182
+   ],
+   "bound": 169277.04634963337,
+   "build_time": 3.77e-7,
+   "expected_opened": 10.09749740584789,
+   "guarded_sampling_time": 0.434900173,
+   "marginals_below_half": 3,
+   "max_psd": 54,
+   "n_binaries": 186,
+   "n_cliques": 723,
+   "n_conn_cuts": 0,
+   "n_cut_blocks": 0,
+   "polish_evals": 40,
+   "polished": 222375.5276775244,
+   "polished_opened": [
+    44,
+    95,
+    102,
+    146,
+    149,
+    161,
+    182
+   ],
+   "radial_fixed": [],
+   "raw_bound": 169535.35211711715,
+   "schemes": {
+    "conditional": {
+     "best": 229567.0345391601,
+     "best_opened": [
+      44,
+      79,
+      102,
+      105,
+      106,
+      146,
+      149,
+      182
+     ],
+     "connected": 0.11,
+     "eval_time": 75.869849846,
+     "feas": 0.01,
+     "infeasible_reasons": {
+      "LOCALLY_INFEASIBLE": 72,
+      "island_deficit": 27
+     },
+     "mean_fixes": 0.0,
+     "median_feasible": 229567.0345391601,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    },
+    "conditional+repair": {
+     "best": 229567.0345391601,
+     "best_opened": [
+      44,
+      79,
+      102,
+      105,
+      106,
+      146,
+      149,
+      182
+     ],
+     "connected": 0.12,
+     "eval_time": 30.392659916,
+     "feas": 0.01,
+     "infeasible_reasons": {
+      "LOCALLY_INFEASIBLE": 99
+     },
+     "mean_fixes": 0.29,
+     "median_feasible": 229567.0345391601,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    },
+    "conditional_guarded": {
+     "best": null,
+     "best_opened": [
+      12,
+      30,
+      43,
+      46,
+      79,
+      89,
+      126,
+      130,
+      141,
+      168,
+      176
+     ],
+     "connected": 0.16,
+     "eval_time": 154.78653851,
+     "feas": 0.0,
+     "infeasible_reasons": {
+      "ITERATION_LIMIT": 1,
+      "LOCALLY_INFEASIBLE": 99
+     },
+     "mean_fixes": 0.41,
+     "median_feasible": null,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    },
+    "gaussian": {
+     "best": null,
+     "best_opened": [
+      5,
+      68,
+      102,
+      106,
+      107,
+      109,
+      127,
+      138,
+      176
+     ],
+     "connected": 0.09,
+     "eval_time": 93.903529301,
+     "feas": 0.0,
+     "infeasible_reasons": {
+      "LOCALLY_INFEASIBLE": 74,
+      "island_deficit": 26
+     },
+     "mean_fixes": 0.0,
+     "median_feasible": null,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    },
+    "gaussian+repair": {
+     "best": null,
+     "best_opened": [
+      5,
+      68,
+      102,
+      106,
+      107,
+      109,
+      127,
+      138,
+      176
+     ],
+     "connected": 0.13,
+     "eval_time": 26.431586597,
+     "feas": 0.0,
+     "infeasible_reasons": {
+      "LOCALLY_INFEASIBLE": 100
+     },
+     "mean_fixes": 0.28,
+     "median_feasible": null,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    },
+    "independent": {
+     "best": null,
+     "best_opened": [
+      101,
+      105,
+      106,
+      107,
+      113,
+      126,
+      127,
+      140,
+      176
+     ],
+     "connected": 0.07,
+     "eval_time": 81.563228425,
+     "feas": 0.0,
+     "infeasible_reasons": {
+      "LOCALLY_INFEASIBLE": 78,
+      "island_deficit": 22
+     },
+     "mean_fixes": 0.0,
+     "median_feasible": null,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    },
+    "independent+repair": {
+     "best": null,
+     "best_opened": [
+      101,
+      105,
+      106,
+      107,
+      126,
+      127,
+      140,
+      176
+     ],
+     "connected": 0.09,
+     "eval_time": 24.330421039,
+     "feas": 0.0,
+     "infeasible_reasons": {
+      "LOCALLY_INFEASIBLE": 100
+     },
+     "mean_fixes": 0.23,
+     "median_feasible": null,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    }
+   },
+   "status": "SLOW_PROGRESS",
+   "time": 123.161716602
+  },
+  "conn": {
+   "best_rounded": 242236.78875838636,
+   "best_rounded_opened": [],
+   "bound": 169129.8622900813,
+   "build_time": 0.903239827,
+   "expected_opened": 10.39470550154332,
+   "guarded_sampling_time": 0.290468213,
+   "marginals_below_half": 6,
+   "max_psd": 54,
+   "n_binaries": 182,
+   "n_cliques": 874,
+   "n_conn_cuts": 186,
+   "n_cut_blocks": 163,
+   "polish_evals": 40,
+   "polished": 237207.77348678,
+   "polished_opened": [
+    95,
+    102,
+    161,
+    182
+   ],
+   "radial_fixed": [
+    113,
+    177,
+    183,
+    184
+   ],
+   "raw_bound": 169532.0682468678,
+   "schemes": {
+    "conditional": {
+     "best": null,
+     "best_opened": [
+      1,
+      36,
+      81,
+      83,
+      102,
+      105,
+      106,
+      107,
+      109,
+      140,
+      154,
+      166,
+      167,
+      171,
+      176,
+      182
+     ],
+     "connected": 0.12,
+     "eval_time": 93.973970436,
+     "feas": 0.0,
+     "infeasible_reasons": {
+      "LOCALLY_INFEASIBLE": 90,
+      "island_deficit": 10
+     },
+     "mean_fixes": 0.0,
+     "median_feasible": null,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    },
+    "conditional+repair": {
+     "best": null,
+     "best_opened": [
+      1,
+      36,
+      81,
+      83,
+      102,
+      105,
+      106,
+      107,
+      109,
+      140,
+      154,
+      166,
+      167,
+      171,
+      176,
+      182
+     ],
+     "connected": 0.13,
+     "eval_time": 11.823632538,
+     "feas": 0.0,
+     "infeasible_reasons": {
+      "LOCALLY_INFEASIBLE": 100
+     },
+     "mean_fixes": 0.12,
+     "median_feasible": null,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    },
+    "conditional_guarded": {
+     "best": null,
+     "best_opened": [
+      17,
+      32,
+      76,
+      79,
+      102,
+      105,
+      119,
+      120,
+      162,
+      163,
+      176,
+      182
+     ],
+     "connected": 0.12,
+     "eval_time": 103.847526448,
+     "feas": 0.0,
+     "infeasible_reasons": {
+      "LOCALLY_INFEASIBLE": 100
+     },
+     "mean_fixes": 0.07,
+     "median_feasible": null,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    },
+    "gaussian": {
+     "best": null,
+     "best_opened": [
+      30,
+      79,
+      102,
+      105,
+      106,
+      107,
+      110,
+      119,
+      123,
+      128,
+      131,
+      154,
+      176
+     ],
+     "connected": 0.17,
+     "eval_time": 97.973636779,
+     "feas": 0.0,
+     "infeasible_reasons": {
+      "LOCALLY_INFEASIBLE": 93,
+      "island_deficit": 7
+     },
+     "mean_fixes": 0.0,
+     "median_feasible": null,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    },
+    "gaussian+repair": {
+     "best": null,
+     "best_opened": [
+      30,
+      79,
+      102,
+      105,
+      106,
+      107,
+      110,
+      119,
+      123,
+      128,
+      131,
+      154,
+      176
+     ],
+     "connected": 0.19,
+     "eval_time": 5.764039557,
+     "feas": 0.0,
+     "infeasible_reasons": {
+      "LOCALLY_INFEASIBLE": 100
+     },
+     "mean_fixes": 0.07,
+     "median_feasible": null,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    },
+    "independent": {
+     "best": null,
+     "best_opened": [
+      101,
+      105,
+      106,
+      107,
+      119,
+      127,
+      151,
+      154
+     ],
+     "connected": 0.15,
+     "eval_time": 95.784755392,
+     "feas": 0.0,
+     "infeasible_reasons": {
+      "LOCALLY_INFEASIBLE": 93,
+      "island_deficit": 7
+     },
+     "mean_fixes": 0.0,
+     "median_feasible": null,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    },
+    "independent+repair": {
+     "best": null,
+     "best_opened": [
+      101,
+      105,
+      106,
+      107,
+      119,
+      127,
+      151,
+      154
+     ],
+     "connected": 0.15,
+     "eval_time": 5.380559156,
+     "feas": 0.0,
+     "infeasible_reasons": {
+      "LOCALLY_INFEASIBLE": 100
+     },
+     "mean_fixes": 0.08,
+     "median_feasible": null,
+     "unique": 100,
+     "within_1pct_best_known": 0.0
+    }
+   },
+   "status": "SLOW_PROGRESS",
+   "time": 94.907678384
+  }
+ }
+}

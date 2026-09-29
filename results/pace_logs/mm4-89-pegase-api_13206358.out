@@ -1,0 +1,45 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 20:27:01
+Job ID:    13206358
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mm4-89-pegase-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 89-pegase-api on atl1-1-02-005-13-1.pace.gatech.edu, cpus 8, mem 32768 MB, relaxations base,conn, start Mon Sep 14 20:27:01 EDT 2026
+
+=== 89-pegase-api: 191 binaries; AC-OPF 130174.85; paper O-DC-OTS 100702, AC-OTS 100344
+  base  bound 99486.15 (raw 99914.69) SLOW_PROGRESS  82.1s  binaries 191 (radial fixed 0, cuts 0)  max PSD 54  E[#opened] 35.8
+    independent            best 100721.42    feas  39%  connected  85%  ≤1% of best known   2%  unique 100  fixes/sample 0.0  (572s)  Dict("LOCALLY_INFEASIBLE" => 46, "ITERATION_LIMIT" => 2, "OTHER_ERROR" => 9, "island_deficit" => 3, "TIME_LIMIT" => 1)
+    independent+repair     best 100721.42    feas  39%  connected  88%  ≤1% of best known   2%  unique 100  fixes/sample 0.0  (13s)  Dict("LOCALLY_INFEASIBLE" => 49, "ITERATION_LIMIT" => 2, "OTHER_ERROR" => 9, "TIME_LIMIT" => 1)
+    gaussian               best 100622.92    feas  38%  connected  81%  ≤1% of best known   2%  unique 100  fixes/sample 0.0  (567s)  Dict("LOCALLY_INFEASIBLE" => 43, "ITERATION_LIMIT" => 4, "OTHER_ERROR" => 9, "island_deficit" => 5, "TIME_LIMIT" => 1)
+    gaussian+repair        best 100622.92    feas  41%  connected  86%  ≤1% of best known   2%  unique 100  fixes/sample 0.1  (12s)  Dict("LOCALLY_INFEASIBLE" => 45, "ITERATION_LIMIT" => 4, "OTHER_ERROR" => 9, "TIME_LIMIT" => 1)
+    conditional            best 101804.54    feas  49%  connected  85%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (491s)  Dict("LOCALLY_INFEASIBLE" => 36, "ITERATION_LIMIT" => 2, "OTHER_ERROR" => 3, "island_deficit" => 7, "TIME_LIMIT" => 3)
+    conditional+repair     best 101804.54    feas  54%  connected  92%  ≤1% of best known   0%  unique 100  fixes/sample 0.1  (9s)  Dict("LOCALLY_INFEASIBLE" => 38, "ITERATION_LIMIT" => 2, "OTHER_ERROR" => 3, "TIME_LIMIT" => 3)
+    conditional_guarded    best 101153.20    feas  43%  connected  87%  ≤1% of best known   1%  unique 100  fixes/sample 0.0  (547s)  Dict("LOCALLY_INFEASIBLE" => 44, "ITERATION_LIMIT" => 4, "OTHER_ERROR" => 7, "TIME_LIMIT" => 2)
+    best rounded 100622.92 (32 lines opened); after 1-flip polish 100609.10 (40 evals, 18s)
+  conn  bound 99626.63 (raw 99915.90) SLOW_PROGRESS  66.8s  binaries 189 (radial fixed 2, cuts 113)  max PSD 54  E[#opened] 41.1
+    independent            best 100917.30    feas  50%  connected  82%  ≤1% of best known   3%  unique 100  fixes/sample 0.0  (751s)  Dict("LOCALLY_INFEASIBLE" => 30, "ITERATION_LIMIT" => 10, "OTHER_ERROR" => 5, "island_deficit" => 4, "TIME_LIMIT" => 1)
+    independent+repair     best 100917.30    feas  53%  connected  86%  ≤1% of best known   3%  unique 100  fixes/sample 0.0  (3s)  Dict("LOCALLY_INFEASIBLE" => 31, "ITERATION_LIMIT" => 10, "OTHER_ERROR" => 5, "TIME_LIMIT" => 1)
+    gaussian               best 100771.35    feas  42%  connected  82%  ≤1% of best known   2%  unique 100  fixes/sample 0.0  (609s)  Dict("LOCALLY_INFEASIBLE" => 41, "ITERATION_LIMIT" => 5, "OTHER_ERROR" => 8, "island_deficit" => 3, "TIME_LIMIT" => 1)
+    gaussian+repair        best 100771.35    feas  43%  connected  85%  ≤1% of best known   2%  unique 100  fixes/sample 0.0  (12s)  Dict("LOCALLY_INFEASIBLE" => 43, "ITERATION_LIMIT" => 5, "OTHER_ERROR" => 8, "TIME_LIMIT" => 1)
+    conditional            best 100509.97    feas  55%  connected  88%  ≤1% of best known   2%  unique 100  fixes/sample 0.0  (506s)  Dict("LOCALLY_INFEASIBLE" => 34, "ITERATION_LIMIT" => 4, "OTHER_ERROR" => 6, "TIME_LIMIT" => 1)
+    conditional+repair     best 100509.97    feas  55%  connected  88%  ≤1% of best known   2%  unique 100  fixes/sample 0.0  (0s)  Dict("LOCALLY_INFEASIBLE" => 34, "ITERATION_LIMIT" => 4, "OTHER_ERROR" => 6, "TIME_LIMIT" => 1)
+    conditional_guarded    best 100620.63    feas  54%  connected  90%  ≤1% of best known   4%  unique 100  fixes/sample 0.0  (490s)  Dict("LOCALLY_INFEASIBLE" => 35, "ITERATION_LIMIT" => 6, "OTHER_ERROR" => 5)
+    best rounded 100509.97 (43 lines opened); after 1-flip polish 100503.16 (40 evals, 16s)
+  SUMMARY 89-pegase-api: best found 100503.16 (paper AC-OTS 100344, O-DC-OTS 100702); best bound 99626.62574354296; gap 0.71%; 903 configs
+finished Mon Sep 14 21:49:19 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 21:49:19
+Job ID:        13206358
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mm4-89-pegase-api
+Resources:     cpu=8,mem=32G,node=1
+Rsrc Used:     cput=10:58:24,vmem=0,walltime=01:22:18,mem=3337184K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-13-1
+---------------------------------------

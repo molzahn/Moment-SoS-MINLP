@@ -1,0 +1,39 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 17:08:59
+Job ID:    13202500
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mm-1354-pegase-api
+Partition: cpu-medium
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 1354-pegase-api on atl1-1-01-003-7-1.pace.gatech.edu, cpus 8, mem 131072 MB, variants mixed,mixed_nobigM, start Mon Sep 14 17:08:59 EDT 2026
+
+=== 1354-pegase-api: 1354 buses, 1991 branches (184 merged ties, 1807 switchable), 12280 POP variables (build 14.5s); AC-OPF 1498271.03 (paper 1498271); paper O-DC-OTS 1496750, AC-OTS –
+  mixed        bound NaN (raw NaN) SLOW_PROGRESS  total 1643.8s (solve 1471.3s)  order-2 cliques 3210/6667  max PSD 75  integral marginals 6%, marginals<0.5: 235
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.1s)
+    independent  best infeasible  feas 0%  unique 100  (eval 3.8s)
+    gaussian     best infeasible  feas 0%  unique 100  (eval 3.4s)
+    conditional  best infeasible  feas 0%  unique 100  (eval 3.3s)
+    best rounded 1498271.03 (opens Any[]); after 1-flip polish 1498165.66 (opens [172, 1226]; 40 evals, 193.2s)
+  mixed_nobigM bound NaN (raw NaN) SLOW_PROGRESS  total 892.0s (solve 797.5s)  order-2 cliques 3202/6670  max PSD 75  integral marginals 5%, marginals<0.5: 761
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.7s)
+    independent  best infeasible  feas 0%  unique 100  (eval 3.7s)
+    gaussian     best infeasible  feas 0%  unique 100  (eval 3.5s)
+    conditional  best infeasible  feas 0%  unique 100  (eval 3.4s)
+    best rounded 1498271.03 (opens Any[]); after 1-flip polish 1498116.94 (opens [646, 770, 1718, 1921]; 40 evals, 236.1s)
+  SUMMARY 1354-pegase-api: best found 1498116.94 vs paper AC-OTS – / O-DC-OTS 1496750; best bound NaN; certified gap of best known NaN%; 683 configs
+finished Mon Sep 14 18:02:23 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 18:02:23
+Job ID:        13202500
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mm-1354-pegase-api
+Resources:     cpu=8,mem=128G,node=1
+Rsrc Used:     cput=07:07:12,vmem=0,walltime=00:53:24,mem=34132004K,energy_used=0
+Partition:     cpu-medium
+QOS:           inferno
+Nodes:         atl1-1-01-003-7-1
+---------------------------------------

@@ -1,0 +1,154 @@
+# Polynomial optimization problem:  min f(x)  s.t.  g_i(x) >= 0,  h_j(x) = 0,  G_k(x) ⪰ 0,
+# with some variables binary (x_i ∈ {0,1}, handled via x_i^2 = x_i).
+
+mutable struct POP
+    names::Vector{String}
+    isbin::Vector{Bool}
+    lb::Vector{Float64}
+    ub::Vector{Float64}
+    start::Vector{Float64}
+    obj::Poly
+    ineqs::Vector{Poly}
+    ineq_tags::Vector{String}
+    eqs::Vector{Poly}
+    eq_tags::Vector{String}
+    pmis::Vector{Matrix{Poly}}
+    pmi_scalar::Vector{Poly}   # equivalent scalar inequality (>= 0) used by the NLP solver
+    pmi_tags::Vector{String}
+    # Rotated second-order cones: (a, b, xs) means 2*a*b >= sum(x^2), a >= 0, b >= 0, with a, b
+    # and every x an AFFINE polynomial. Imposed on the relaxation's first moments, which is
+    # exactly how the QC relaxation's conic constraints act in QC+SDP. Kept separate from `pmis`
+    # because a rotated SOC is a far simpler cone than a PSD block and should not be modelled as
+    # one -- a 2x2 or 3x3 semidefinite constraint costs an SDP cone where a quadratic cone does.
+    socs::Vector{Tuple{Poly,Poly,Vector{Poly}}}
+    soc_tags::Vector{String}
+    meta::Dict{String,Any}
+end
+
+POP() = POP(String[], Bool[], Float64[], Float64[], Float64[], Poly(), Poly[], String[], Poly[], String[],
+    Matrix{Poly}[], Poly[], String[], Tuple{Poly,Poly,Vector{Poly}}[], String[], Dict{String,Any}())
+
+nvars(pop::POP) = length(pop.names)
+binary_indices(pop::POP) = findall(pop.isbin)
+
+function add_var!(pop::POP, name::String; binary = false, lb = -Inf, ub = Inf, start = 0.0)
+    push!(pop.names, name)
+    push!(pop.isbin, binary)
+    push!(pop.lb, binary ? 0.0 : lb)
+    push!(pop.ub, binary ? 1.0 : ub)
+    push!(pop.start, start)
+    return length(pop.names)
+end
+
+add_ineq!(pop::POP, g::Poly, tag::String) = (push!(pop.ineqs, g); push!(pop.ineq_tags, tag); pop)
+add_eq!(pop::POP, h::Poly, tag::String) = (push!(pop.eqs, h); push!(pop.eq_tags, tag); pop)
+function add_pmi!(pop::POP, G::Matrix{Poly}, scalar::Poly, tag::String)
+    push!(pop.pmis, G)
+    push!(pop.pmi_scalar, scalar)
+    push!(pop.pmi_tags, tag)
+    return pop
+end
+
+"Add the rotated second-order cone 2*a*b >= sum(x.^2) with a, b >= 0. All arguments affine."
+function add_soc!(pop::POP, a::Poly, b::Poly, xs::Vector{Poly}, tag::String)
+    # Arguments may be polynomials of any degree, not just affine. The relaxation needs only
+    # linearity of the moment functional L and convexity of the cone K:
+    #   * moment form -- (a(x), b(x), x(x)) in K for every feasible x, and a moment vector of a
+    #     measure supported on the feasible set gives (L(a), L(b), L(x)) as an average of points
+    #     of K, hence in K;
+    #   * SOS form -- the multiplier lies in K* = K (rotated SOCs are self-dual), so the pairing
+    #     <mu, (a, b, x)> is nonnegative on the feasible set and stays a valid SOS term.
+    # Neither argument mentions the degree. The one real requirement is that every monomial of the
+    # arguments be producible by some block, which `covered_by_monomials` checks in relaxation.jl.
+    # This is what lets w = e^2 + f^2 sit on one side of a cone without being lifted to a variable.
+    push!(pop.socs, (a, b, xs))
+    push!(pop.soc_tags, tag)
+    return pop
+end
+
+"""
+    fix_variables(pop, fixed) -> (newpop, consistent)
+
+Substitute fixed values. Constraints that become constant are dropped; `consistent`
+is false if any of them is violated.
+"""
+function fix_variables(pop::POP, fixed::AbstractDict{Int,<:Real}; tol = 1e-9)
+    q = deepcopy(pop)
+    ok = true
+    for (i, v) in fixed
+        q.lb[i] = v
+        q.ub[i] = v
+        q.start[i] = v
+    end
+    q.obj = substitute(pop.obj, fixed)
+    keep_i = Int[]
+    q.ineqs = [substitute(g, fixed) for g in pop.ineqs]
+    for (k, g) in enumerate(q.ineqs)
+        if is_constant(g)
+            constant_term(g) < -tol && (ok = false)
+        else
+            push!(keep_i, k)
+        end
+    end
+    q.ineqs = q.ineqs[keep_i]
+    q.ineq_tags = q.ineq_tags[keep_i]
+    keep_e = Int[]
+    q.eqs = [substitute(h, fixed) for h in pop.eqs]
+    for (k, h) in enumerate(q.eqs)
+        if is_constant(h)
+            abs(constant_term(h)) > tol && (ok = false)
+        else
+            push!(keep_e, k)
+        end
+    end
+    q.eqs = q.eqs[keep_e]
+    q.eq_tags = q.eq_tags[keep_e]
+    q.pmis = [map(p -> substitute(p, fixed), G) for G in pop.pmis]
+    q.pmi_scalar = [substitute(p, fixed) for p in pop.pmi_scalar]
+    q.meta["fixed"] = merge(get(pop.meta, "fixed", Dict{Int,Float64}()), Dict{Int,Float64}(fixed))
+    return q, ok
+end
+
+function _jump_poly(model, x, p::Poly)
+    terms = Any[]
+    for (m, c) in p.terms
+        push!(terms, isempty(m) ? c : c * prod(x[v] for v in m))
+    end
+    isempty(terms) && return 0.0
+    return sum(terms)
+end
+
+"""
+    solve_nlp(pop; fixed, optimizer) -> NamedTuple
+
+Local solution of the POP (binaries relaxed to [0,1] unless fixed) with Ipopt.
+Used to validate formulations and to recover continuous variables.
+"""
+function solve_nlp(pop::POP; fixed = Dict{Int,Float64}(), optimizer = ipopt_optimizer(), start = pop.start)
+    n = nvars(pop)
+    model = Model(optimizer)
+    @variable(model, x[1:n])
+    for i in 1:n
+        isfinite(pop.lb[i]) && set_lower_bound(x[i], pop.lb[i])
+        isfinite(pop.ub[i]) && set_upper_bound(x[i], pop.ub[i])
+        set_start_value(x[i], start[i])
+    end
+    for (i, v) in fixed
+        fix(x[i], v; force = true)
+    end
+    for g in pop.ineqs
+        @constraint(model, _jump_poly(model, x, g) >= 0)
+    end
+    for h in pop.eqs
+        @constraint(model, _jump_poly(model, x, h) == 0)
+    end
+    for s in pop.pmi_scalar
+        @constraint(model, _jump_poly(model, x, s) >= 0)
+    end
+    @objective(model, Min, _jump_poly(model, x, pop.obj))
+    optimize!(model)
+    st = termination_status(model)
+    ok = st in (MOI.LOCALLY_SOLVED, MOI.ALMOST_LOCALLY_SOLVED, MOI.OPTIMAL)
+    return (status = st, feasible = ok, objective = ok ? objective_value(model) : Inf,
+        x = ok ? value.(x) : fill(NaN, n))
+end

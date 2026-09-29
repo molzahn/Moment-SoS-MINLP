@@ -1,0 +1,59 @@
+
+=== case5_opf_o2
+  config                 status             time  iter          bound    relgap    λmin(M)  λmin(loc)    eq.res  dropped
+  baseline               SLOW_PROGRESS       1.2    22     18269.4144   3.7e-08   -1.5e-09   -3.3e-08   9.4e-09  Dict{String, Int64}()
+  normalize              OPTIMAL             0.9    20     18269.1048   3.4e-10   -2.7e-11   -4.9e-10   1.5e-10  Dict{String, Int64}()
+  drop_bigM              SLOW_PROGRESS       1.1    22     18269.4144   3.7e-08   -1.5e-09   -3.3e-08   9.4e-09  Dict{String, Int64}()
+  norm+drop              OPTIMAL             0.8    20     18269.1048   3.4e-10   -2.7e-11   -4.9e-10   1.5e-10  Dict{String, Int64}()
+  norm+drop+primalform   OPTIMAL             0.7    20     18269.1048   3.4e-10   -2.7e-11   -4.9e-10   1.5e-10  Dict{String, Int64}()
+  norm+drop+dualform     OPTIMAL             0.8    20     18269.1048   3.4e-10   -2.7e-11   -4.9e-10   1.5e-10  Dict{String, Int64}()
+
+=== case14_uc_o2
+  config                 status             time  iter          bound    relgap    λmin(M)  λmin(loc)    eq.res  dropped
+  baseline               SLOW_PROGRESS      52.4    30      9042.4788   1.1e-10   -2.1e-11   -2.1e-10   2.5e-11  Dict{String, Int64}()
+  normalize              OPTIMAL            31.8    22      9042.4790   2.2e-10   -6.5e-11   -5.1e-10   7.3e-11  Dict{String, Int64}()
+  drop_bigM              SLOW_PROGRESS      53.6    30      9042.4788   1.1e-10   -2.1e-11   -2.1e-10   2.5e-11  Dict{String, Int64}()
+  norm+drop              OPTIMAL            34.6    22      9042.4790   2.2e-10   -6.5e-11   -5.1e-10   7.3e-11  Dict{String, Int64}()
+  norm+drop+primalform   OPTIMAL            35.1    22      9042.4790   2.2e-10   -6.5e-11   -5.1e-10   7.3e-11  Dict{String, Int64}()
+  norm+drop+dualform     OPTIMAL            36.3    22      9042.4790   2.2e-10   -6.5e-11   -5.1e-10   7.3e-11  Dict{String, Int64}()
+
+=== case5_ots_o2
+  config                 status             time  iter          bound    relgap    λmin(M)  λmin(loc)    eq.res  dropped
+  baseline               SLOW_PROGRESS      14.7    28     15071.6495   5.2e-08   -2.5e-09   -2.1e-08   8.9e-09  Dict{String, Int64}()
+  normalize              SLOW_PROGRESS      19.5    45     15027.2922   4.1e-08   -5.8e-10   -3.8e-08   1.1e-08  Dict{String, Int64}()
+  drop_bigM              SLOW_PROGRESS      12.4    28     15045.2956   2.6e-07   -4.8e-09   -5.1e-08   4.1e-08  Dict("sw_flow_onoff" => 56, "sw_angle_bigM" => 14, "sw_flow_bigM" => 56)
+  norm+drop              SLOW_PROGRESS      13.2    33     15025.0643   1.0e-07   -1.7e-09    8.7e-13   2.5e-08  Dict("sw_flow_onoff" => 56, "sw_angle_bigM" => 14, "sw_flow_bigM" => 56)
+  norm+drop+primalform   SLOW_PROGRESS      14.6    33     15025.0643   1.0e-07   -1.7e-09    8.7e-13   2.5e-08  Dict("sw_flow_onoff" => 56, "sw_angle_bigM" => 14, "sw_flow_bigM" => 56)
+  norm+drop+dualform     SLOW_PROGRESS      13.7    33     15025.0643   1.0e-07   -1.7e-09    8.7e-13   2.5e-08  Dict("sw_flow_onoff" => 56, "sw_angle_bigM" => 14, "sw_flow_bigM" => 56)
+
+=== case30_ots_mixed
+  config                 status             time  iter          bound    relgap    λmin(M)  λmin(loc)    eq.res  dropped
+  baseline               SLOW_PROGRESS       6.9    41       173.0329   1.1e-10   -4.5e-10   -2.3e-09   7.2e-10  Dict{String, Int64}()
+  normalize              SLOW_PROGRESS       6.2    41       173.0324   4.0e-11   -8.2e-11   -4.5e-10   7.9e-11  Dict{String, Int64}()
+  drop_bigM              SLOW_PROGRESS       3.5    31       172.9852   3.1e-11   -4.9e-11   -2.3e-10   5.7e-11  Dict("sw_flow_onoff" => 120, "sw_angle_bigM" => 30, "sw_flow_bigM" => 120)
+  norm+drop              SLOW_PROGRESS       3.1    27       172.9852   2.9e-11   -2.2e-11   -1.0e-10   3.6e-11  Dict("sw_flow_onoff" => 120, "sw_angle_bigM" => 30, "sw_flow_bigM" => 120)
+  norm+drop+primalform   SLOW_PROGRESS       2.7    27       172.9852   2.9e-11   -2.2e-11   -1.0e-10   3.6e-11  Dict("sw_flow_onoff" => 120, "sw_angle_bigM" => 30, "sw_flow_bigM" => 120)
+  norm+drop+dualform     SLOW_PROGRESS       3.1    27       172.9852   2.9e-11   -2.2e-11   -1.0e-10   3.6e-11  Dict("sw_flow_onoff" => 120, "sw_angle_bigM" => 30, "sw_flow_bigM" => 120)
+
+=== case24_ots_adj16
+  config                 status             time  iter          bound    relgap    λmin(M)  λmin(loc)    eq.res  dropped
+  baseline               SLOW_PROGRESS      68.9    38     74415.5121   2.6e-08   -2.6e-08   -1.9e-07   5.0e-08  Dict{String, Int64}()
+  normalize              SLOW_PROGRESS      71.2    44     74402.4053   2.8e-09   -1.6e-09   -1.3e-08   3.0e-09  Dict{String, Int64}()
+  drop_bigM              SLOW_PROGRESS      74.5    46     74023.7563   1.2e-08   -1.4e-08   -1.1e-07   3.0e-08  Dict("sw_flow_onoff" => 120, "sw_angle_bigM" => 30, "sw_flow_bigM" => 120)
+  norm+drop              SLOW_PROGRESS      59.4    36     74016.1883   5.2e-10   -2.6e-09   -2.2e-08   8.0e-09  Dict("sw_flow_onoff" => 120, "sw_angle_bigM" => 30, "sw_flow_bigM" => 120)
+  norm+drop+primalform   SLOW_PROGRESS      57.5    36     74016.1883   5.2e-10   -2.6e-09   -2.2e-08   8.0e-09  Dict("sw_flow_onoff" => 120, "sw_angle_bigM" => 30, "sw_flow_bigM" => 120)
+  norm+drop+dualform     SLOW_PROGRESS      50.0    36     74016.1883   5.2e-10   -2.6e-09   -2.2e-08   8.0e-09  Dict("sw_flow_onoff" => 120, "sw_angle_bigM" => 30, "sw_flow_bigM" => 120)
+
+[70087] signal 15: Terminated: 15
+in expression starting at /Users/dmolzahn6/Documents/Dan's Files/Moment-SoS-MINLP/scripts/numerics_benchmark.jl:40
+__psynch_cvwait at /usr/lib/system/libsystem_kernel.dylib (unknown line)
+unknown function (ip: 0x0) at (unknown file)
+swtch_pri at /usr/lib/system/libsystem_kernel.dylib (unknown line)
+unknown function (ip: 0x0) at (unknown file)
+Allocations: 276866858 (Pool: 276866210; Big: 648); GC: 118
+Precompiling packages...
+   3829.7 ms  ✓ MomentMINLP
+  1 dependency successfully precompiled in 4 seconds. 139 already precompiled.
+
+=== case24_uc_adj16pairs
+  config                 status             time  iter          bound    relgap    λmin(M)  λmin(loc)    eq.res  dropped

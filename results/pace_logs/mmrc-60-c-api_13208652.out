@@ -1,0 +1,27 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 22:53:00
+Job ID:    13208652
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mmrc-60-c-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 60-c-api on atl1-1-02-005-17-1.pace.gatech.edu, cpus 8, mem 16384 MB, certificate optimization time 1800 s, start Mon Sep 14 22:53:00 EDT 2026
+60-c-api         exp3/mixed         SLOW_PROGRESS  raw 180333.71 (saved 180334.40) | box 180227.82 | box ρ* 180227.82 | implicit 180300.46 | hybrid 180300.72 | optimized 180325.10 | saved certified 180064.72 | 177s (opt 57s)
+60-c-api         exp3/adj16         SLOW_PROGRESS  raw 180867.51 (saved 180864.66) | box 179582.17 | box ρ* 179582.17 | implicit 180365.34 | hybrid 180368.14 | optimized 180737.84 | saved certified 179535.74 | 502s (opt 131s)
+60-c-api         exp3/adj16_pairs   SLOW_PROGRESS  raw 180902.27 (saved 180899.31) | box 180175.33 | box ρ* 180175.33 | implicit 180609.40 | hybrid 180611.78 | optimized 180836.29 | saved certified 180023.10 | 640s (opt 176s)
+finished Mon Sep 14 23:16:51 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 23:16:51
+Job ID:        13208652
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mmrc-60-c-api
+Resources:     cpu=8,mem=16G,node=1
+Rsrc Used:     cput=03:10:48,vmem=0,walltime=00:23:51,mem=15863540K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-17-1
+---------------------------------------

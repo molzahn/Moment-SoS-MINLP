@@ -1,0 +1,39 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 12:18:45
+Job ID:    13190481
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mm-200-activ-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 200-activ-api on atl1-1-02-005-10-1.pace.gatech.edu, cpus 8, mem 65536 MB, variants mixed,mixed_nobigM, start Mon Sep 14 12:18:45 EDT 2026
+
+=== 200-activ-api: 200 buses, 245 branches (0 merged ties, 245 switchable), 1700 POP variables (build 7.0s); AC-OPF 35701.47 (paper 35701); paper O-DC-OTS 35701, AC-OTS 35701
+  mixed        bound 35540.45 (raw 35680.36) SLOW_PROGRESS  total 266.1s (solve 199.1s)  order-2 cliques 428/880  max PSD 56  integral marginals 21%, marginals<0.5: 16
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.3s)
+    independent  best infeasible  feas 0%  unique 100  (eval 0.3s)
+    gaussian     best infeasible  feas 0%  unique 100  (eval 0.4s)
+    conditional  best infeasible  feas 0%  unique 100  (eval 0.3s)
+    best rounded 35701.47 (opens Any[]); after 1-flip polish 35700.74 (opens [23, 37, 44, 85]; 40 evals, 11.3s)
+  mixed_nobigM bound 35594.66 (raw 35677.99) SLOW_PROGRESS  total 114.9s (solve 102.6s)  order-2 cliques 428/880  max PSD 56  integral marginals 28%, marginals<0.5: 16
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.1s)
+    independent  best infeasible  feas 0%  unique 100  (eval 0.3s)
+    gaussian     best infeasible  feas 0%  unique 100  (eval 0.3s)
+    conditional  best infeasible  feas 0%  unique 100  (eval 0.3s)
+    best rounded 35701.47 (opens Any[]); after 1-flip polish 35700.74 (opens [23, 37, 44, 85]; 40 evals, 6.0s)
+  SUMMARY 200-activ-api: best found 35700.74 vs paper AC-OTS 35701 / O-DC-OTS 35701; best bound 35594.66; certified gap of best known 0.30%; 667 configs
+finished Mon Sep 14 12:26:27 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 12:26:28
+Job ID:        13190481
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mm-200-activ-api
+Resources:     cpu=8,mem=64G,node=1
+Rsrc Used:     cput=01:01:44,vmem=0,walltime=00:07:43,mem=5436580K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-10-1
+---------------------------------------

@@ -1,0 +1,217 @@
+{
+ "acopf": 76377.4109722324,
+ "best_bound": 73369.15297544535,
+ "best_found": 75190.29162945492,
+ "branches": 6,
+ "buses": 5,
+ "case": "5-pjm-api",
+ "certified_gap_best_known": 0.02421661157806422,
+ "n_configs_evaluated": 14,
+ "n_vars": 49,
+ "paper_acopf": 76377,
+ "paper_acots": 75190,
+ "paper_acots_time": 0.521,
+ "paper_odcots": 75190,
+ "pop_build_time": 2.831413375,
+ "relaxations": {
+  "adj16": {
+   "best_rounded": 75190.29162945492,
+   "best_rounded_opened": [
+    3
+   ],
+   "bound": 73363.44849361911,
+   "frac_integral": 0.3333333333333333,
+   "marginals": [
+    0.9999999756520758,
+    0.9688955558283283,
+    0.9558269341107299,
+    0.9999999676920709,
+    0.9361897002620149,
+    0.9788831693422458
+   ],
+   "max_psd": 105,
+   "n_cliques": 28,
+   "n_marg_below_half": 0,
+   "n_moments": 8572,
+   "n_order2": 28,
+   "polish_evals": 0,
+   "polish_time": 6.292e-6,
+   "polished": 75190.29162945492,
+   "polished_opened": [
+    3
+   ],
+   "raw_bound": 73373.09398707029,
+   "schemes": {
+    "conditional": {
+     "best": 75190.29162945492,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 0.009642667,
+     "feas": 0.93,
+     "unique": 7
+    },
+    "gaussian": {
+     "best": 75190.29162945492,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 1.9875e-5,
+     "feas": 0.92,
+     "unique": 7
+    },
+    "independent": {
+     "best": 75190.29162945492,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 0.014604125,
+     "feas": 0.91,
+     "unique": 7
+    },
+    "threshold": {
+     "best": 76377.4109722324,
+     "best_opened": [],
+     "eval_time": 5.209e-6,
+     "feas": 1.0,
+     "unique": 1
+    }
+   },
+   "solve_time": 10.583991050720215,
+   "status": "SLOW_PROGRESS",
+   "time": 11.358650417
+  },
+  "adj16_pairs": {
+   "best_rounded": 75190.29162945492,
+   "best_rounded_opened": [
+    3
+   ],
+   "bound": 73369.15297544535,
+   "frac_integral": 0.3333333333333333,
+   "marginals": [
+    0.9999999729783164,
+    0.9720431697221917,
+    0.9722931146154101,
+    0.9999999689028135,
+    0.9344762842054367,
+    0.982048922785485
+   ],
+   "max_psd": 105,
+   "n_cliques": 37,
+   "n_marg_below_half": 0,
+   "n_moments": 9712,
+   "n_order2": 37,
+   "polish_evals": 0,
+   "polish_time": 3.541e-6,
+   "polished": 75190.29162945492,
+   "polished_opened": [
+    3
+   ],
+   "raw_bound": 73376.1802443667,
+   "schemes": {
+    "conditional": {
+     "best": 76377.4109722324,
+     "best_opened": [],
+     "eval_time": 0.000147708,
+     "feas": 0.915,
+     "unique": 6
+    },
+    "gaussian": {
+     "best": 75190.29162945492,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 0.01500725,
+     "feas": 0.93,
+     "unique": 8
+    },
+    "independent": {
+     "best": 75190.29162945492,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 2.3334e-5,
+     "feas": 0.91,
+     "unique": 7
+    },
+    "threshold": {
+     "best": 76377.4109722324,
+     "best_opened": [],
+     "eval_time": 6.166e-6,
+     "feas": 1.0,
+     "unique": 1
+    }
+   },
+   "solve_time": 12.871558904647827,
+   "status": "SLOW_PROGRESS",
+   "time": 13.612742375
+  },
+  "mixed": {
+   "best_rounded": 75190.29162945492,
+   "best_rounded_opened": [
+    3
+   ],
+   "bound": 73256.68741831556,
+   "frac_integral": 0.5,
+   "marginals": [
+    0.9999999999248058,
+    0.9863125928605503,
+    0.9854168934077401,
+    0.9999999995495418,
+    0.896388723768716,
+    0.9999924951788163
+   ],
+   "max_psd": 54,
+   "n_cliques": 28,
+   "n_marg_below_half": 0,
+   "n_moments": 3968,
+   "n_order2": 12,
+   "polish_evals": 4,
+   "polish_time": 0.03455325,
+   "polished": 75190.29162945492,
+   "polished_opened": [
+    3
+   ],
+   "raw_bound": 73256.73000334136,
+   "schemes": {
+    "conditional": {
+     "best": 75190.29162945492,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 2.6042e-5,
+     "feas": 0.89,
+     "unique": 5
+    },
+    "gaussian": {
+     "best": 75190.29162945492,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 0.014428291,
+     "feas": 0.9,
+     "unique": 5
+    },
+    "independent": {
+     "best": 75190.29162945492,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 0.070514833,
+     "feas": 0.855,
+     "unique": 5
+    },
+    "threshold": {
+     "best": 76377.4109722324,
+     "best_opened": [],
+     "eval_time": 0.012845291,
+     "feas": 1.0,
+     "unique": 1
+    }
+   },
+   "solve_time": 2.0687010288238525,
+   "status": "OPTIMAL",
+   "time": 9.558784584
+  }
+ }
+}

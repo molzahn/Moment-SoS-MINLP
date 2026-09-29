@@ -1,0 +1,375 @@
+% Consolidated findings for the Moment-SoS-MINLP project.
+%
+% NOTE: this file is deliberately SEPARATE from notes/notes.tex, which is a one-way sync from Sam
+% Chevalier's Overleaf repository (SamChevalier/Moment-SoS-MINLP-Notes) and whose contents can be
+% overwritten by the next sync. Edit this file freely; coordinate with Sam before merging any of it
+% into notes.tex or Overleaf.
+%
+% Compile:  pdflatex findings.tex
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{siunitx}
+\sisetup{group-separator={,},group-minimum-digits=4,detect-weight=true}
+
+\newcommand{\code}[1]{\texttt{\small #1}}
+
+\title{Moment/SOS relaxations for AC optimal transmission switching:\\consolidated findings}
+\author{Daniel Molzahn \and Sam Chevalier}
+\date{21 September 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We apply sparse moment/sum-of-squares (Lasserre) relaxations to AC optimal transmission switching
+(AC-OTS) on the 18 PGLib-OPF ``api'' test cases of Taheri and Molzahn, with every branch switchable.
+Two threads are pursued: certified lower bounds from per-clique mixed-order relaxations, and correlated
+randomized rounding of the switching binaries from the relaxation's pseudo-moments. We obtain certified
+gaps below \SI{1}{\percent} on eight of the eighteen cases and below \SI{0.5}{\percent} on five, and we
+find solutions that improve on the reference values for four cases. We report three findings that we
+believe matter beyond this benchmark: (i) certification quality, not relaxation strength, drove an
+earlier incorrect ranking of big-M versus no-big-M formulations; (ii) a network preprocessing step
+(low-impedance bus merging) silently destroyed the validity of the bounds, producing a ``lower bound''
+\SI{72}{\percent} above a known feasible solution, and removing it changes the certified gap by
+between $+0.04$ and $-0.07$ percentage points --- it is free, and on the largest case an improvement; and (iii) the collapse of randomized rounding above 118 buses is
+caused by the \emph{number} of lines opened simultaneously, not by network islanding, and capping it
+raises the AC-feasible sample rate on \code{300-ieee} from \SI{0}{\percent} to \SI{91}{\percent} and
+yields two new best-known solutions, on \code{179-goc} and \code{500-goc}.
+\end{abstract}
+
+\section{Scope}
+
+The problem is AC-OTS written as a polynomial optimization problem in rectangular voltage coordinates
+(see \code{docs/formulations.md}). Binaries $z_\ell \in \{0,1\}$ select branch status. The benchmark is
+the set of 18 PGLib-OPF v21.07 ``api'' (congested) cases used by Taheri and Molzahn, with every branch
+switchable; their AC-OPF, O-DC-OTS and AC-OTS (Juniper) values serve as reference points.
+
+Two research threads:
+\begin{enumerate}
+  \item \textbf{Certified lower bounds} from sparse, per-clique mixed-order moment relaxations.
+  \item \textbf{Correlated randomized rounding} of the binaries from the relaxation's pseudo-moments,
+        with continuous recovery by Ipopt.
+\end{enumerate}
+
+\section{Formulation and method}
+
+\paragraph{Binaries by basis reduction.} We impose $z \in \{0,1\}$ by substituting $z^k \to z$ in the
+monomial basis rather than adding the equality $z^2 = z$. Keeping it as an equality makes the SDP
+feasible set lower-dimensional, Slater's condition fails, and the order-2 interior-point solve degrades
+badly. This is a practical, not cosmetic, distinction.
+
+\paragraph{Switching is degree three.} The flow equations become $p_\ell = z_\ell \, P_\ell(V)$, which is
+cubic. Order-1 (Shor) relaxations cannot represent this, and the resulting bounds collapse to
+uselessness (\num{78116} on the 73-bus case, $0$ on the 118-bus case, \num{20079} on the 200-bus case).
+
+\paragraph{Order policy rather than a global order.} Only cliques containing a binary are raised to
+order 2 (\code{binary\_clique\_order}); all others remain at order 1. In practice 40--48\% of cliques are
+order 2 and the largest PSD block has size 54--75, which is what makes the degree-3 constraints
+affordable at these network sizes.
+
+\paragraph{Variants.} \code{mixed} (big-M), \code{mixed\_nobigM}, \code{adj16} (adjacent-clique merging,
+maximum size 16), \code{adj16\_pairs} (additional order-2 blocks on binary pairs), and, from
+Experiment~4, \code{base} and \code{conn} (radial fixings plus connectivity cuts).
+
+\paragraph{Certified bounds from inexact solves.} MOSEK terminates at \code{SLOW\_PROGRESS} on these
+problems, so its dual objective is \emph{not} a valid bound. Following Oustry et al.~\cite{oustry2022}, we
+compute a bound
+valid at \emph{any} dual point $\theta$:
+\[
+  F(\theta) \;=\; \theta_t \;-\; \sum_\alpha |r_\alpha(\theta)| \max|x^\alpha|
+              \;+\; \sum_k \rho_k \min\bigl(\lambda_{\min}(A_k(\theta)),\,0\bigr),
+\]
+where all correction terms are non-positive. Four variants are implemented (box; box with tight trace
+bounds; implicit-Gram; per-block hybrid) plus an L-BFGS-optimized certificate on a smoothed surrogate.
+Because $F$ is valid for every $\theta$, a badly converged solve still yields a rigorous bound.
+
+\section{Main results}
+
+Costs in \$/h. ``Best known'' is the minimum of our best found solution and the paper's AC-OPF, O-DC-OTS
+and AC-OTS values. Gap is (best known $-$ certified bound)\,/\,best known. Every bound below is checked
+against the best known feasible cost; none violates it.
+
+\begin{longtable}{lrrrrrrl}
+\toprule
+case & AC-OPF & O-DC-OTS & AC-OTS & ours & best known & bound & gap \\
+\midrule
+\endhead
+\code{3-lmbd}        & \num{11236}   & \num{10636}   & \num{10636}   & \num{10636}   & \num{10636}   & \num{10636}   & $0.00\%$ \\
+\code{5-pjm}         & \num{76377}   & \num{75190}   & \num{75190}   & \num{75190}   & \num{75190}   & \num{73376}   & $2.41\%$ \\
+\code{14-ieee}       & \num{5999}    & \num{5999}    & \num{5999}    & \num{5999}    & \num{5999}    & \num{5735}    & $4.39\%$ \\
+\code{24-ieee-rts}   & \num{134944}  & \num{122283}  & \num{119743}  & \num{119743}  & \num{119743}  & \num{111741}  & $6.68\%$ \\
+\code{30-as}         & \num{4996}    & \num{2797}    & \num{2797}    & \num{2797}    & \num{2797}    & \num{2767}    & $1.06\%$ \\
+\code{30-ieee}       & \num{18044}   & \num{17939}   & \num{17936}   & \num{17940}   & \num{17936}   & \num{17287}   & $3.62\%$ \\
+\code{39-epri}       & \num{249672}  & \num{246850}  & \num{246723}  & \num{246561}  & \num{246561}  & \num{245369}  & $0.48\%$ \\
+\code{57-ieee}       & \num{49290}   & \num{49290}   & \num{49274}   & \num{49272}   & \num{49272}   & \num{49224}   & $0.10\%$ \\
+\code{60-c}          & \num{185239}  & \num{182028}  & \num{182028}  & \num{182028}  & \num{182028}  & \num{180836}  & $0.65\%$ \\
+\code{73-ieee-rts}   & \num{422627}  & \num{413133}  & \num{385194}  & \num{389142}  & \num{385194}  & \num{368338}  & $4.38\%$ \\
+\code{89-pegase}$^\dagger$  & \num{130175} & \num{100702} & \num{100344} & \num{100503} & \num{100344} & \num{99858} & $0.48\%$ \\
+\code{118-ieee}      & \num{242237}  & \num{195918}  & \num{180312}  & \num{222376}  & \num{180312}  & \num{169523}  & $5.98\%$ \\
+\code{179-goc}$^\dagger$    & \num{1932044} & \num{1931004} & --        & \textbf{\num{1928125}} & \num{1928125} & \num{1835909} & $4.78\%$ \\
+\code{200-activ}     & \num{35701}   & \num{35701}   & \num{35701}   & \num{35701}   & \num{35701}   & \num{35670}   & $0.09\%$ \\
+\code{240-pserc}$^\dagger$ & \num{4640589} & \num{4627155} & --      & \num{4635816} & \num{4627155} & \num{4606386} & $0.45\%$ \\
+\code{300-ieee}$^\dagger$   & \num{684985} & \num{684985} & \num{683968} & \num{684401} & \num{683968} & \num{678283} & $0.83\%$ \\
+\code{500-goc}       & \num{692407}  & \num{692271}  & --            & \textbf{\num{676183}}  & \num{676183}  & \num{667141}  & $1.34\%$ \\
+\code{1354-pegase}$^\dagger$ & \num{1498271} & \num{1496750} & -- & \num{1498117} & \num{1496750} & \num{1487079} & $0.65\%$ \\
+\bottomrule
+\end{longtable}
+
+\noindent
+$^\dagger$ Rigorous bound on the exact (unmerged) model; see Section~\ref{sec:rigour}. All other rows
+never involved merging, so \emph{every} bound in this table is rigorous.
+
+\paragraph{Solutions improving on the reference.} \code{179-goc} \num{1928125} and \code{500-goc}
+\num{676183} (both new; Section~\ref{sec:cardinality}), \code{39-epri} \num{246561} (opening lines $\{4,6\}$,
+better than the paper's Juniper AC-OTS \num{246723}); \code{500-goc} \num{685131} (better than the
+paper's O-DC-OTS \num{692271}); \code{57-ieee} \num{49272}; \code{300-ieee} \num{684401}.
+
+\paragraph{Where the relaxation is weak.} The largest gaps are on \emph{small}, highly combinatorial
+cases (\code{24-ieee-rts} \SI{6.68}{\percent}, \code{118-ieee} \SI{5.98}{\percent}, \code{179-goc}
+\SI{4.92}{\percent}, \code{14-ieee} \SI{4.39}{\percent}). Small does not mean easy here: a larger
+fraction of the network is switchable relative to its redundancy.
+
+\section{Certification matters as much as the relaxation}
+
+Re-certifying every stored relaxation with the optimized certificate tightened every case, in several
+substantially: \code{179-goc} \SI{6.28}{\percent} $\to$ \SI{4.88}{\percent}, \code{60-c}
+\SI{1.08}{\percent} $\to$ \SI{0.65}{\percent}, \code{200-activ} \SI{0.30}{\percent} $\to$
+\SI{0.09}{\percent}. Two conclusions:
+
+\begin{itemize}
+  \item \textbf{The big-M versus no-big-M ranking was a certification artifact.} Big-M appeared inferior
+        because its certificates were looser, not because its relaxation was weaker. Certified properly,
+        big-M gives the \emph{better} bound on \code{179-goc} (\num{1836683} versus \num{1810514}).
+        No-big-M remains 1.5--2$\times$ faster to solve.
+  \item \textbf{Tight trace bounds never helped}, because the residual term dominates the box
+        certificate. A clean negative result.
+\end{itemize}
+
+After re-certification the certified bound lies within \SI{0.25}{\percent} of the raw SDP objective on
+every relaxation, and within \SI{0.03}{\percent} on most, so the remaining gaps are attributable to the
+relaxations rather than to inexact solves.
+
+\section{Rigour of the bounds}\label{sec:rigour}
+
+\subsection{A preprocessing step invalidated the bounds}
+
+Low-impedance bus merging (\code{merge\_zmax}, default $10^{-3}$) was applied on 5 of the 18 cases. It is
+\emph{not} a relaxation, for three independent reasons:
+
+\begin{enumerate}
+  \item \textbf{Restriction (voltages).} Buses joined by a merged tie are forced to share one $(e,f)$
+        pair; the original problem does not require this.
+  \item \textbf{Restriction (switching).} Merged ties are removed from the switchable set, i.e.\ forced
+        closed. Minimizing over a \emph{subset} of switching configurations can only raise the optimum.
+        This affects 178 branches on \code{1354-pegase}.
+  \item \textbf{Relaxation (losses).} Merged ties are modelled as lossless, which acts in the opposite
+        direction.
+\end{enumerate}
+
+Because the effects have opposite signs, the merged optimum is neither provably above nor below the true
+one, so a bound computed on a merged model is not a valid lower bound for the original problem.
+
+\subsection{The failure this caused}
+
+On \code{1354-pegase} the consequence was not subtle. Merging at the default threshold merged a tie
+sitting exactly at its thermal limit (flow/rate $=1.000$), which rendered the model \emph{infeasible}:
+with every switch closed the merged POP is \code{LOCALLY\_INFEASIBLE}, while the unmerged one solves to
+\num{1498271.03}, exactly the paper's AC-OPF cost. An SDP relaxation of an infeasible problem can take
+any value, and indeed the re-certification reported ``lower bounds'' of \num{2580996}, \num{2612454} and
+\num{3772084} against a known feasible cost of \num{1496750} --- exceeding it by 72\% to 152\%.
+
+The mechanism was isolated by scaling only the merged ties' thermal ratings: at $\times 1.00$ and
+$\times 1.02$ the model stays infeasible, at $\times 1.10$ it solves. Voltage differences across merged
+ties are negligible at the true solution (maximum \num{0.00194}~p.u.), so the shared-voltage restriction
+was nearly harmless; the binding thermal limit was not.
+
+\paragraph{Remedies now in place.} A self-validating merge rule
+(\code{safe\_merge\_exclusions}) compares the all-closed AC-OPF of the merged model against the unmerged
+one and un-merges the most heavily loaded tie until they agree, terminating in the worst case with
+nothing merged. On \code{1354-pegase} it un-merges 6 of 184 ties and reproduces the reference AC-OPF to
+\SI{-0.018}{\percent}; on every other case it excludes nothing. A regression test
+(\code{scripts/validate\_merging.jl}) checks all 18 cases, and the experiment scripts now verify that no
+certified bound exceeds a known feasible cost, with the tabulation step failing outright if one does.
+
+\subsection{Removing merging costs almost nothing}
+
+Since the unmerged model \emph{is} the exact problem, and the certificate is valid at any dual point,
+rigour is obtained simply by not merging. Re-running all variants on the exact model:
+
+\begin{table}[h]\centering
+\begin{tabular}{lrrrl}
+\toprule
+case & merged ties & merged bound & rigorous bound & certified gap \\
+\midrule
+\code{179-goc}   & 2  & \num{1836682.93} & \num{1835908.57} & $4.883\% \to 4.923\%$ \\
+\code{89-pegase} & 19 & \num{99890.19}   & \num{99858.29}   & $0.452\% \to 0.484\%$ \\
+\code{300-ieee}  & 2  & \num{678466.75}  & \num{678283.45}  & $0.804\% \to 0.831\%$ \\
+\code{240-pserc} & 55 & \num{4606997.21} & \num{4606386.34} & $0.436\% \to 0.449\%$ \\
+\code{1354-pegase} & 178 & \num{1486086.12} & \num{1487078.55} & $0.712\% \to \mathbf{0.646\%}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Rigour is free.} Across the five affected cases the change in certified gap ranges from
+$+0.040$ to $-0.066$ percentage points: it costs almost nothing on four cases and \emph{improves} the
+largest, \code{1354-pegase}, where the exact model gives a strictly better bound than the merged one.
+\textbf{All eighteen cases now carry rigorous bounds} (thirteen never merged anything; five re-run on
+the exact model).
+
+Two caveats. First, part of even that small deficit is budget rather than modelling: the merged numbers
+come from runs with a \SI{1800}{\second} certificate budget and the rigorous ones from
+\SI{900}{\second}; in a controlled comparison at equal budget the unmerged bound was \emph{better} on
+\code{179-goc} and \code{300-ieee} (and five times faster on the latter). Second, merging is not
+obsolete: the \code{89-pegase} big-M variant fails numerically when unmerged, returning a garbage point
+and certificates near $-1.6\times 10^{8}$. That is still a valid (if useless) bound, and the no-big-M
+variants supply the best bound anyway, but \code{merge\_zmax} cannot simply be set to zero and the merge
+machinery deleted.
+
+\section{Rounding at scale}
+
+On small enumerable instances (Experiments 1--2, with ground truth by enumeration) correlated schemes
+outperform independent rounding, confirming that order-2 pseudo-moments carry usable joint information.
+
+At scale the picture changes sharply. Over 100 samples per scheme, the AC-feasible fraction is
+39--\SI{55}{\percent} on \code{89-pegase} and 24--\SI{37}{\percent} on \code{240-pserc}, but
+0--\SI{2}{\percent} on \code{118-ieee}, \code{179-goc}, \code{300-ieee}, \code{500-goc} and
+\code{1354-pegase} --- under \emph{every} scheme, including island-guarded sampling and island repair.
+
+\paragraph{The cause is cardinality, not connectivity.} Independent and Gaussian rounding decide each
+line separately, so the number of lines opened simultaneously concentrates around $\sum_\ell (1 - y_\ell)$,
+which is 25 on \code{300-ieee} and \num{724} of \num{1807} binaries on \code{1354-pegase}. Capping it,
+while still letting the relaxation choose \emph{which} lines (weighted sampling without replacement by
+$1-y_\ell$, implemented as a Gumbel top-$k$ draw):
+
+\begin{table}[h]\centering
+\begin{tabular}{lrrrrrl}
+\toprule
+case & independent & cap 8 & cap 5 & cap 3 & cap 1 & best cost found \\
+\midrule
+\code{118-ieee} & $0/50$ & \SI{0}{\percent}  & \SI{6}{\percent}  & \SI{22}{\percent} & \SI{58}{\percent} & \num{225486} ($+25.05\%$) \\
+\code{300-ieee} & $0/30$ & \SI{47}{\percent} & \SI{67}{\percent} & \SI{77}{\percent} & \SI{93}{\percent} & \num{684766} ($+0.12\%$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On \code{300-ieee} this is the first time rounding alone, with no local-search polishing, has produced
+competitive solutions at that size. On \code{118-ieee} feasibility is restored but solution quality is
+not, and the reason is diagnostic: the relaxation implies roughly 11 openings whereas the best known
+solution opens \num{37}, so \emph{no} sampler drawing from those fixed marginals can reach it. At that
+size the limitation is the pseudo-distribution, not the rounding scheme.
+
+\paragraph{Islanding is a partial explanation only.} Island repair does not restore feasibility, but the
+dominant rejection reason varies by case. Of 100 independent samples, AC local infeasibility versus
+island-screen rejection splits 78/22 on \code{118-ieee}, 78/18 on \code{200-activ} and 95/5 on
+\code{500-goc}, but 18/82 on \code{179-goc}, 46/54 on \code{300-ieee} and 0/100 on \code{1354-pegase}.
+Cardinality capping helps because it addresses both at once: opening fewer lines produces fewer islands
+\emph{and} less network stress.
+
+\subsection{How many lines should a sample open?}\label{sec:cardinality}
+
+\code{scripts/experiment5\_cardinality.jl} sweeps the cap directly, reusing the stored marginals so no SDP
+is re-solved. $N=100$ ($N=60$ on \code{500-goc}), evaluated on the original network.
+
+\begin{table}[h]\centering
+\begin{tabular}{lrrlrrr}
+\toprule
+case & E[\#opened] & independent & best cap & feasible & best cost & vs best known \\
+\midrule
+\code{118-ieee}  & 10.9 & \SI{0}{\percent}  & $k{=}3$ & \SI{17}{\percent} & \num{225486.25}  & $+25.05\%$ \\
+\code{179-goc}   & 39.3 & \SI{0}{\percent}  & $k{=}2$ & \SI{78}{\percent} & \num{1928124.99} & $\mathbf{-0.15\%}$ \\
+\code{200-activ} & 19.2 & \SI{5}{\percent}  & $k{=}2$ & \SI{77}{\percent} & \num{35700.87}   & $+0.00\%$ \\
+\code{240-pserc} & 33.0 & \SI{26}{\percent} & $k{=}5$ & \SI{89}{\percent} & \num{4638056.84} & $+0.24\%$ \\
+\code{300-ieee}  & 25.0 & \SI{0}{\percent}  & $k{=}1$ & \SI{91}{\percent} & \num{684584.26}  & $+0.09\%$ \\
+\code{500-goc}   & 50.5 & \SI{0}{\percent}  & $k{=}6$ & \SI{52}{\percent} & \num{676182.83}  & $\mathbf{-1.31\%}$ \\
+\code{89-pegase} & 37.2 & \SI{38}{\percent} & $k{=}8$ & \SI{74}{\percent} & \num{101016.95}  & $+0.67\%$ \\
+\code{1354-pegase}$^{*}$ & 204.0 & \SI{0}{\percent} & $k{=}3$ & \SI{80}{\percent} & \num{1497390.91} & $+0.04\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Two new best-known solutions}, both verified independently by re-solving the AC-OPF for that
+switching configuration from scratch on the original network:
+\begin{itemize}
+  \item \code{179-goc}: \num{1928124.99}, opening only two lines $\{147, 158\}$ --- \num{2851}
+        (\SI{0.148}{\percent}) below our previous incumbent, and below the paper's O-DC-OTS
+        (\num{1931004}) and AC-OPF (\num{1932044}).
+  \item \code{500-goc}: \num{676182.83}, opening six lines $\{131, 228, 464, 607, 629, 698\}$ ---
+        \num{8949} (\SI{1.306}{\percent}) below our incumbent and \SI{2.3}{\percent} below the paper's
+        O-DC-OTS (\num{692271}).
+\end{itemize}
+Both tighten their certified gaps, since the best known cost falls: \code{179-goc}
+$4.923\% \to 4.783\%$ and \code{500-goc} $2.626\% \to 1.337\%$, roughly halving the latter.
+
+The effect is large and consistent: independent rounding lands at 0--\SI{38}{\percent} AC-feasible,
+capping at 52--\SI{97}{\percent}. The useful caps are $1$--$8$, always far below the relaxation's own
+expectation, which remains useless everywhere (0--\SI{2}{\percent}), and quality is flat across
+neighbouring caps, so the result does not depend on tuning the cap. \code{118-ieee} stays the exception:
+feasibility is restored but cost remains $+25\%$, because its optimum opens \num{37} lines while the
+marginals imply about 11.
+
+$^{*}$ \code{1354-pegase} needed fresh marginals: its original ones came from the pre-fix merged model,
+which was infeasible (Section~\ref{sec:rigour}), and a dimension guard in the script caught this. They
+were regenerated on the \emph{exact} unmerged model (experiment 4, \code{base}, \num{1991} binaries,
+\SI{3.5}{\hour}). The difference is instructive --- the infeasible model implied
+$\mathbb{E}[\#\text{opened}] = 724$ of \num{1807} binaries, the exact model $204$ of \num{1991} --- but it
+means this row rests on exact-model marginals while the others use merged-model ones.
+
+With \code{1354-pegase} included the finding is unanimous across all eight cases: independent rounding is
+hopeless (0--\SI{38}{\percent}), capping restores feasibility (52--\SI{97}{\percent}), and the useful cap
+is $1$--$8$ regardless of network size.
+
+\section{Negative results worth recording}
+
+\begin{itemize}
+  \item Tight trace bounds in the box certificate never changed the answer.
+  \item Island repair and guarded sampling help only where rounding already works.
+  \item Connectivity cuts and radial fixings improve the bound on \code{89-pegase} and
+        \code{1354-pegase} but do not improve rounding on \code{118-ieee}, \code{179-goc} or
+        \code{300-ieee}.
+  \item Capping openings at the relaxation's own expectation is insufficient (\SI{2}{\percent} and
+        \SI{0}{\percent}); the useful caps are far tighter, 1--8 lines.
+  \item The ``api'' cases are genuinely tight: on \code{118-ieee}, 100 of the 186 single-line openings
+        are AC-infeasible on their own, and feasibility is \emph{not} monotone in the set of opened
+        lines.
+\end{itemize}
+
+\section{Open problems}
+
+\begin{enumerate}
+  \item Sweep the opening cap $k_{\max}$ and re-run Experiments 3 and 4 with cardinality-limited
+        sampling.
+  \item For cases requiring large coordinated rewirings (\code{118-ieee}, \code{89-pegase},
+        \code{73-ieee-rts}), move from resampling fixed marginals to conditioning and re-solving
+        (randomized diving), which changes the distribution; and test conditional moments
+        $\mathbb{E}[V \mid z]$ as Ipopt warm starts.
+  \item Understand why the \code{118-ieee} marginals are so concentrated (expected 11 openings against
+        an optimum opening 37). This is a relaxation-tightness question and connects to the
+        relaxation-selection thread.
+  \item The ML-guided relaxation-selection thread remains untouched; non-ML baselines (OBBT, QC
+        envelopes, dual- and eigenvalue-guided order elevation) should come first.
+\end{enumerate}
+
+\section*{Artifacts}
+
+Julia package \code{MomentMINLP} (JuMP, MOSEK, PowerModels, Ipopt/HSL). Supporting notes:
+\code{results/writeup.md} (the Markdown counterpart of this document),
+\code{results/merging\_findings.md}, \code{results/rounding\_scale\_findings.md},
+\code{results/experiment4\_findings.md}, \code{results/recertify\_findings.md},
+\code{results/numerics\_findings.md}. Regression tests: \code{scripts/validate\_merging.jl} (18/18) and
+\code{scripts/test\_islands.jl} (96/96).
+
+\begin{thebibliography}{9}
+\bibitem{oustry2022}
+A.~Oustry, C.~D'Ambrosio, L.~Liberti and M.~Ruiz,
+\newblock ``Certified and accurate SDP bounds for the ACOPF problem,''
+\newblock \emph{Power Systems Computation Conference (PSCC)}, 2022.
+\end{thebibliography}
+
+\end{document}

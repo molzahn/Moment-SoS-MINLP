@@ -1,0 +1,25 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 22:53:00
+Job ID:    13208651
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mmrc-57-ieee-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 57-ieee-api on atl1-1-02-005-16-2.pace.gatech.edu, cpus 8, mem 16384 MB, certificate optimization time 1800 s, start Mon Sep 14 22:53:00 EDT 2026
+57-ieee-api      exp3/mixed         SLOW_PROGRESS  raw 49215.52 (saved 49215.54) | box 49174.98 | box ρ* 49174.98 | implicit 49198.89 | hybrid 49199.23 | optimized 49212.59 | saved certified 49188.32 | 160s (opt 62s)
+57-ieee-api      exp3/adj16         SLOW_PROGRESS  raw 49227.18 (saved 49227.28) | box 49210.36 | box ρ* 49210.36 | implicit 49217.50 | hybrid 49218.28 | optimized 49223.78 | saved certified 49169.13 | 515s (opt 100s)
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 23:06:44
+Job ID:        13208651
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mmrc-57-ieee-api
+Resources:     cpu=8,mem=16G,node=1
+Rsrc Used:     cput=01:49:52,vmem=0,walltime=00:13:44,mem=16777604K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-16-2
+---------------------------------------

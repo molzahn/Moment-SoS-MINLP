@@ -1,0 +1,114 @@
+{
+ "N": 100,
+ "best_known": 1.930975963410612e6,
+ "best_rounded": 1.9281249861886853e6,
+ "best_scheme": "cardinality_k2",
+ "case": "179-goc-api",
+ "expected_opened": 39.2691344712326,
+ "marginal_source": "experiment3_179-goc-api.json:mixed_nobigM",
+ "n_binaries": 261,
+ "n_configs_evaluated": 961,
+ "schemes": {
+  "cardinality_E": {
+   "best": null,
+   "eval_time": 165.637086938,
+   "feasible": 0.0,
+   "gap_vs_best_known": null,
+   "mean_opened": 39.0,
+   "n_feasible": 0,
+   "unique": 100,
+   "within_1pct": 0.0
+  },
+  "cardinality_k1": {
+   "best": 1.9281644115638586e6,
+   "eval_time": 91.307931005,
+   "feasible": 0.86,
+   "gap_vs_best_known": -0.0014560263307407512,
+   "mean_opened": 1.0,
+   "n_feasible": 86,
+   "unique": 73,
+   "within_1pct": 0.82
+  },
+  "cardinality_k2": {
+   "best": 1.9281249861886853e6,
+   "eval_time": 124.415122631,
+   "feasible": 0.78,
+   "gap_vs_best_known": -0.0014764436616244035,
+   "mean_opened": 2.0,
+   "n_feasible": 78,
+   "unique": 99,
+   "within_1pct": 0.75
+  },
+  "cardinality_k3": {
+   "best": 1.9286918088843157e6,
+   "eval_time": 130.039070412,
+   "feasible": 0.67,
+   "gap_vs_best_known": -0.0011829015842651331,
+   "mean_opened": 3.0,
+   "n_feasible": 67,
+   "unique": 100,
+   "within_1pct": 0.64
+  },
+  "cardinality_k4": {
+   "best": 1.92869948418456e6,
+   "eval_time": 165.165048767,
+   "feasible": 0.54,
+   "gap_vs_best_known": -0.001178926754754213,
+   "mean_opened": 4.0,
+   "n_feasible": 54,
+   "unique": 100,
+   "within_1pct": 0.5
+  },
+  "cardinality_k5": {
+   "best": 1.9287331358161087e6,
+   "eval_time": 163.854003463,
+   "feasible": 0.49,
+   "gap_vs_best_known": -0.001161499488860478,
+   "mean_opened": 5.0,
+   "n_feasible": 49,
+   "unique": 100,
+   "within_1pct": 0.45
+  },
+  "cardinality_k6": {
+   "best": 1.9287418176713756e6,
+   "eval_time": 189.620058044,
+   "feasible": 0.4,
+   "gap_vs_best_known": -0.0011570033918445527,
+   "mean_opened": 6.0,
+   "n_feasible": 40,
+   "unique": 100,
+   "within_1pct": 0.35
+  },
+  "cardinality_k8": {
+   "best": 1.9294472697339624e6,
+   "eval_time": 160.354439349,
+   "feasible": 0.3,
+   "gap_vs_best_known": -0.0007916689309531939,
+   "mean_opened": 8.0,
+   "n_feasible": 30,
+   "unique": 100,
+   "within_1pct": 0.26
+  },
+  "independent": {
+   "best": null,
+   "eval_time": 15.340118765,
+   "feasible": 0.0,
+   "gap_vs_best_known": null,
+   "mean_opened": 39.67,
+   "n_feasible": 0,
+   "unique": 100,
+   "within_1pct": 0.0
+  },
+  "independent+repair": {
+   "best": null,
+   "eval_time": 126.042438574,
+   "feasible": 0.0,
+   "gap_vs_best_known": null,
+   "mean_opened": 37.36,
+   "n_feasible": 0,
+   "unique": 100,
+   "within_1pct": 0.0
+  }
+ },
+ "seed": 1
+}

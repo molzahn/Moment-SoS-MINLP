@@ -1,0 +1,28 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 22:53:00
+Job ID:    13208656
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mmrc-179-goc-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 179-goc-api on atl1-1-02-005-20-1.pace.gatech.edu, cpus 8, mem 32768 MB, certificate optimization time 1800 s, start Mon Sep 14 22:53:00 EDT 2026
+179-goc-api      exp3/mixed         SLOW_PROGRESS  raw 1841292.30 (saved 1841292.30) | box 1809725.20 | box ρ* 1809725.20 | implicit 1826440.71 | hybrid 1826850.94 | optimized 1836682.93 | saved certified 1809725.20 | 467s (opt 184s)
+179-goc-api      exp3/mixed_nobigM  SLOW_PROGRESS  raw 1813839.48 (saved 1813839.48) | box 1785023.04 | box ρ* 1785023.04 | implicit 1802700.58 | hybrid 1803028.62 | optimized 1810513.50 | saved certified 1785023.04 | 228s (opt 116s)
+179-goc-api      exp4/base          SLOW_PROGRESS  raw 1813839.48 (saved 1813839.48) | box 1785023.04 | box ρ* 1785023.04 | implicit 1802700.58 | hybrid 1803028.62 | optimized 1810513.50 | saved certified 1785023.04 | 224s (opt 112s)
+179-goc-api      exp4/conn          SLOW_PROGRESS  raw 1813940.33 (saved 1813940.33) | box 1784781.84 | box ρ* 1784781.84 | implicit 1802163.11 | hybrid 1802801.70 | optimized 1810704.90 | saved certified 1784781.84 | 240s (opt 114s)
+finished Mon Sep 14 23:14:02 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 23:14:02
+Job ID:        13208656
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mmrc-179-goc-api
+Resources:     cpu=8,mem=32G,node=1
+Rsrc Used:     cput=02:48:16,vmem=0,walltime=00:21:02,mem=10210660K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-20-1
+---------------------------------------

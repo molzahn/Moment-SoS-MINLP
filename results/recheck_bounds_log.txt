@@ -1,0 +1,25 @@
+case5_uc     order1       OPTIMAL             0.0s  certified   21172.7660  raw   21172.7673  old 21172.7679  SOS res 1.1e-08
+case5_uc     order2       OPTIMAL             3.5s  certified   21865.7135  raw   21865.7570  old 21865.8028  SOS res 3.0e-08
+case5_uc_sym order1       OPTIMAL             0.1s  certified   21094.7526  raw   21094.7531  old 21094.7533  SOS res 4.2e-09
+case5_uc_sym order2       SLOW_PROGRESS       7.0s  certified   21888.3498  raw   21889.0459  old 21891.2209  SOS res 1.6e-07
+case14_uc    order1       OPTIMAL             0.1s  certified    8626.4173  raw    8626.4178  old 8626.4180  SOS res 6.0e-09
+case14_uc    order2       OPTIMAL            27.5s  certified    9042.4559  raw    9042.4783  old 9042.4788  SOS res 2.5e-08
+case5_ots    order1       OPTIMAL             0.0s  certified      -0.0001  raw       0.0000  old 0.0000  SOS res 3.1e-10
+case5_ots    order2       SLOW_PROGRESS      10.8s  certified   15025.9749  raw   15027.1159  old 15071.6502  SOS res 5.8e-07
+case9_ots    order1       OPTIMAL             0.0s  certified      75.0000  raw      75.0000  old 75.0000  SOS res 7.6e-10
+case9_ots    order2       OPTIMAL             5.1s  certified     638.1814  raw     638.1829  old 638.1829  SOS res 2.7e-08
+case30_uc    mixed        OPTIMAL             0.1s  certified     953.5902  raw     953.5903  old 953.5903  SOS res 2.6e-08
+case30_uc    adj16        OPTIMAL             2.4s  certified     959.3660  raw     959.3663  old 959.3664  SOS res 1.5e-08
+case30_uc    adj16_pairs  OPTIMAL             2.4s  certified     959.3660  raw     959.3663  old 959.3664  SOS res 1.5e-08
+case24_uc    mixed        OPTIMAL             0.3s  certified   72492.7538  raw   72492.7564  old 72492.7651  SOS res 2.6e-08
+case24_uc    adj16        SLOW_PROGRESS      55.2s  certified   75716.1922  raw   75722.6918  old 75728.1914  SOS res 9.4e-07
+case24_uc    adj16_pairs  SLOW_PROGRESS      67.4s  certified   75736.7885  raw   75740.6679  old 75747.0244  SOS res 1.1e-06
+case30_ots   mixed        SLOW_PROGRESS       6.6s  certified     173.0132  raw     173.0326  old 173.0329  SOS res 1.1e-07
+case30_ots   adj16        SLOW_PROGRESS      84.8s  certified     173.7951  raw     174.3649  old 174.3773  SOS res 1.0e-06
+case30_ots   adj16_pairs  SLOW_PROGRESS      90.8s  certified     174.4606  raw     175.0638  old 175.0710  SOS res 8.8e-07
+case24_ots   mixed        SLOW_PROGRESS       5.3s  certified   72366.0933  raw   72366.6593  old 72371.3484  SOS res 4.4e-07
+case24_ots   adj16        SLOW_PROGRESS      50.6s  certified   74374.8929  raw   74398.4963  old 74415.5121  SOS res 5.1e-06
+case24_ots   adj16_pairs  SLOW_PROGRESS      53.3s  certified   74425.8869  raw   74454.0660  old 74476.2776  SOS res 5.5e-06
+Precompiling packages...
+   3339.6 ms  ✓ MomentMINLP
+  1 dependency successfully precompiled in 4 seconds. 139 already precompiled.

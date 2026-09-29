@@ -1,0 +1,39 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 17:08:59
+Job ID:    13202499
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mm-500-goc-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 500-goc-api on atl1-1-02-005-10-1.pace.gatech.edu, cpus 8, mem 49152 MB, variants mixed,mixed_nobigM, start Mon Sep 14 17:08:59 EDT 2026
+
+=== 500-goc-api: 500 buses, 733 branches (0 merged ties, 728 switchable), 4981 POP variables (build 16.2s); AC-OPF 692407.34 (paper 692407); paper O-DC-OTS 692271, AC-OTS –
+  mixed        bound NaN (raw NaN) SLOW_PROGRESS  total 849.6s (solve 780.0s)  order-2 cliques 1250/2563  max PSD 72  integral marginals 18%, marginals<0.5: 40
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.6s)
+    independent  best infeasible  feas 0%  unique 100  (eval 1.1s)
+    gaussian     best infeasible  feas 0%  unique 100  (eval 1.4s)
+    conditional  best infeasible  feas 0%  unique 100  (eval 1.0s)
+    best rounded 692407.34 (opens Any[]); after 1-flip polish 691087.07 (opens [447, 464, 475, 476, 660]; 40 evals, 125.2s)
+  mixed_nobigM bound NaN (raw NaN) SLOW_PROGRESS  total 468.4s (solve 385.6s)  order-2 cliques 1250/2563  max PSD 72  integral marginals 21%, marginals<0.5: 39
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.7s)
+    independent  best infeasible  feas 0%  unique 100  (eval 1.2s)
+    gaussian     best infeasible  feas 0%  unique 100  (eval 1.1s)
+    conditional  best infeasible  feas 0%  unique 100  (eval 1.1s)
+    best rounded 692407.34 (opens Any[]); after 1-flip polish 691083.11 (opens [447, 464, 475, 476, 529, 660]; 40 evals, 136.2s)
+  SUMMARY 500-goc-api: best found 691083.11 vs paper AC-OTS – / O-DC-OTS 692271; best bound NaN; certified gap of best known NaN%; 683 configs
+finished Mon Sep 14 17:38:11 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 17:38:11
+Job ID:        13202499
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mm-500-goc-api
+Resources:     cpu=8,mem=48G,node=1
+Rsrc Used:     cput=03:53:36,vmem=0,walltime=00:29:12,mem=17598184K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-10-1
+---------------------------------------

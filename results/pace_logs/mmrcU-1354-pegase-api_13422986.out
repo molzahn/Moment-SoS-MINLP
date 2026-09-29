@@ -1,0 +1,28 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-21-2026 21:36:23
+Job ID:    13422986
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6-fy20phase3
+Job name:  mmrcU-1354-pegase-api
+Partition: cpu-large
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/project/r-dmolzahn6-0/dmolzahn6/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/project/r-dmolzahn6-0/dmolzahn6/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 1354-pegase-api on atl1-1-01-002-22-2.pace.gatech.edu, cpus 8, mem 163840 MB, certificate optimization time 1800 s, start Mon Sep 21 09:36:24 PM EDT 2026
+1354-pegase-api  exp3/mixed         ITERATION_LIMIT raw 1488936.75 (saved –) | box – | box ρ* 1432429.02 | implicit 1460230.38 | hybrid 1462595.68 | optimized 1480662.86 | saved certified – | 15475s (opt 1282s)
+1354-pegase-api  exp3/mixed_nobigM  ITERATION_LIMIT raw 1488531.02 (saved –) | box – | box ρ* 1477634.17 | implicit 1483474.26 | hybrid 1483919.62 | optimized 1487078.55 | saved certified – | 9038s (opt 770s)
+1354-pegase-api  exp4/base          ITERATION_LIMIT raw 1488531.02 (saved –) | box – | box ρ* 1477634.17 | implicit 1483474.26 | hybrid 1483919.62 | optimized 1487078.55 | saved certified – | 9056s (opt 774s)
+1354-pegase-api  exp4/conn          SLOW_PROGRESS  raw 1488548.35 (saved –) | box – | box ρ* 1474911.05 | implicit 1481744.16 | hybrid 1482757.23 | optimized 1486768.52 | saved certified – | 1818s (opt 723s)
+finished Tue Sep 22 07:38:31 AM EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-22-2026 07:38:31
+Job ID:        13422986
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6-fy20phase3
+Job name:      mmrcU-1354-pegase-api
+Resources:     cpu=8,mem=160G,node=1
+Rsrc Used:     cput=3-08:17:28,vmem=0,walltime=10:02:11,mem=48484168K,energy_used=0
+Partition:     cpu-large
+QOS:           inferno
+Nodes:         atl1-1-01-002-22-2
+---------------------------------------

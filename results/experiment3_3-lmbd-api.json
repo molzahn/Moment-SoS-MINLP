@@ -1,0 +1,216 @@
+{
+ "acopf": 11235.680599081357,
+ "best_bound": 10635.952340428712,
+ "best_found": 10635.952252583153,
+ "branches": 3,
+ "buses": 3,
+ "case": "3-lmbd-api",
+ "certified_gap_best_known": -8.259303662318807e-9,
+ "n_configs_evaluated": 4,
+ "n_vars": 26,
+ "paper_acopf": 11236,
+ "paper_acots": 10636,
+ "paper_acots_time": 0.971,
+ "paper_odcots": 10636,
+ "pop_build_time": 2.636278542,
+ "relaxations": {
+  "adj16": {
+   "best_rounded": 10635.952252583153,
+   "best_rounded_opened": [
+    3
+   ],
+   "bound": 10635.952025262417,
+   "frac_integral": 1.0,
+   "marginals": [
+    0.9999999992445456,
+    0.999999998502824,
+    1.9832991943366054e-8
+   ],
+   "max_psd": 78,
+   "n_cliques": 16,
+   "n_marg_below_half": 1,
+   "n_moments": 2561,
+   "n_order2": 16,
+   "polish_evals": 0,
+   "polish_time": 2.625e-6,
+   "polished": 10635.952252583153,
+   "polished_opened": [
+    3
+   ],
+   "raw_bound": 10635.952725628424,
+   "schemes": {
+    "conditional": {
+     "best": 10635.952252583153,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 1.3792e-5,
+     "feas": 1.0,
+     "unique": 1
+    },
+    "gaussian": {
+     "best": 10635.952252583153,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 1.3083e-5,
+     "feas": 1.0,
+     "unique": 1
+    },
+    "independent": {
+     "best": 10635.952252583153,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 1.6167e-5,
+     "feas": 1.0,
+     "unique": 1
+    },
+    "threshold": {
+     "best": 10635.952252583153,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 8.042e-6,
+     "feas": 1.0,
+     "unique": 1
+    }
+   },
+   "solve_time": 1.6795752048492432,
+   "status": "OPTIMAL",
+   "time": 2.250468625
+  },
+  "adj16_pairs": {
+   "best_rounded": 10635.952252583153,
+   "best_rounded_opened": [
+    3
+   ],
+   "bound": 10635.952026340532,
+   "frac_integral": 1.0,
+   "marginals": [
+    0.9999999989513975,
+    0.9999999977872351,
+    3.060324467255183e-8
+   ],
+   "max_psd": 78,
+   "n_cliques": 19,
+   "n_marg_below_half": 1,
+   "n_moments": 2869,
+   "n_order2": 19,
+   "polish_evals": 0,
+   "polish_time": 2.958e-6,
+   "polished": 10635.952252583153,
+   "polished_opened": [
+    3
+   ],
+   "raw_bound": 10635.95273950531,
+   "schemes": {
+    "conditional": {
+     "best": 10635.952252583153,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 1.3334e-5,
+     "feas": 1.0,
+     "unique": 1
+    },
+    "gaussian": {
+     "best": 10635.952252583153,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 1.325e-5,
+     "feas": 1.0,
+     "unique": 1
+    },
+    "independent": {
+     "best": 10635.952252583153,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 1.4125e-5,
+     "feas": 1.0,
+     "unique": 1
+    },
+    "threshold": {
+     "best": 10635.952252583153,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 3.709e-6,
+     "feas": 1.0,
+     "unique": 1
+    }
+   },
+   "solve_time": 1.514244794845581,
+   "status": "OPTIMAL",
+   "time": 1.654049125
+  },
+  "mixed": {
+   "best_rounded": 10635.952252583153,
+   "best_rounded_opened": [
+    3
+   ],
+   "bound": 10635.952340428712,
+   "frac_integral": 1.0,
+   "marginals": [
+    0.9999999884669747,
+    0.9999999897085736,
+    1.9035436984909606e-7
+   ],
+   "max_psd": 54,
+   "n_cliques": 16,
+   "n_marg_below_half": 1,
+   "n_moments": 2081,
+   "n_order2": 9,
+   "polish_evals": 2,
+   "polish_time": 0.000228791,
+   "polished": 10635.952252583153,
+   "polished_opened": [
+    3
+   ],
+   "raw_bound": 10635.95280755787,
+   "schemes": {
+    "conditional": {
+     "best": 10635.952252583153,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 2.0625e-5,
+     "feas": 1.0,
+     "unique": 1
+    },
+    "gaussian": {
+     "best": 10635.952252583153,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 2.0e-5,
+     "feas": 1.0,
+     "unique": 1
+    },
+    "independent": {
+     "best": 10635.952252583153,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 2.3708e-5,
+     "feas": 1.0,
+     "unique": 1
+    },
+    "threshold": {
+     "best": 10635.952252583153,
+     "best_opened": [
+      3
+     ],
+     "eval_time": 0.020444625,
+     "feas": 1.0,
+     "unique": 1
+    }
+   },
+   "solve_time": 0.7188949584960938,
+   "status": "OPTIMAL",
+   "time": 8.2191715
+  }
+ }
+}

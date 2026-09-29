@@ -1,0 +1,45 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 20:27:01
+Job ID:    13206365
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mm4-1354-pegase-api
+Partition: cpu-medium
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 1354-pegase-api on atl1-1-01-003-9-2.pace.gatech.edu, cpus 8, mem 131072 MB, relaxations base,conn, start Mon Sep 14 20:27:02 EDT 2026
+
+=== 1354-pegase-api: 1807 binaries; AC-OPF 1498271.03; paper O-DC-OTS 1496750, AC-OTS –
+  base  bound NaN (raw NaN) SLOW_PROGRESS  1004.9s  binaries 1807 (radial fixed 0, cuts 0)  max PSD 75  E[#opened] 724.1
+    independent            best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (4s)  Dict("island_deficit" => 100)
+    independent+repair     best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 119.1  (3725s)  Dict("LOCALLY_INFEASIBLE" => 88, "OTHER_ERROR" => 3, "TIME_LIMIT" => 9)
+    gaussian               best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (4s)  Dict("island_deficit" => 100)
+    gaussian+repair        best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 117.7  (3837s)  Dict("LOCALLY_INFEASIBLE" => 85, "OTHER_ERROR" => 3, "TIME_LIMIT" => 12)
+    conditional            best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (4s)  Dict("island_deficit" => 100)
+    conditional+repair     best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 118.8  (3827s)  Dict("LOCALLY_INFEASIBLE" => 85, "OTHER_ERROR" => 3, "TIME_LIMIT" => 12)
+    conditional_guarded    best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 114.5  (3690s)  Dict("LOCALLY_INFEASIBLE" => 94, "OTHER_ERROR" => 1, "TIME_LIMIT" => 5)
+    best rounded 1498271.03 (0 lines opened); after 1-flip polish 1498116.94 (40 evals, 265s)
+  conn  bound NaN (raw NaN) SLOW_PROGRESS  1057.2s  binaries 1607 (radial fixed 200, cuts 737)  max PSD 79  E[#opened] 660.4
+    independent            best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (4s)  Dict("island_deficit" => 100)
+    independent+repair     best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 75.9  (3704s)  Dict("LOCALLY_INFEASIBLE" => 93, "OTHER_ERROR" => 1, "TIME_LIMIT" => 6)
+    gaussian               best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (4s)  Dict("island_deficit" => 100)
+    gaussian+repair        best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 56.5  (3847s)  Dict("LOCALLY_INFEASIBLE" => 90, "OTHER_ERROR" => 3, "TIME_LIMIT" => 7)
+    conditional            best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 0.0  (10s)  Dict("island_deficit" => 100)
+    conditional+repair     best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 48.3  (3565s)  Dict("LOCALLY_INFEASIBLE" => 92, "OTHER_ERROR" => 3, "TIME_LIMIT" => 5)
+    conditional_guarded    best infeasible   feas   0%  connected   0%  ≤1% of best known   0%  unique 100  fixes/sample 48.8  (4332s)  Dict("LOCALLY_INFEASIBLE" => 91, "OTHER_ERROR" => 4, "TIME_LIMIT" => 5)
+    best rounded 1498271.03 (0 lines opened); after 1-flip polish 1498163.72 (40 evals, 268s)
+  SUMMARY 1354-pegase-api: best found 1498116.94 (paper AC-OTS –, O-DC-OTS 1496750); best bound –; gap –; 1481 configs
+finished Tue Sep 15 05:46:16 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-15-2026 05:46:16
+Job ID:        13206365
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mm4-1354-pegase-api
+Resources:     cpu=8,mem=128G,node=1
+Rsrc Used:     cput=3-02:34:00,vmem=0,walltime=09:19:15,mem=33713004K,energy_used=0
+Partition:     cpu-medium
+QOS:           inferno
+Nodes:         atl1-1-01-003-9-2
+---------------------------------------

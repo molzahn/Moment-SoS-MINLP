@@ -1,0 +1,39 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-14-2026 12:18:45
+Job ID:    13190480
+User ID:   dmolzahn6
+Account:   gts-dmolzahn6
+Job name:  mm-179-goc-api
+Partition: cpu-small
+QOS:       inferno
+---------------------------------------
+[pace_env] root=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP julia=/storage/home/hcoda1/0/dmolzahn6/scratch/parameter_optimized_OTS/julia-1.12.7/bin/julia depot=/storage/home/hcoda1/0/dmolzahn6/scratch/Moment-SoS-MINLP/.julia account=gts-dmolzahn6
+case 179-goc-api on atl1-1-02-005-9-1.pace.gatech.edu, cpus 8, mem 65536 MB, variants mixed,mixed_nobigM, start Mon Sep 14 12:18:45 EDT 2026
+
+=== 179-goc-api: 179 buses, 263 branches (2 merged ties, 261 switchable), 1722 POP variables (build 6.7s); AC-OPF 1932043.63 (paper 1932044); paper O-DC-OTS 1931004, AC-OTS –
+  mixed        bound 1809725.20 (raw 1841292.30) SLOW_PROGRESS  total 270.1s (solve 236.5s)  order-2 cliques 468/931  max PSD 54  integral marginals 8%, marginals<0.5: 18
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.1s)
+    independent  best infeasible  feas 0%  unique 100  (eval 0.4s)
+    gaussian     best infeasible  feas 0%  unique 100  (eval 0.4s)
+    conditional  best infeasible  feas 0%  unique 100  (eval 0.3s)
+    best rounded 1932043.63 (opens Any[]); after 1-flip polish 1931629.17 (opens [155, 174]; 40 evals, 36.6s)
+  mixed_nobigM bound 1785023.04 (raw 1813839.48) SLOW_PROGRESS  total 112.7s (solve 101.6s)  order-2 cliques 468/931  max PSD 54  integral marginals 10%, marginals<0.5: 21
+    threshold    best infeasible  feas 0%  unique 1  (eval 0.0s)
+    independent  best infeasible  feas 0%  unique 100  (eval 0.4s)
+    gaussian     best infeasible  feas 0%  unique 100  (eval 0.4s)
+    conditional  best infeasible  feas 0%  unique 100  (eval 0.3s)
+    best rounded 1932043.63 (opens Any[]); after 1-flip polish 1931000.65 (opens [155, 158, 174]; 40 evals, 29.7s)
+  SUMMARY 179-goc-api: best found 1931000.65 vs paper AC-OTS – / O-DC-OTS 1931004; best bound 1809725.20; certified gap of best known 6.28%; 683 configs
+finished Mon Sep 14 12:27:15 EDT 2026
+---------------------------------------
+Begin Slurm Epilog: Sep-14-2026 12:27:15
+Job ID:        13190480
+User ID:       dmolzahn6
+Account:       gts-dmolzahn6
+Job name:      mm-179-goc-api
+Resources:     cpu=8,mem=64G,node=1
+Rsrc Used:     cput=01:08:00,vmem=0,walltime=00:08:30,mem=7134608K,energy_used=0
+Partition:     cpu-small
+QOS:           inferno
+Nodes:         atl1-1-02-005-9-1
+---------------------------------------

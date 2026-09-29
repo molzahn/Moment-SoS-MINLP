@@ -328,7 +328,7 @@ function certified_value(cert::SOSCertificate, θ::Vector{Float64}; mode::Symbol
     if mode == :box
         F = θ[cert.tcol] - sum(abs.(r) .* cert.mb)
         for (k, B) in enumerate(cert.blocks)
-            F += cert.rho[k] * min(_mineig(θ, B)[1], 0.0)
+            F += cert.rho[k] * min(_mineigval(θ, B), 0.0)
         end
         return F * cert.scale, nothing, F * cert.scale
     end
@@ -346,8 +346,8 @@ function certified_value(cert::SOSCertificate, θ::Vector{Float64}; mode::Symbol
     if mode == :hybrid
         F = θ[cert.tcol] - unrep
         for (k, B) in enumerate(cert.blocks)
-            absorbed = cert.rho[k] * min(_mineig(θa, B)[1], 0.0)
-            boxed = cert.rho[k] * min(_mineig(θ, B)[1], 0.0) - sum((abs(r[i]) * cert.mb[i] for i in cert.blockrows[k]); init = 0.0)
+            absorbed = cert.rho[k] * min(_mineigval(θa, B), 0.0)
+            boxed = cert.rho[k] * min(_mineigval(θ, B), 0.0) - sum((abs(r[i]) * cert.mb[i] for i in cert.blockrows[k]); init = 0.0)
             F += max(absorbed, boxed)
         end
         return F * cert.scale, nothing, F * cert.scale
@@ -358,7 +358,13 @@ function certified_value(cert::SOSCertificate, θ::Vector{Float64}; mode::Symbol
     for (k, B) in enumerate(cert.blocks)
         n = size(B, 1)
         if mu <= 0 || n == 1
-            λ, u = _mineig(θa, B)
+            local u
+            λ = if gradient
+                λv, u = _mineig(θa, B)
+                λv
+            else
+                _mineigval(θa, B)
+            end
             Fexact += cert.rho[k] * min(λ, 0.0)
             if mu <= 0
                 λ >= 0 && continue
@@ -371,8 +377,18 @@ function certified_value(cert::SOSCertificate, θ::Vector{Float64}; mode::Symbol
             end
         else
             M = Symmetric([θa[B[i, j]] for i in 1:n, j in 1:n])
-            E = eigen(M)
-            λs = E.values
+            # Eigenvectors are needed ONLY for the softmin supergradient below. The gradient-free
+            # calls are the frequent ones -- the per-iteration :hybrid evaluation in
+            # `smooth_certify`, every candidate point, and both `bothmax` modes -- and computing
+            # vectors for them made LAPACK's syevr! ~41% of the whole certify path. `eigvals!`
+            # consumes the freshly allocated M, which is dead either way.
+            local E
+            λs = if gradient
+                E = eigen(M)
+                E.values
+            else
+                eigvals!(M)
+            end
             Fexact += cert.rho[k] * min(λs[1], 0.0)
             z = exp.(-(λs .- λs[1]) ./ mu)
             fs = λs[1] - mu * log(sum(z))           # softmin of the eigenvalues (<= λ_min)
@@ -412,6 +428,20 @@ function _addouter!(G::Vector{Float64}, B::Matrix{Int}, u::AbstractVector, c::Fl
     for i in 1:n, j in i:n
         G[B[i, j]] += c * (i == j ? u[i]^2 : 2 * u[i] * u[j])
     end
+end
+
+"""
+Smallest eigenvalue only, without the eigenvector.
+
+Three of the four `_mineig` call sites discard the vector immediately, and `:hybrid` mode runs two
+of them per block on every evaluation -- across ~380 blocks and ~360 certificate iterations that
+made LAPACK's symmetric eigensolver the single hottest leaf in the certify path. Asking syevr for
+jobz='N' skips the vector computation entirely.
+"""
+function _mineigval(θ::Vector{Float64}, B::Matrix{Int})
+    n = size(B, 1)
+    n == 1 && return θ[B[1, 1]]
+    return eigvals!(Symmetric([θ[B[i, j]] for i in 1:n, j in 1:n]), 1:1)[1]
 end
 
 function _mineig(θ::Vector{Float64}, B::Matrix{Int})

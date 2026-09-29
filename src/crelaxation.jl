@@ -55,7 +55,12 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         psd_mode::Symbol = :full, minor_kmax::Int = 2, psd_threshold::Int = 0,
         minor_core_degree::Int = 1,
         adjacency::Union{Nothing,Set{Tuple{Int,Int}}} = nothing,
+        minor_cover = nothing, retain = nothing, warm_start = nothing,
         solver_params = Dict{String,Any}())
+    psd_mode === :nlp && certify &&
+        error("psd_mode = :nlp posts determinant inequalities, not PSD cones, so the certificate's " *
+              "Gram recovery does not apply; solve with certify = false and verify the returned " *
+              "moments against the true blocks instead")
     t0 = time()
     n = cnvars(pop)
     cls = cliques === nothing ? [collect(1:n)] : cliques
@@ -104,6 +109,11 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
     one_poly = CPoly(1)
     psd_sizes = Int[]
     blockmeta = Tuple{CPoly,Vector{Vector{Int}}}[]   # (weight, basis) per posted block
+    # (A, C, basis) per hermitian_psd! CALL, i.e. per moment block rather than per posted cone.
+    # The lazy minor loop needs these to rebuild each block's Hermitian matrix at the current
+    # solution, score its violation and post further minors into the same model; without them the
+    # matrices built by `loc_matrix` are local to the build loop and thrown away.
+    blocks_ab = Tuple{Matrix,Matrix,Vector{Vector{Int}}}[]
     psd_refs = Any[]                 # (constraint, k) for Gram recovery in the certificate
     """
     Post a Hermitian PSD constraint from its entry-wise (real, imag) affine parts.
@@ -116,14 +126,35 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
     function hermitian_psd!(A, B, weight = one_poly, basis = Vector{Int}[])
         k = size(A, 1)
         k == 0 && return
+        push!(blocks_ab, (A, B, basis))
+        bidx = length(blocks_ab)
+        # An explicit cover overrides the generated one: this is what lets the NLP and the conic
+        # model be built over the SAME posted subsets, which is the only way the Ipopt-vs-Mosek
+        # comparison means anything.
+        cover(kmx) = minor_cover === nothing ?
+            basis_minor_subsets(basis; kmax = kmx, core_degree = minor_core_degree,
+                                adjacency = adjacency) :
+            minor_cover(bidx, basis)
+        if psd_mode === :nlp && !isempty(basis)
+            # Variant 2: no PSD cone at all, so EVERY block becomes principal minors -- including
+            # the core block that :minors keeps exact. The model is therefore weaker than :minors,
+            # which is the price of reaching order 3 with a solver that has no conic support.
+            posted = 0
+            for S in cover(minor_kmax)
+                post_minor_hermitian_nlp!(model, A, B, S; kmax = minor_kmax) > 0 || continue
+                push!(psd_sizes, length(S))
+                push!(blockmeta, (weight, [basis[i] for i in S]))
+                posted += 1
+            end
+            posted > 0 && return
+        end
         if psd_mode === :minors && k > psd_threshold && !isempty(basis)
             posted = 0
             # With T-invariance each block holds monomials of a single |alpha|, so
             # `minor_core_degree = 1` keeps the |alpha| = 1 block (the Hermitian W) EXACT and
             # relaxes only the higher-order blocks -- PowerTech (16) generalised, and exactly what
             # makes order 3 reachable without giving up the order-1 strength that is nearly free.
-            for S in basis_minor_subsets(basis; kmax = minor_kmax,
-                                         core_degree = minor_core_degree, adjacency = adjacency)
+            for S in cover(minor_kmax)
                 cref = post_minor_hermitian!(model, A, B, S)
                 push!(psd_sizes, length(S) <= 2 ? length(S) : 2 * length(S))
                 push!(psd_refs, (cref, length(S)))
@@ -268,11 +299,26 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
     # convex quadratic epigraphs on the auxiliaries, as rotated cones: 2*(t/(2a))*1 >= x^2
     for (ti, a, xi) in pop.aux_quad
         a > 0 || continue
-        @constraint(model, [auxv[ti] / (2a), 1.0, auxv[xi]] in RotatedSecondOrderCone())
+        if psd_mode === :nlp
+            # 2*u*v >= w^2 with u = t/(2a), v = 1 is just t/a >= x^2, already smooth
+            @constraint(model, auxv[ti] / a - auxv[xi] * auxv[xi] >= 0)
+        else
+            @constraint(model, [auxv[ti] / (2a), 1.0, auxv[xi]] in RotatedSecondOrderCone())
+        end
     end
     # second-order cones on the moment image (thermal limits); valid at every order
     for ((a, xs), tag) in zip(pop.socs, pop.soc_tags)
-        @constraint(model, vcat(lin_real(a), [lin_real(x) for x in xs]) in SecondOrderCone())
+        if psd_mode === :nlp
+            # Same convexity trap as the 2x2 minor: `a^2 - sum(x^2) >= 0` describes the cone with a
+            # nonconcave function. `a >= ||x||` is convex as written, smoothed so the set only grows.
+            ea = lin_real(a)
+            ex = [lin_real(x) for x in xs]
+            ce = NLP_CONE_EPS[]
+            sq = sum(e * e for e in ex)
+            @constraint(model, ea - (ce > 0 ? sqrt(sq + ce) - sqrt(ce) : sqrt(sq)) >= 0)
+        else
+            @constraint(model, vcat(lin_real(a), [lin_real(x) for x in xs]) in SecondOrderCone())
+        end
     end
 
     # Normalise the objective. Cost coefficients are O(1e3) while every moment is O(1), and handing
@@ -291,6 +337,34 @@ function solve_complex_moment_relaxation(pop::CPOP; order::Int = 1,
         add_to_expression!(obj, real(c) / oscale, re); add_to_expression!(obj, -imag(c) / oscale, im)
     end
     @objective(model, Min, obj)
+    # Ipopt is strongly start-dependent, and cold-starting it on thousands of moment variables was
+    # worth 3000 iterations of nothing (ITERATION_LIMIT at 2e7 on case14 order 1). `warm_start` is a
+    # moment dictionary from a previous solve -- typically the conic solve of the SAME cover, which
+    # the lazy loop computes anyway for its cross-check, so the start costs nothing extra.
+    if warm_start !== nothing
+        # Sanitise. A start value that is NaN/Inf makes Ipopt reject the model outright with
+        # INVALID_MODEL, and the source here is another solver's output -- an unconverged or weakly
+        # constrained conic solve can hand back enormous moments. Skipping the bad entries leaves
+        # those variables at their default start rather than poisoning the whole solve.
+        nbad = 0
+        for (key, rv) in yre
+            v = get(warm_start, key, nothing)
+            v === nothing && continue
+            re, im = real(v), imag(v)
+            if !isfinite(re) || !isfinite(im) || abs(re) > 1e8 || abs(im) > 1e8
+                nbad += 1
+                continue
+            end
+            set_start_value(rv, re)
+            iv = yim[key]
+            iv === nothing || set_start_value(iv, im)
+        end
+        nbad > 0 && @warn "warm start: skipped $nbad non-finite or oversized moment values"
+    end
+    if retain !== nothing
+        retain[] = (model = model, yre = yre, yim = yim, blocks_ab = blocks_ab,
+                    oscale = oscale, auxv = auxv)
+    end
     build_time = time() - t0
     optimize!(model)
     st = termination_status(model)

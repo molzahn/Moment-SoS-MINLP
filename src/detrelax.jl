@@ -213,3 +213,90 @@ end
 "Number of scalar cone entries a cover implies, as a cheap cost proxy for the promotion schedule."
 cover_cost(subs::Vector{Vector{Int}}) =
     sum(length(S) == 1 ? 1 : (length(S) == 2 ? 4 : (2 * length(S))^2) for S in subs; init = 0)
+
+"""
+Smoothing for the NLP cone constraints, applied so the feasible set only GROWS.
+
+NOT free: the constraint is loosened by `sqrt(eps)` in NORMALISED units, and the objective scaling
+multiplies that back up. At 1e-10 (`sqrt(eps)` = 1e-5) it cost about 2 units of bound on case14
+order 1 -- visible as Mosek's dual on the same cover EXCEEDING Ipopt's primal, which is impossible
+for one feasible set and was the tell. It must also be large enough for the HESSIAN, not just the gradient: the second derivative of
+`sqrt(d + eps)` at d = 0 is `-1/(4*eps^1.5)`, which is -2.5e23 at eps = 1e-16 and overflows, so
+Ipopt rejects the model with INVALID_MODEL (Invalid_Number_Detected) before iterating. Measured on
+case14 order 2, convex-only cover, against Mosek's 1141.5056 on the same cover:
+
+    eps    1e-12  ITERATION_LIMIT
+           1e-10  LOCALLY_INFEASIBLE
+           1e-8   1140.8731  ALMOST_LOCALLY_SOLVED   <- default
+           1e-6   1124.4624  ALMOST_LOCALLY_SOLVED
+           1e-4   1120.4618  ALMOST_LOCALLY_SOLVED
+
+Too small and the Hessian blows up; too large and the looseness eats the bound. Ipopt option tuning
+(scaling, linear solver, mu strategy, bound relaxation, tolerances) changed nothing by comparison --
+eps was the whole story. 0 disables smoothing and gives an INFINITE gradient at the apex.
+"""
+const NLP_CONE_EPS = Ref(1e-8)
+
+"""
+    post_minor_hermitian_nlp!(model, A, B, S; kmax = 3) -> Int
+
+Determinant form of the minor relaxation, for a solver with no PSD cone (Ipopt -- "Variant 2").
+
+A Hermitian matrix is PSD iff EVERY principal minor is >= 0, so this posts every principal minor of
+`H[S,S] = A[S,S] + i B[S,S]` up to order `kmax` as a smooth polynomial inequality. The cover's
+subsets are maximal, so the smaller minors inside one are not posted anywhere else and must be
+emitted here or the submatrix is not constrained to be PSD at all.
+
+For |S| > kmax this is a strict RELAXATION of `H[S,S] >= 0`: the feasible set is larger, so the
+optimum is LOWER. That matters for interpretation -- a feasible point of this model does NOT
+upper-bound the true SDP optimum unless its blocks are separately verified PSD.
+
+Hermitian determinants, with a_ij = A[i,j], b_ij = B[i,j] (A symmetric, B antisymmetric, b_ii = 0):
+  k=1  a_ii
+  k=2  a_ii a_jj - (a_ij^2 + b_ij^2)
+  k=3  a11 a22 a33 + 2[(a12 a23 - b12 b23) a13 + (a12 b23 + b12 a23) b13]
+         - a11(a23^2 + b23^2) - a22(a13^2 + b13^2) - a33(a12^2 + b12^2)
+"""
+function post_minor_hermitian_nlp!(model, A::AbstractMatrix, B::AbstractMatrix, S::Vector{Int};
+        kmax::Int = 3)
+    posted = 0
+    for i in S
+        @constraint(model, A[i, i] >= 0)
+        posted += 1
+    end
+    kmax >= 2 || return posted
+    for p in 1:length(S), q in (p + 1):length(S)
+        i, j = S[p], S[q]
+        # CONVEX form of the 2x2 Hermitian minor. The hyperbolic writing
+        # `A_ii*A_jj - (A_ij^2 + B_ij^2) >= 0` describes the same CONVEX SET but with a function
+        # that is not concave, and Ipopt works on the functions: that alone made it report
+        # LOCALLY_INFEASIBLE at order 1 on case200, on a problem whose feasible set is a product of
+        # rotated cones. As a norm bounded by an affine term the constraint is genuinely convex, so
+        # a local solution is the global optimum and its objective is a valid lower bound.
+        #
+        # The norm is nonsmooth at the cone apex. `sqrt(D + eps) - sqrt(eps) <= sqrt(D)` smooths it
+        # in the direction that ENLARGES the feasible set, so the relaxation stays valid.
+        # SIGN MATTERS: `sqrt(D + eps)` on its own is >= sqrt(D), a STRONGER constraint that can cut
+        # off the true optimum and return a bound that is not a bound. Do not drop the `- sqrt(eps)`.
+        d = (A[i, i] - A[j, j])^2 + 4 * A[i, j]^2 + 4 * B[i, j]^2
+        e = NLP_CONE_EPS[]
+        @constraint(model, A[i, i] + A[j, j] -
+            (e > 0 ? sqrt(d + e) - sqrt(e) : sqrt(d)) >= 0)
+        posted += 1
+    end
+    kmax >= 3 || return posted
+    for p in 1:length(S), q in (p + 1):length(S), s in (q + 1):length(S)
+        i, j, l = S[p], S[q], S[s]
+        a11, a22, a33 = A[i, i], A[j, j], A[l, l]
+        a12, a13, a23 = A[i, j], A[i, l], A[j, l]
+        b12, b13, b23 = B[i, j], B[i, l], B[j, l]
+        @constraint(model,
+            a11 * a22 * a33
+            + 2 * ((a12 * a23 - b12 * b23) * a13 + (a12 * b23 + b12 * a23) * b13)
+            - a11 * (a23 * a23 + b23 * b23)
+            - a22 * (a13 * a13 + b13 * b13)
+            - a33 * (a12 * a12 + b12 * b12) >= 0)
+        posted += 1
+    end
+    return posted
+end
